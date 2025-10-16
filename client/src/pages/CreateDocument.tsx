@@ -67,16 +67,18 @@ export default function CreateDocument() {
             Vyberte šablónu dokumentu alebo nahrajte vlastný dokument
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <UploadDocumentCard onUpload={handleFileUpload} />
             
-            {templates.map((template) => (
-              <DocumentTemplateCard
-                key={template.title}
-                {...template}
-                onSelect={() => console.log('Template selected:', template.title)}
-              />
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {templates.map((template) => (
+                <DocumentTemplateCard
+                  key={template.title}
+                  {...template}
+                  onSelect={() => console.log('Template selected:', template.title)}
+                />
+              ))}
+            </div>
           </div>
         </Card>
       </div>
