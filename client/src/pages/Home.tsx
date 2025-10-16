@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import AuthSection from "@/components/AuthSection";
 import MainMenu from "@/components/MainMenu";
@@ -6,8 +6,14 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
   const [userName] = useState("Ján Novák");
+
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', isAuthenticated.toString());
+  }, [isAuthenticated]);
 
   const handleLogin = () => {
     console.log('EUDI authentication initiated');
