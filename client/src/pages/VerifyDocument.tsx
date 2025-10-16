@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
-import QRCodeDisplay from "@/components/QRCodeDisplay";
 import SignatureCard from "@/components/SignatureCard";
-import { Upload, Search, CheckCircle, XCircle } from "lucide-react";
+import { Upload, Search, CheckCircle, XCircle, QrCode } from "lucide-react";
 
 export default function VerifyDocument() {
   const [, setLocation] = useLocation();
@@ -17,6 +16,10 @@ export default function VerifyDocument() {
   const handleVerify = () => {
     console.log('Verifying document with code:', verificationCode);
     setVerified(verificationCode.length > 0);
+  };
+
+  const handleScanQR = () => {
+    console.log('Opening QR code scanner');
   };
 
   return (
@@ -96,8 +99,18 @@ export default function VerifyDocument() {
             </div>
 
             <div className="flex flex-col items-center justify-center">
-              <p className="text-sm text-muted-foreground mb-4">Príklad QR kódu</p>
-              <QRCodeDisplay value="DN-2024-ABC123456789" size={200} />
+              <Button
+                onClick={handleScanQR}
+                size="lg"
+                className="gap-2"
+                data-testid="button-scan-qr"
+              >
+                <QrCode className="w-5 h-5" />
+                Scan QR kód
+              </Button>
+              <p className="text-sm text-muted-foreground mt-4 text-center">
+                Naskenujte QR kód z dokumentu pomocou kamery
+              </p>
             </div>
           </div>
         </Card>
