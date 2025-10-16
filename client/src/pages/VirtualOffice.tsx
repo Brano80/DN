@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
+import { CompletedTransactionModal } from "@/components/CompletedTransactionModal";
 import { Plus, CheckCircle, Copy } from "lucide-react";
 
 type ViewType = 'create' | 'list' | 'created';
@@ -13,6 +14,7 @@ export default function VirtualOffice() {
   const [, setLocation] = useLocation();
   const [currentView, setCurrentView] = useState<ViewType>('create');
   const [meetingLink] = useState('https://digital-notary.sk/meeting/ABC123XYZ');
+  const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
 
   const handleCreateOffice = () => {
     setCurrentView('created');
@@ -36,6 +38,14 @@ export default function VirtualOffice() {
 
   const handleShowCreateView = () => {
     setCurrentView('create');
+  };
+
+  const handleOpenTransaction = (transactionId: string) => {
+    setSelectedTransaction(transactionId);
+  };
+
+  const handleContinueProcess = (processType: string) => {
+    setLocation(`/digital-signing/${processType}`);
   };
 
   return (
@@ -83,7 +93,7 @@ export default function VirtualOffice() {
                     <p><strong>Cena:</strong> 35 000 €</p>
                     <p><strong>Stav:</strong> Prevod dokončený, dokumenty odoslané</p>
                   </div>
-                  <Button variant="outline" size="sm" className="mt-3" data-testid="button-open-bmw">
+                  <Button variant="outline" size="sm" className="mt-3" onClick={() => handleOpenTransaction('bmw-x5')} data-testid="button-open-bmw">
                     Otvoriť
                   </Button>
                 </Card>
@@ -102,7 +112,7 @@ export default function VirtualOffice() {
                     <p><strong>Cena:</strong> 250 000 €</p>
                     <p><strong>Stav:</strong> Čaká na podpis druhej strany</p>
                   </div>
-                  <Button variant="default" size="sm" className="mt-3 bg-blue-600 hover:bg-blue-700" data-testid="button-continue-house">
+                  <Button size="sm" className="mt-3" onClick={() => handleContinueProcess('house')} data-testid="button-continue-house">
                     Pokračovať v procese
                   </Button>
                 </Card>
@@ -122,7 +132,7 @@ export default function VirtualOffice() {
                     <p><strong>Cena:</strong> 18 500 €</p>
                     <p><strong>Stav:</strong> Čaká na podpis kupujúceho</p>
                   </div>
-                  <Button variant="default" size="sm" className="mt-3 bg-green-600 hover:bg-green-700" data-testid="button-continue-vehicle">
+                  <Button size="sm" className="mt-3" onClick={() => handleContinueProcess('vehicle')} data-testid="button-continue-vehicle">
                     Pokračovať v procese
                   </Button>
                 </Card>
@@ -141,7 +151,7 @@ export default function VirtualOffice() {
                     <p><strong>Účel:</strong> Zastupovanie na katastrálnom úrade</p>
                     <p><strong>Stav:</strong> Pripravené na podpis</p>
                   </div>
-                  <Button variant="default" size="sm" className="mt-3 bg-orange-600 hover:bg-orange-700" data-testid="button-continue-attorney">
+                  <Button size="sm" className="mt-3" onClick={() => handleContinueProcess('attorney')} data-testid="button-continue-attorney">
                     Pokračovať v procese
                   </Button>
                 </Card>
@@ -201,6 +211,12 @@ export default function VirtualOffice() {
           )}
         </Card>
       </div>
+
+      <CompletedTransactionModal 
+        open={selectedTransaction !== null} 
+        onOpenChange={(open) => !open && setSelectedTransaction(null)}
+        transactionId={selectedTransaction || ''}
+      />
     </div>
   );
 }

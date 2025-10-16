@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import BackButton from "@/components/BackButton";
+import { ContractDetailModal } from "@/components/ContractDetailModal";
 
 export default function MyContracts() {
   const [, setLocation] = useLocation();
+  const [selectedContract, setSelectedContract] = useState<string | null>(null);
 
   const handleShowContract = (type: string) => {
-    console.log('Showing contract:', type);
+    setSelectedContract(type);
   };
 
   return (
@@ -107,6 +110,12 @@ export default function MyContracts() {
           </div>
         </Card>
       </div>
+
+      <ContractDetailModal 
+        open={selectedContract !== null} 
+        onOpenChange={(open) => !open && setSelectedContract(null)}
+        contractType={selectedContract || ''}
+      />
     </div>
   );
 }

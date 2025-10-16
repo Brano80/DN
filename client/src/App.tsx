@@ -9,6 +9,7 @@ import MyContracts from "@/pages/MyContracts";
 import CreateDocument from "@/pages/CreateDocument";
 import VerifyDocument from "@/pages/VerifyDocument";
 import VirtualOffice from "@/pages/VirtualOffice";
+import DigitalSigning from "@/pages/DigitalSigning";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/create-document" component={CreateDocument} />
       <Route path="/verify-document" component={VerifyDocument} />
       <Route path="/virtual-office" component={VirtualOffice} />
+      <Route path="/digital-signing/:type" component={DigitalSigning} />
       <Route component={NotFound} />
     </Switch>
   );
