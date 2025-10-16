@@ -2,6 +2,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import BackButton from "@/components/BackButton";
 import DocumentTemplateCard from "@/components/DocumentTemplateCard";
+import UploadDocumentCard from "@/components/UploadDocumentCard";
 import { FileText, Home, Gift, Briefcase, Users, Car } from "lucide-react";
 
 export default function CreateDocument() {
@@ -52,6 +53,10 @@ export default function CreateDocument() {
     },
   ];
 
+  const handleFileUpload = (file: File) => {
+    console.log('Document uploaded:', file.name);
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
@@ -59,10 +64,12 @@ export default function CreateDocument() {
           <BackButton onClick={() => setLocation('/')} />
           <h2 className="text-2xl font-semibold mb-2">Vytvoriť digitálny dokument</h2>
           <p className="text-muted-foreground mb-6">
-            Vyberte šablónu dokumentu, ktorý chcete vytvoriť
+            Vyberte šablónu dokumentu alebo nahrajte vlastný dokument
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <UploadDocumentCard onUpload={handleFileUpload} />
+            
             {templates.map((template) => (
               <DocumentTemplateCard
                 key={template.title}
