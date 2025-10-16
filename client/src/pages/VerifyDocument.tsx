@@ -32,87 +32,95 @@ export default function VerifyDocument() {
             Zadajte overovací kód alebo naskenujte QR kód dokumentu
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div>
-                <Label htmlFor="verification-code">Overovací kód</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    id="verification-code"
-                    placeholder="DN-2024-XXXXXXXXX"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    data-testid="input-verification-code"
-                  />
-                  <Button onClick={handleVerify} data-testid="button-verify">
-                    <Search className="w-4 h-4 mr-2" />
-                    Overiť
-                  </Button>
-                </div>
-              </div>
-
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground mb-4">alebo</p>
-                <Button variant="outline" data-testid="button-upload">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Nahrať dokument
+          <div className="max-w-xl mx-auto space-y-6">
+            <div>
+              <Label htmlFor="verification-code">Overovací kód</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  id="verification-code"
+                  placeholder="DN-2024-XXXXXXXXX"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  data-testid="input-verification-code"
+                />
+                <Button onClick={handleVerify} data-testid="button-verify">
+                  <Search className="w-4 h-4 mr-2" />
+                  Overiť
                 </Button>
               </div>
-
-              {verified !== null && (
-                <Card className="p-6">
-                  {verified ? (
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-chart-2/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle className="w-8 h-8 text-chart-2" />
-                      </div>
-                      <h3 className="font-semibold text-lg mb-2">Dokument je platný</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Všetky podpisy sú overené a platné
-                      </p>
-                      <div className="space-y-2">
-                        <SignatureCard
-                          signerName="Ján Novák"
-                          signedDate="15.10.2024 14:30"
-                          status="signed"
-                        />
-                        <SignatureCard
-                          signerName="Peter Horváth"
-                          signedDate="15.10.2024 15:45"
-                          status="signed"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <XCircle className="w-8 h-8 text-destructive" />
-                      </div>
-                      <h3 className="font-semibold text-lg mb-2">Dokument nie je platný</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Overovací kód nebol nájdený v systéme
-                      </p>
-                    </div>
-                  )}
-                </Card>
-              )}
             </div>
 
-            <div className="flex flex-col items-center justify-center">
-              <Button
-                onClick={handleScanQR}
-                size="lg"
-                className="gap-2"
-                data-testid="button-scan-qr"
-              >
-                <QrCode className="w-5 h-5" />
-                Scan QR kód
-              </Button>
-              <p className="text-sm text-muted-foreground mt-4 text-center">
-                Naskenujte QR kód z dokumentu pomocou kamery
-              </p>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">alebo</span>
+              </div>
             </div>
+
+            <Button variant="outline" className="w-full" data-testid="button-upload">
+              <Upload className="w-4 h-4 mr-2" />
+              Nahrať dokument
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">alebo</span>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleScanQR}
+              variant="outline"
+              className="w-full"
+              data-testid="button-scan-qr"
+            >
+              <QrCode className="w-5 h-5 mr-2" />
+              Scan QR kód
+            </Button>
           </div>
+
+          {verified !== null && (
+            <Card className="p-6 max-w-xl mx-auto mt-6">
+              {verified ? (
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-chart-2/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-chart-2" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2">Dokument je platný</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Všetky podpisy sú overené a platné
+                  </p>
+                  <div className="space-y-2">
+                    <SignatureCard
+                      signerName="Ján Novák"
+                      signedDate="15.10.2024 14:30"
+                      status="signed"
+                    />
+                    <SignatureCard
+                      signerName="Peter Horváth"
+                      signedDate="15.10.2024 15:45"
+                      status="signed"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <XCircle className="w-8 h-8 text-destructive" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2">Dokument nie je platný</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Overovací kód nebol nájdený v systéme
+                  </p>
+                </div>
+              )}
+            </Card>
+          )}
         </Card>
       </div>
     </div>
