@@ -4,6 +4,19 @@
 
 Digital Notary is a government/legal application for digital identity verification and electronic document signing, designed for Slovak users. The platform integrates with the EU Digital Identity Wallet (EUDI) for authentication and enables users to create, sign, verify, and manage digital contracts and documents. The application emphasizes trust, clarity, and accessibility with Slovak language support and professional design optimized for legal/governmental contexts.
 
+## Recent Changes
+
+**October 16, 2025:**
+- Implemented multi-step digital signing workflows following DN v51 specifications
+  - House/property contracts: 5-step process (signing → escrow → kataster → transfer → completed)
+  - Vehicle sales: 7-step process (signing → payment → office submission → registration → notarial record → archiving → completed)
+  - Power of attorney: 3-step process (signing → verification → completed)
+- Built complete DigitalSigning page with state management and progress timeline visualization
+- Fixed progress bar rendering logic to correctly display completed steps (green checkmark), active step (primary color), and future steps (gray)
+- Created ContractDetailModal and CompletedTransactionModal for virtual office transactions
+- Established Virtual Office workflow: "Otvoriť" opens transaction details, "Pokračovať v procese" navigates to digital signing with appropriate workflow type
+- All workflows tested end-to-end with proper step progression and completion screens
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -33,8 +46,8 @@ Preferred communication style: Simple, everyday language.
 - My Documents: Personal document management (identity, education, property)
 - My Contracts: Contract lifecycle management
 - Verify Document: QR code and verification code validation
-- Virtual Office: Multi-party document signing sessions
-- Digital Signing: Step-by-step signing workflows
+- Virtual Office: Multi-party document signing sessions with active/completed transaction management
+- Digital Signing: Multi-step signing workflows following DN v51 specifications (house: 5 steps, vehicle: 7 steps, attorney: 3 steps)
 
 ### Backend Architecture
 
