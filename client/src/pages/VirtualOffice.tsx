@@ -46,6 +46,13 @@ export default function VirtualOffice() {
     enabled: !!officeId,
   });
 
+  // Load all offices for the list view
+  const ownerEmail = "jan.novak@example.com"; // TODO: Get from auth
+  const { data: offices = [], isLoading: isLoadingOffices } = useQuery<SelectVirtualOffice[]>({
+    queryKey: ['/api/virtual-offices', { ownerEmail }],
+    enabled: currentView === 'list',
+  });
+
   const createOfficeMutation = useMutation({
     mutationFn: async (data: { name: string; invitedEmail: string }) => {
       const response = await apiRequest("POST", "/api/virtual-offices", {
@@ -60,6 +67,8 @@ export default function VirtualOffice() {
         title: "Kancelária vytvorená",
         description: `Email odoslaný na ${data.invitedEmail}`,
       });
+      // Invalidate offices list cache
+      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices', { ownerEmail }] });
       // Redirect to the new office
       setLocation(`/virtual-office/${data.id}`);
     },
@@ -382,84 +391,69 @@ export default function VirtualOffice() {
           {currentView === 'list' && (
             <Card className="p-6">
               <h3 className="text-lg font-medium mb-4">Moje virtuálne kancelárie</h3>
-              <div className="space-y-4">
-                {/* Completed transaction */}
-                <Card className="p-4 bg-muted/50">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium">Prevod vozidla - BMW X5</h4>
-                      <p className="text-sm text-muted-foreground">Vytvorené: 10.12.2024 | Dokončené: 12.12.2024</p>
-                    </div>
-                    <span className="px-3 py-1 bg-chart-2/20 text-chart-2 rounded-full text-sm">Dokončené</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p><strong>Strany:</strong> Peter Kováč → Anna Nováková</p>
-                    <p><strong>Cena:</strong> 35 000 €</p>
-                    <p><strong>Stav:</strong> Prevod dokončený, dokumenty odoslané</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="mt-3" onClick={() => handleOpenTransaction('bmw-x5')} data-testid="button-open-bmw">
-                    Otvoriť
+              
+              {isLoadingOffices ? (
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-muted-foreground" data-testid="text-loading-offices">Načítava sa...</p>
+                </div>
+              ) : offices.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <p className="text-muted-foreground mb-4" data-testid="text-no-offices">Zatiaľ nemáte žiadne virtuálne kancelárie</p>
+                  <Button onClick={handleShowCreateView} data-testid="button-create-first">
+                    Vytvoriť prvú kanceláriu
                   </Button>
-                </Card>
-
-                {/* Active transaction - House sale */}
-                <Card className="p-4 bg-blue-50 dark:bg-blue-950/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium">Kúpno-predajná zmluva - Rodinný dom</h4>
-                      <p className="text-sm text-muted-foreground">Vytvorené: 20.12.2024 | Aktívne</p>
-                    </div>
-                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm">Aktívne</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p><strong>Strany:</strong> Ján Novák → Mária Svobodová</p>
-                    <p><strong>Cena:</strong> 250 000 €</p>
-                    <p><strong>Stav:</strong> Čaká na podpis druhej strany</p>
-                  </div>
-                  <Button size="sm" className="mt-3" onClick={() => handleContinueProcess('house')} data-testid="button-continue-house">
-                    Pokračovať v procese
-                  </Button>
-                </Card>
-
-                {/* Active transaction - Vehicle Sale */}
-                <Card className="p-4 bg-green-50 dark:bg-green-950/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium">Predaj vozidla - Škoda Octavia</h4>
-                      <p className="text-sm text-muted-foreground">Vytvorené: 22.12.2024 | Aktívne</p>
-                    </div>
-                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">Aktívne</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p><strong>Strany:</strong> Ján Novák → Tomáš Horváth</p>
-                    <p><strong>Vozidlo:</strong> Škoda Octavia 2019, 85 000 km</p>
-                    <p><strong>Cena:</strong> 18 500 €</p>
-                    <p><strong>Stav:</strong> Čaká na podpis kupujúceho</p>
-                  </div>
-                  <Button size="sm" className="mt-3" onClick={() => handleContinueProcess('vehicle')} data-testid="button-continue-vehicle">
-                    Pokračovať v procese
-                  </Button>
-                </Card>
-
-                {/* Active transaction - Power of Attorney */}
-                <Card className="p-4 bg-orange-50 dark:bg-orange-950/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium">Splnomocnenie - Zastupovanie na úrade</h4>
-                      <p className="text-sm text-muted-foreground">Vytvorené: 21.12.2024 | Aktívne</p>
-                    </div>
-                    <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full text-sm">Aktívne</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p><strong>Strany:</strong> Ján Novák → Peter Kováč</p>
-                    <p><strong>Účel:</strong> Zastupovanie na katastrálnom úrade</p>
-                    <p><strong>Stav:</strong> Pripravené na podpis</p>
-                  </div>
-                  <Button size="sm" className="mt-3" onClick={() => handleContinueProcess('attorney')} data-testid="button-continue-attorney">
-                    Pokračovať v procese
-                  </Button>
-                </Card>
-              </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {offices.map((office) => {
+                    const statusDisplay = getStatusDisplay(office.status);
+                    const createdDate = new Date(office.createdAt || '').toLocaleDateString('sk-SK');
+                    
+                    return (
+                      <Card 
+                        key={office.id} 
+                        className={`p-4 ${
+                          office.status === 'completed' 
+                            ? 'bg-muted/50' 
+                            : office.status === 'active'
+                            ? 'bg-blue-50 dark:bg-blue-950/30'
+                            : 'bg-orange-50 dark:bg-orange-950/30'
+                        }`}
+                        data-testid={`card-office-${office.id}`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-medium" data-testid={`text-office-name-${office.id}`}>{office.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Vytvorené: {createdDate}
+                            </p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-sm ${statusDisplay.className}`}>
+                            {statusDisplay.text}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p><strong>Vlastník:</strong> {office.ownerEmail}</p>
+                          <p><strong>Pozvaná strana:</strong> {office.invitedEmail}</p>
+                          {office.contractId && (
+                            <p><strong>Zmluva:</strong> Pripojená (ID: {office.contractId.substring(0, 8)}...)</p>
+                          )}
+                        </div>
+                        <Button 
+                          variant={office.status === 'completed' ? 'outline' : 'default'} 
+                          size="sm" 
+                          className="mt-3" 
+                          onClick={() => setLocation(`/virtual-office/${office.id}`)}
+                          data-testid={`button-open-office-${office.id}`}
+                        >
+                          {office.status === 'completed' ? 'Otvoriť' : 'Pokračovať v procese'}
+                        </Button>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+              
               <Button variant="outline" onClick={handleShowCreateView} className="mt-6 w-full" data-testid="button-back-create">
                 Späť na vytvorenie kancelárie
               </Button>
