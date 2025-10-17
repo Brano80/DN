@@ -40,7 +40,7 @@ export const virtualOffices = pgTable("virtual_offices", {
   ownerEmail: text("owner_email").notNull(),
   invitedEmail: text("invited_email").notNull(),
   contractId: varchar("contract_id"),
-  status: text("status").notNull().default("pending"),
+  status: text("status").notNull().default("active"),
   processType: text("process_type"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

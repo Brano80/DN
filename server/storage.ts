@@ -106,9 +106,8 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const office: VirtualOffice = { 
       ...insertOffice,
-      status: insertOffice.status || "pending",
-      contractId: insertOffice.contractId || null,
-      processType: insertOffice.processType || null,
+      contractId: insertOffice.contractId ?? null,
+      processType: insertOffice.processType ?? null,
       id,
       createdAt: new Date()
     };

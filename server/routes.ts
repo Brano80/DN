@@ -46,13 +46,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/virtual-offices/:id", async (req, res) => {
     try {
-      const updated = await storage.updateVirtualOffice(req.params.id, req.body);
+      // Validate request body - allow partial updates
+      const updateSchema = insertVirtualOfficeSchema.partial();
+      const validated = updateSchema.parse(req.body);
+      
+      const updated = await storage.updateVirtualOffice(req.params.id, validated);
       if (!updated) {
         return res.status(404).json({ error: "Office not found" });
       }
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ error: "Failed to update office" });
+      res.status(400).json({ error: "Invalid request data" });
     }
   });
 

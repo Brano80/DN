@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,18 +8,41 @@ import BackButton from "@/components/BackButton";
 import { CompletedTransactionModal } from "@/components/CompletedTransactionModal";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import type { SelectVirtualOffice } from "@shared/schema";
 
 type ViewType = 'create' | 'list';
+
+const getStatusDisplay = (status: string | null): { text: string; className: string } => {
+  switch (status) {
+    case 'active':
+      return { text: 'Aktívna', className: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' };
+    case 'pending':
+      return { text: 'Čaká', className: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' };
+    case 'completed':
+      return { text: 'Dokončená', className: 'bg-chart-2/20 text-chart-2' };
+    default:
+      return { text: 'Aktívna', className: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' };
+  }
+};
 
 export default function VirtualOffice() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [match, params] = useRoute("/virtual-office/:id");
+  const officeId = match ? params?.id : null;
+  
   const [currentView, setCurrentView] = useState<ViewType>('create');
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [officeName, setOfficeName] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
+
+  // Load office data if ID is present
+  const { data: office, isLoading: isLoadingOffice } = useQuery<SelectVirtualOffice>({
+    queryKey: ['/api/virtual-offices', officeId],
+    enabled: !!officeId,
+  });
 
   const createOfficeMutation = useMutation({
     mutationFn: async (data: { name: string; invitedEmail: string }) => {
@@ -27,7 +50,6 @@ export default function VirtualOffice() {
         name: data.name,
         ownerEmail: "jan.novak@example.com", // TODO: Get from auth
         invitedEmail: data.invitedEmail,
-        status: "pending"
       });
       return response.json();
     },
@@ -81,6 +103,88 @@ export default function VirtualOffice() {
     setLocation(`/digital-signing/${processType}`);
   };
 
+  // Show detail view if we have an office ID
+  if (officeId) {
+    if (isLoadingOffice) {
+      return (
+        <div className="min-h-screen bg-background p-4">
+          <div className="max-w-4xl mx-auto">
+            <Card className="p-8">
+              <BackButton onClick={() => setLocation('/virtual-office')} />
+              <div className="flex items-center justify-center py-12">
+                <p className="text-muted-foreground" data-testid="text-loading">Načítava sa kancelária...</p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    if (!office) {
+      return (
+        <div className="min-h-screen bg-background p-4">
+          <div className="max-w-4xl mx-auto">
+            <Card className="p-8">
+              <BackButton onClick={() => setLocation('/virtual-office')} />
+              <div className="flex items-center justify-center py-12">
+                <p className="text-muted-foreground" data-testid="text-not-found">Kancelária nebola nájdená</p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    // Office detail view
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto">
+          <Card className="p-8">
+            <BackButton onClick={() => setLocation('/virtual-office')} />
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold mb-2" data-testid="text-office-name">{office.name}</h2>
+              <p className="text-muted-foreground">Virtuálna kancelária</p>
+            </div>
+
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Vlastník</Label>
+                  <p className="mt-1" data-testid="text-owner-email">{office.ownerEmail}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Pozvaná strana</Label>
+                  <p className="mt-1" data-testid="text-invited-email">{office.invitedEmail}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Stav</Label>
+                  <p className="mt-1" data-testid="text-office-status">
+                    <span className={`px-3 py-1 rounded-full text-sm ${getStatusDisplay(office.status).className}`}>
+                      {getStatusDisplay(office.status).text}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="font-medium mb-4">Akcie</h3>
+                <div className="space-y-3">
+                  <Button variant="outline" className="w-full" data-testid="button-upload-contract">
+                    Nahrať zmluvu z "Moje zmluvy"
+                  </Button>
+                  <Button variant="outline" className="w-full" data-testid="button-view-contract">
+                    Zobraziť zmluvu
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Otherwise show create/list view
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
