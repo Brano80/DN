@@ -442,8 +442,8 @@ export default function VirtualOffice() {
 
           {/* My Virtual Offices View */}
           {currentView === 'list' && (
-            <Card className="p-6">
-              <h3 className="text-lg font-medium mb-4">Moje virtuálne kancelárie</h3>
+            <div className="bg-white dark:bg-card p-6 rounded-lg border border-border">
+              <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Moje virtuálne kancelárie</h3>
               
               {isLoadingOffices ? (
                 <div className="flex items-center justify-center py-12">
@@ -459,50 +459,88 @@ export default function VirtualOffice() {
               ) : (
                 <div className="space-y-4">
                   {offices.map((office) => {
-                    const statusDisplay = getStatusDisplay(office.status);
                     const createdDate = office.createdAt 
                       ? new Date(office.createdAt).toLocaleDateString('sk-SK')
                       : 'Neznámy dátum';
                     
-                    // Special handling for Škoda Octavia example - use original design
+                    // DN v51 style - determine colors based on status
+                    const getBgColor = () => {
+                      if (office.status === 'completed') return 'bg-gray-50 dark:bg-gray-800/50';
+                      if (office.name === 'Predaj vozidla - Škoda Octavia') return 'bg-green-50 dark:bg-green-900/20';
+                      if (office.status === 'active') return 'bg-blue-50 dark:bg-blue-900/20';
+                      return 'bg-orange-50 dark:bg-orange-900/20';
+                    };
+                    
+                    const getBorderColor = () => {
+                      if (office.status === 'completed') return 'border-gray-200 dark:border-gray-700';
+                      if (office.name === 'Predaj vozidla - Škoda Octavia') return 'border-green-200 dark:border-green-800';
+                      if (office.status === 'active') return 'border-blue-200 dark:border-blue-800';
+                      return 'border-orange-200 dark:border-orange-800';
+                    };
+                    
+                    const getStatusBadge = () => {
+                      if (office.status === 'completed') {
+                        return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200';
+                      }
+                      if (office.name === 'Predaj vozidla - Škoda Octavia') {
+                        return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200';
+                      }
+                      if (office.status === 'active') {
+                        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200';
+                      }
+                      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200';
+                    };
+                    
+                    const getButtonStyle = () => {
+                      if (office.status === 'completed') {
+                        return 'bg-gray-600 text-white hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-800';
+                      }
+                      if (office.name === 'Predaj vozidla - Škoda Octavia') {
+                        return 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800';
+                      }
+                      if (office.status === 'active') {
+                        return 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800';
+                      }
+                      return 'bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800';
+                    };
+                    
                     const isSkodaExample = office.name === 'Predaj vozidla - Škoda Octavia';
                     
+                    // DN v51: Škoda Octavia is ACTIVE (green), not completed
+                    const getStatusText = () => {
+                      if (isSkodaExample) return 'Aktívne';
+                      return office.status === 'completed' ? 'Dokončené' : 'Aktívne';
+                    };
+                    
+                    const displayDate = isSkodaExample ? 'Vytvorené: 22.12.2024 | Aktívne' : `Vytvorené: ${createdDate}`;
+                    const buttonText = isSkodaExample ? 'Pokračovať v procese' : (office.status === 'completed' ? 'Otvoriť' : 'Pokračovať v procese');
+                    
                     return (
-                      <Card 
+                      <div 
                         key={office.id} 
-                        className={`p-4 ${
-                          isSkodaExample
-                            ? 'bg-green-50 dark:bg-green-950/30'
-                            : office.status === 'completed' 
-                            ? 'bg-muted/50' 
-                            : office.status === 'active'
-                            ? 'bg-blue-50 dark:bg-blue-950/30'
-                            : 'bg-orange-50 dark:bg-orange-950/30'
-                        }`}
+                        className={`p-4 rounded-lg border ${getBgColor()} ${getBorderColor()}`}
                         data-testid={`card-office-${office.id}`}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <h4 className="font-medium" data-testid={`text-office-name-${office.id}`}>{office.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {isSkodaExample ? 'Vytvorené: 22.12.2024 | Aktívne' : `Vytvorené: ${createdDate}`}
+                            <h4 className="font-medium text-gray-800 dark:text-gray-200" data-testid={`text-office-name-${office.id}`}>
+                              {office.name}
+                            </h4>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {displayDate}
                             </p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-sm ${
-                            isSkodaExample 
-                              ? 'bg-chart-2/20 text-chart-2'
-                              : statusDisplay.className
-                          }`}>
-                            {isSkodaExample ? 'Dokončené' : statusDisplay.text}
+                          <span className={`px-3 py-1 rounded-full text-sm ${getStatusBadge()}`}>
+                            {getStatusText()}
                           </span>
                         </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                           {isSkodaExample ? (
                             <>
                               <p><strong>Strany:</strong> Ján Novák → Tomáš Horváth</p>
                               <p><strong>Vozidlo:</strong> Škoda Octavia 2019, 85 000 km</p>
                               <p><strong>Cena:</strong> 18 500 €</p>
-                              <p><strong>Stav:</strong> Prevod dokončený, dokumenty odoslané</p>
+                              <p><strong>Stav:</strong> Čaká na podpis kupujúceho</p>
                             </>
                           ) : (
                             <>
@@ -514,25 +552,27 @@ export default function VirtualOffice() {
                             </>
                           )}
                         </div>
-                        <Button 
-                          variant={office.status === 'completed' || isSkodaExample ? 'outline' : 'default'} 
-                          size="sm" 
-                          className="mt-3" 
+                        <button 
+                          className={`mt-3 px-4 py-2 rounded-lg text-sm transition-colors ${getButtonStyle()}`}
                           onClick={() => setLocation(`/virtual-office/${office.id}`)}
                           data-testid={`button-open-office-${office.id}`}
                         >
-                          {office.status === 'completed' || isSkodaExample ? 'Otvoriť' : 'Pokračovať v procese'}
-                        </Button>
-                      </Card>
+                          {buttonText}
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
               )}
               
-              <Button variant="outline" onClick={handleShowCreateView} className="mt-6 w-full" data-testid="button-back-create">
+              <button 
+                onClick={handleShowCreateView} 
+                className="mt-6 w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                data-testid="button-back-create"
+              >
                 Späť na vytvorenie kancelárie
-              </Button>
-            </Card>
+              </button>
+            </div>
           )}
 
         </Card>
