@@ -7,6 +7,8 @@ import Home from "@/pages/Home";
 import MyDocuments from "@/pages/MyDocuments";
 import MyContracts from "@/pages/MyContracts";
 import CreateDocument from "@/pages/CreateDocument";
+import CreateVehicleContract from "@/pages/CreateVehicleContract";
+import CreateRentalContract from "@/pages/CreateRentalContract";
 import VerifyDocument from "@/pages/VerifyDocument";
 import VirtualOffice from "@/pages/VirtualOffice";
 import DigitalSigning from "@/pages/DigitalSigning";
@@ -19,6 +21,8 @@ function Router() {
       <Route path="/my-documents" component={MyDocuments} />
       <Route path="/my-contracts" component={MyContracts} />
       <Route path="/create-document" component={CreateDocument} />
+      <Route path="/create-vehicle-contract" component={CreateVehicleContract} />
+      <Route path="/create-rental-contract" component={CreateRentalContract} />
       <Route path="/verify-document" component={VerifyDocument} />
       <Route path="/virtual-office/:id" component={VirtualOffice} />
       <Route path="/virtual-office" component={VirtualOffice} />
