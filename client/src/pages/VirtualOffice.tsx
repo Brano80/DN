@@ -11,7 +11,7 @@ import { Plus, Check, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { SelectVirtualOffice } from "@shared/schema";
+import type { VirtualOffice as VirtualOfficeType } from "@shared/schema";
 
 type ViewType = 'create' | 'list';
 
@@ -41,15 +41,15 @@ export default function VirtualOffice() {
   const [showSelectContract, setShowSelectContract] = useState(false);
 
   // Load office data if ID is present
-  const { data: office, isLoading: isLoadingOffice } = useQuery<SelectVirtualOffice>({
-    queryKey: ['/api/virtual-offices', officeId],
+  const { data: office, isLoading: isLoadingOffice } = useQuery<VirtualOfficeType>({
+    queryKey: [`/api/virtual-offices/${officeId}`],
     enabled: !!officeId,
   });
 
   // Load all offices for the list view
   const ownerEmail = "jan.novak@example.com"; // TODO: Get from auth
-  const { data: offices = [], isLoading: isLoadingOffices } = useQuery<SelectVirtualOffice[]>({
-    queryKey: ['/api/virtual-offices', { ownerEmail }],
+  const { data: offices = [], isLoading: isLoadingOffices } = useQuery<VirtualOfficeType[]>({
+    queryKey: [`/api/virtual-offices?ownerEmail=${ownerEmail}`],
     enabled: currentView === 'list',
   });
 
@@ -68,7 +68,7 @@ export default function VirtualOffice() {
         description: `Email odoslaný na ${data.invitedEmail}`,
       });
       // Invalidate offices list cache
-      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices', { ownerEmail }] });
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${ownerEmail}`] });
       // Redirect to the new office
       setLocation(`/virtual-office/${data.id}`);
     },
@@ -89,7 +89,7 @@ export default function VirtualOffice() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices', officeId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${officeId}`] });
       toast({
         title: "Zmluva pripojená",
         description: "Zmluva bola úspešne pripojená k virtuálnej kancelárii",
@@ -407,7 +407,9 @@ export default function VirtualOffice() {
                 <div className="space-y-4">
                   {offices.map((office) => {
                     const statusDisplay = getStatusDisplay(office.status);
-                    const createdDate = new Date(office.createdAt || '').toLocaleDateString('sk-SK');
+                    const createdDate = office.createdAt 
+                      ? new Date(office.createdAt).toLocaleDateString('sk-SK')
+                      : 'Neznámy dátum';
                     
                     return (
                       <Card 
