@@ -573,14 +573,14 @@ export default function VirtualOffice() {
                     
                     const isSkodaExample = office.name === 'Predaj vozidla - Škoda Octavia';
                     
-                    // DN v51: Škoda Octavia is ACTIVE (green), not completed
+                    // DN v51: Škoda Octavia is COMPLETED (green background, completed status)
                     const getStatusText = () => {
-                      if (isSkodaExample) return 'Aktívne';
+                      if (isSkodaExample) return 'Dokončené';
                       return office.status === 'completed' ? 'Dokončené' : 'Aktívne';
                     };
                     
-                    const displayDate = isSkodaExample ? 'Vytvorené: 22.12.2024 | Aktívne' : `Vytvorené: ${createdDate}`;
-                    const buttonText = isSkodaExample ? 'Pokračovať v procese' : (office.status === 'completed' ? 'Otvoriť' : 'Pokračovať v procese');
+                    const displayDate = isSkodaExample ? 'Vytvorené: 22.12.2024 | Dokončené: 12.12.2024' : `Vytvorené: ${createdDate}`;
+                    const buttonText = isSkodaExample ? 'Otvoriť' : (office.status === 'completed' ? 'Otvoriť' : 'Pokračovať v procese');
                     
                     return (
                       <div 
