@@ -24,8 +24,17 @@ Digital Notary is a government/legal application for digital identity verificati
   - MyContracts page now loads from GET /api/contracts?ownerEmail=...
   - ContractDetailModal fetches by ID and renders based on type
 - Fixed contract content format: changed from plain text to structured JSON objects
-- Successfully tested full workflow: template selection → form fill → save → display in MyContracts → view details
-- All contract data properly persisted and displayed dynamically from database
+- Fixed virtual office database loading and display:
+  - Replaced hardcoded office cards with dynamic database loading via GET /api/virtual-offices?ownerEmail=...
+  - Fixed React Query queryKey format bug (changed from array with objects to single URL string)
+  - Added cache invalidation after office creation to refresh list immediately
+  - Added loading and empty states for better UX
+  - Fixed date formatting to handle null createdAt values gracefully
+  - Both list and detail views now load from database correctly
+- Successfully tested full workflows: 
+  - Contract: template selection → form fill → save → display in MyContracts → view details
+  - Virtual Office: create office → display in list → view detail → attach contract
+- All data properly persisted and displayed dynamically from database
 
 **October 16, 2025:**
 - Implemented multi-step digital signing workflows following DN v51 specifications
