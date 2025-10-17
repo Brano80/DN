@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
 import { CompletedTransactionModal } from "@/components/CompletedTransactionModal";
+import { SelectContractDialog } from "@/components/SelectContractDialog";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SelectVirtualOffice } from "@shared/schema";
 
 type ViewType = 'create' | 'list';
@@ -37,6 +38,7 @@ export default function VirtualOffice() {
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [officeName, setOfficeName] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
+  const [showSelectContract, setShowSelectContract] = useState(false);
 
   // Load office data if ID is present
   const { data: office, isLoading: isLoadingOffice } = useQuery<SelectVirtualOffice>({
@@ -65,6 +67,29 @@ export default function VirtualOffice() {
       toast({
         title: "Chyba",
         description: "Nepodarilo sa vytvoriť kanceláriu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const attachContractMutation = useMutation({
+    mutationFn: async (contractId: string) => {
+      const response = await apiRequest("PATCH", `/api/virtual-offices/${officeId}`, {
+        contractId: contractId,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices', officeId] });
+      toast({
+        title: "Zmluva pripojená",
+        description: "Zmluva bola úspešne pripojená k virtuálnej kancelárii",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Chyba",
+        description: "Nepodarilo sa pripojiť zmluvu",
         variant: "destructive",
       });
     },
@@ -167,19 +192,52 @@ export default function VirtualOffice() {
               </div>
 
               <div className="mt-6 pt-6 border-t">
-                <h3 className="font-medium mb-4">Akcie</h3>
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full" data-testid="button-upload-contract">
+                <h3 className="font-medium mb-4">Zmluva</h3>
+                {!office.contractId ? (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowSelectContract(true)}
+                    data-testid="button-upload-contract"
+                  >
                     Nahrať zmluvu z "Moje zmluvy"
                   </Button>
-                  <Button variant="outline" className="w-full" data-testid="button-view-contract">
-                    Zobraziť zmluvu
-                  </Button>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Pripojená zmluva:</p>
+                      <p className="font-medium" data-testid="text-attached-contract-id">ID: {office.contractId}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setShowSelectContract(true)}
+                        data-testid="button-change-contract"
+                      >
+                        Zmeniť zmluvu
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        data-testid="button-view-contract"
+                      >
+                        Zobraziť zmluvu
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </Card>
         </div>
+
+        <SelectContractDialog
+          open={showSelectContract}
+          onOpenChange={setShowSelectContract}
+          onSelectContract={(contractId) => attachContractMutation.mutate(contractId)}
+          ownerEmail="jan.novak@example.com"
+        />
       </div>
     );
   }
