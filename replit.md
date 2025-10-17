@@ -6,6 +6,27 @@ Digital Notary is a government/legal application for digital identity verificati
 
 ## Recent Changes
 
+**October 17, 2025:**
+- Refocused application to 2 primary contract workflows: Vehicle Purchase Contracts and Rental Contracts
+- Updated CreateDocument page to display only 2 active templates (vehicle and rental) with dedicated form pages
+- Implemented comprehensive vehicle contract form (CreateVehicleContract.tsx) with Slovak legal fields:
+  - Seller information (name, birth number, address)
+  - Buyer information (name, birth number, address)
+  - Vehicle details (brand, model, year, VIN, license plate, mileage)
+  - Purchase price and payment terms
+- Implemented comprehensive rental contract form (CreateRentalContract.tsx) with Slovak legal fields:
+  - Landlord information (name, birth number, address)
+  - Tenant information (name, birth number, address)
+  - Property details (address, type, floor area, rooms)
+  - Rent, deposit, and rental period
+- Converted contract storage from hardcoded data to database persistence:
+  - Contracts saved via POST /api/contracts with JSON.stringify(content)
+  - MyContracts page now loads from GET /api/contracts?ownerEmail=...
+  - ContractDetailModal fetches by ID and renders based on type
+- Fixed contract content format: changed from plain text to structured JSON objects
+- Successfully tested full workflow: template selection → form fill → save → display in MyContracts → view details
+- All contract data properly persisted and displayed dynamically from database
+
 **October 16, 2025:**
 - Implemented multi-step digital signing workflows following DN v51 specifications
   - House/property contracts: 5-step process (signing → escrow → kataster → transfer → completed)
