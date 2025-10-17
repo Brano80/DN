@@ -40,54 +40,38 @@ export default function CreateVehicleContract() {
 
   const createContractMutation = useMutation({
     mutationFn: async () => {
-      const contractContent = `
-KÚPNA ZMLUVA O PREVODE MOTOROVÉHO VOZIDLA
-
-I. ZMLUVNÉ STRANY
-
-Predávajúci:
-Meno a priezvisko: ${sellerName}
-Bydlisko: ${sellerAddress}
-Rodné číslo: ${sellerIdNumber}
-
-Kupujúci:
-Meno a priezvisko: ${buyerName}
-Bydlisko: ${buyerAddress}
-Rodné číslo: ${buyerIdNumber}
-
-II. PREDMET ZMLUVY
-
-Vozidlo:
-Značka: ${vehicleBrand}
-Model: ${vehicleModel}
-Rok výroby: ${vehicleYear}
-VIN: ${vehicleVin}
-ŠPZ: ${vehicleLicensePlate}
-Stav tachometra: ${vehicleMileage} km
-
-III. KÚPNA CENA A PLATOBNÉ PODMIENKY
-
-Kúpna cena: ${purchasePrice} €
-Spôsob platby: ${paymentMethod}
-
-IV. DODATOČNÉ PODMIENKY
-
-${additionalTerms || 'Žiadne dodatočné podmienky'}
-
-V. ZÁVEREČNÉ USTANOVENIA
-
-Predávajúci vyhlasuje, že je výlučným vlastníkom vozidla a vozidlo nie je zaťažené záložným právom ani iným vecným bremenom.
-Kupujúci preberá vozidlo v stave, v akom sa nachádza v čase podpisu tejto zmluvy.
-
-Táto zmluva nadobúda platnosť dňom jej podpísania oboma zmluvnými stranami.
-      `.trim();
+      const contractContent = {
+        seller: {
+          name: sellerName,
+          birthNumber: sellerIdNumber,
+          address: sellerAddress,
+        },
+        buyer: {
+          name: buyerName,
+          birthNumber: buyerIdNumber,
+          address: buyerAddress,
+        },
+        vehicle: {
+          brand: vehicleBrand,
+          model: vehicleModel,
+          year: vehicleYear,
+          vin: vehicleVin,
+          licensePlate: vehicleLicensePlate,
+          mileage: vehicleMileage,
+        },
+        price: purchasePrice,
+        paymentMethod: paymentMethod,
+        additionalTerms: additionalTerms || 'Žiadne dodatočné podmienky',
+        signingPlace: 'Bratislava',
+        signingDate: new Date().toLocaleDateString('sk-SK'),
+      };
 
       const title = `Kúpna zmluva vozidla - ${vehicleBrand} ${vehicleModel}`;
       
       return await apiRequest('POST', '/api/contracts', {
         title,
         type: 'vehicle',
-        content: contractContent,
+        content: JSON.stringify(contractContent),
         ownerEmail: 'jan.novak@example.com',
       });
     },

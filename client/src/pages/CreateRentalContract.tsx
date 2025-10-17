@@ -40,63 +40,38 @@ export default function CreateRentalContract() {
 
   const createContractMutation = useMutation({
     mutationFn: async () => {
-      const contractContent = `
-NÁJOMNÁ ZMLUVA
-
-I. ZMLUVNÉ STRANY
-
-Prenajímateľ:
-Meno a priezvisko: ${landlordName}
-Bydlisko: ${landlordAddress}
-Rodné číslo: ${landlordIdNumber}
-
-Nájomca:
-Meno a priezvisko: ${tenantName}
-Bydlisko: ${tenantAddress}
-Rodné číslo: ${tenantIdNumber}
-
-II. PREDMET NÁJMU
-
-Nehnuteľnosť:
-Adresa: ${propertyAddress}
-Typ: ${propertyType}
-Výmera: ${propertySize} m²
-Počet izieb: ${propertyRooms}
-
-III. NÁJOMNÉ A PLATOBNÉ PODMIENKY
-
-Mesačné nájomné: ${monthlyRent} €
-Kaucia: ${deposit} €
-Dátum začiatku nájmu: ${rentStartDate}
-Doba nájmu: ${rentDuration}
-
-IV. PRÁVA A POVINNOSTI ZMLUVNÝCH STRÁN
-
-Prenajímateľ sa zaväzuje:
-- Odovzdať nehnuteľnosť v riadnom stave spôsobilom na dohodnutý účel užívania
-- Zabezpečiť nájomcovi pokojné užívanie nehnuteľnosti
-
-Nájomca sa zaväzuje:
-- Platiť nájomné riadne a včas
-- Užívať nehnuteľnosť s náležitou starostlivosťou
-- Neposkytnúť nehnuteľnosť do podnájmu bez súhlasu prenajímateľa
-
-V. DODATOČNÉ PODMIENKY
-
-${additionalTerms || 'Žiadne dodatočné podmienky'}
-
-VI. ZÁVEREČNÉ USTANOVENIA
-
-Táto zmluva nadobúda platnosť dňom jej podpísania oboma zmluvnými stranami.
-Zmluva je vyhotovená v dvoch rovnopisoch, z ktorých jeden obdrží prenajímateľ a jeden nájomca.
-      `.trim();
+      const contractContent = {
+        landlord: {
+          name: landlordName,
+          birthNumber: landlordIdNumber,
+          address: landlordAddress,
+        },
+        tenant: {
+          name: tenantName,
+          birthNumber: tenantIdNumber,
+          address: tenantAddress,
+        },
+        property: {
+          address: propertyAddress,
+          type: propertyType,
+          floorArea: propertySize,
+          rooms: propertyRooms,
+        },
+        rent: monthlyRent,
+        deposit: deposit,
+        startDate: rentStartDate,
+        endDate: rentDuration,
+        additionalTerms: additionalTerms || 'Žiadne dodatočné podmienky',
+        signingPlace: 'Bratislava',
+        signingDate: new Date().toLocaleDateString('sk-SK'),
+      };
 
       const title = `Nájomná zmluva - ${propertyAddress}`;
       
       return await apiRequest('POST', '/api/contracts', {
         title,
         type: 'rental',
-        content: contractContent,
+        content: JSON.stringify(contractContent),
         ownerEmail: 'jan.novak@example.com',
       });
     },

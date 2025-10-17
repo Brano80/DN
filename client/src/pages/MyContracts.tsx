@@ -17,8 +17,8 @@ export default function MyContracts() {
     queryKey: [`/api/contracts?ownerEmail=jan.novak@example.com`],
   });
 
-  const handleShowContract = (type: string) => {
-    setSelectedContract(type);
+  const handleShowContract = (contractId: string) => {
+    setSelectedContract(contractId);
   };
 
   const getContractStatusBadge = (type: string) => {
@@ -96,7 +96,7 @@ export default function MyContracts() {
       <ContractDetailModal 
         open={selectedContract !== null} 
         onOpenChange={(open) => !open && setSelectedContract(null)}
-        contractType={selectedContract || ''}
+        contractId={selectedContract}
       />
     </div>
   );
