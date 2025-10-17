@@ -7,6 +7,21 @@ Digital Notary is a government/legal application for digital identity verificati
 ## Recent Changes
 
 **October 17, 2025 - Latest:**
+- Implemented digital signing workflow with EUDI authentication:
+  - Created DigitalSigningDialog component with 4-step process (intro → auth → signing → complete)
+  - Integrated EUDI authentication simulation (2-second delay for realism)
+  - Added digital signing simulation with security checklist
+  - Implemented completeSigningMutation to update office status to 'completed'
+  - Added "Začať digitálne podpisovanie" button functionality in virtual office detail view
+  - Successfully tested full workflow: create office → attach contract → digital signing → completion
+  - Status updates automatically with toast notifications and UI refresh via React Query
+  - Completed offices show "Proces dokončený" step and hide signing button
+  - **Improvements implemented based on architect review:**
+    - Dialog resets to intro step when closed (prevents mid-flow resumption)
+    - Added DialogDescription for accessibility compliance
+    - Displays contract title instead of office name for clarity during signing
+
+**October 17, 2025:**
 - Implemented example Škoda Octavia contract and virtual office:
   - Added seed data initialization in MemStorage for consistent example display
   - Created complete vehicle contract with nested JSON structure (seller, buyer, vehicle details)

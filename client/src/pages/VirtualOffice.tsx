@@ -8,11 +8,12 @@ import BackButton from "@/components/BackButton";
 import { CompletedTransactionModal } from "@/components/CompletedTransactionModal";
 import { SelectContractDialog } from "@/components/SelectContractDialog";
 import { ContractDetailModal } from "@/components/ContractDetailModal";
+import { DigitalSigningDialog } from "@/components/DigitalSigningDialog";
 import { Plus, Check, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { VirtualOffice as VirtualOfficeType } from "@shared/schema";
+import type { VirtualOffice as VirtualOfficeType, Contract } from "@shared/schema";
 
 type ViewType = 'create' | 'list';
 
@@ -41,11 +42,18 @@ export default function VirtualOffice() {
   const [invitedEmail, setInvitedEmail] = useState('');
   const [showSelectContract, setShowSelectContract] = useState(false);
   const [viewContractId, setViewContractId] = useState<string | null>(null);
+  const [showSigning, setShowSigning] = useState(false);
 
   // Load office data if ID is present
   const { data: office, isLoading: isLoadingOffice } = useQuery<VirtualOfficeType>({
     queryKey: [`/api/virtual-offices/${officeId}`],
     enabled: !!officeId,
+  });
+
+  // Load contract data for the office (for signing dialog)
+  const { data: contract } = useQuery<Contract>({
+    queryKey: [`/api/contracts/${office?.contractId}`],
+    enabled: !!office?.contractId,
   });
 
   // Load all offices for the list view
@@ -106,6 +114,30 @@ export default function VirtualOffice() {
     },
   });
 
+  const completeSigningMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("PATCH", `/api/virtual-offices/${officeId}`, {
+        status: 'completed',
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${officeId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${ownerEmail}`] });
+      toast({
+        title: "Podpísané",
+        description: "Zmluva bola úspešne podpísaná",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Chyba",
+        description: "Nepodarilo sa dokončiť podpisovanie",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateOffice = () => {
     if (!officeName || !invitedEmail) {
       toast({
@@ -137,6 +169,10 @@ export default function VirtualOffice() {
 
   const handleContinueProcess = (processType: string) => {
     setLocation(`/digital-signing/${processType}`);
+  };
+
+  const handleCompleteSigning = () => {
+    completeSigningMutation.mutate();
   };
 
   // Show detail view if we have an office ID
@@ -306,6 +342,7 @@ export default function VirtualOffice() {
                     {office.status !== 'completed' && (
                       <Button 
                         className="w-full mt-4"
+                        onClick={() => setShowSigning(true)}
                         data-testid="button-start-signing"
                       >
                         Začať digitálne podpisovanie
@@ -329,6 +366,13 @@ export default function VirtualOffice() {
           open={viewContractId !== null}
           onOpenChange={(open) => !open && setViewContractId(null)}
           contractId={viewContractId}
+        />
+
+        <DigitalSigningDialog
+          open={showSigning}
+          onOpenChange={setShowSigning}
+          contractName={contract?.title || office?.name || ''}
+          onComplete={handleCompleteSigning}
         />
       </div>
     );
