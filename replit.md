@@ -7,6 +7,19 @@ Digital Notary is a government/legal application for digital identity verificati
 ## Recent Changes
 
 **October 17, 2025 - Latest:**
+- **Fixed contract creation bug**: Corrected cache invalidation after creating contracts
+  - Problem: New contracts weren't appearing in "Moje zmluvy" after creation
+  - Root cause: Cache key mismatch - invalidation used `['/api/contracts']` but MyContracts queried `['/api/contracts?ownerEmail=...']`
+  - Solution: Changed invalidation to use exact matching key and centralized query keys
+  - **Improvement**: Created `client/src/lib/queryKeys.ts` for centralized query key management
+    - Defined `QUERY_KEYS.contracts(ownerEmail)` for consistent key generation
+    - Added `OWNER_EMAIL` constant for single source of truth
+    - Updated MyContracts, CreateVehicleContract, and CreateRentalContract to use centralized keys
+  - Result: New contracts now immediately appear in list after redirect without manual refresh
+  - Tested successfully with both vehicle and rental contract creation workflows
+  - Key learning: TanStack Query requires exact key matching; centralized keys prevent future mismatches
+
+**October 17, 2025:**
 - Implemented digital signing workflow with EUDI authentication:
   - Created DigitalSigningDialog component with 4-step process (intro → auth → signing → complete)
   - Integrated EUDI authentication simulation (2-second delay for realism)

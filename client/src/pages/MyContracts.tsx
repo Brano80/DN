@@ -7,6 +7,7 @@ import { ContractDetailModal } from "@/components/ContractDetailModal";
 import { useQuery } from "@tanstack/react-query";
 import type { Contract } from "@shared/schema";
 import { FileText } from "lucide-react";
+import { QUERY_KEYS, OWNER_EMAIL } from "@/lib/queryKeys";
 
 export default function MyContracts() {
   const [, setLocation] = useLocation();
@@ -14,7 +15,7 @@ export default function MyContracts() {
 
   // Load contracts from database
   const { data: contracts, isLoading } = useQuery<Contract[]>({
-    queryKey: [`/api/contracts?ownerEmail=jan.novak@example.com`],
+    queryKey: QUERY_KEYS.contracts(OWNER_EMAIL),
   });
 
   const handleShowContract = (contractId: string) => {

@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import BackButton from "@/components/BackButton";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { QUERY_KEYS, OWNER_EMAIL } from "@/lib/queryKeys";
 import { Car } from "lucide-react";
 
 export default function CreateVehicleContract() {
@@ -72,10 +73,11 @@ export default function CreateVehicleContract() {
         title,
         type: 'vehicle',
         content: JSON.stringify(contractContent),
-        ownerEmail: 'jan.novak@example.com',
+        ownerEmail: OWNER_EMAIL,
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(OWNER_EMAIL) });
       toast({
         title: "Zmluva vytvorená",
         description: "Zmluva bola úspešne uložená do 'Moje zmluvy'",
