@@ -20,6 +20,7 @@ function Router() {
       <Route path="/my-contracts" component={MyContracts} />
       <Route path="/create-document" component={CreateDocument} />
       <Route path="/verify-document" component={VerifyDocument} />
+      <Route path="/virtual-office/:id" component={VirtualOffice} />
       <Route path="/virtual-office" component={VirtualOffice} />
       <Route path="/digital-signing/:type" component={DigitalSigning} />
       <Route component={NotFound} />

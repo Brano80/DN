@@ -6,31 +6,64 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
 import { CompletedTransactionModal } from "@/components/CompletedTransactionModal";
-import { Plus, CheckCircle, Copy } from "lucide-react";
+import { Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
-type ViewType = 'create' | 'list' | 'created';
+type ViewType = 'create' | 'list';
 
 export default function VirtualOffice() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [currentView, setCurrentView] = useState<ViewType>('create');
-  const [meetingLink] = useState('https://digital-notary.sk/meeting/ABC123XYZ');
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
+  const [officeName, setOfficeName] = useState('');
+  const [invitedEmail, setInvitedEmail] = useState('');
+
+  const createOfficeMutation = useMutation({
+    mutationFn: async (data: { name: string; invitedEmail: string }) => {
+      const response = await apiRequest("POST", "/api/virtual-offices", {
+        name: data.name,
+        ownerEmail: "jan.novak@example.com", // TODO: Get from auth
+        invitedEmail: data.invitedEmail,
+        status: "pending"
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Kancelária vytvorená",
+        description: `Email odoslaný na ${data.invitedEmail}`,
+      });
+      // Redirect to the new office
+      setLocation(`/virtual-office/${data.id}`);
+    },
+    onError: () => {
+      toast({
+        title: "Chyba",
+        description: "Nepodarilo sa vytvoriť kanceláriu",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleCreateOffice = () => {
-    setCurrentView('created');
+    if (!officeName || !invitedEmail) {
+      toast({
+        title: "Chyba",
+        description: "Vyplňte všetky povinné polia",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createOfficeMutation.mutate({
+      name: officeName,
+      invitedEmail: invitedEmail,
+    });
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(meetingLink);
-  };
-
-  const handleSendEmail = () => {
-    console.log('Sending email...');
-  };
-
-  const handleResetOfficeCreation = () => {
-    setCurrentView('create');
-  };
 
   const handleShowMyOffices = () => {
     setCurrentView('list');
@@ -57,15 +90,50 @@ export default function VirtualOffice() {
 
           {/* Create Office View */}
           {currentView === 'create' && (
-            <Card className="p-6 text-center">
+            <Card className="p-6">
               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Plus className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-medium mb-2">Vytvorte virtuálnu kanceláriu</h3>
-              <p className="text-muted-foreground mb-6">Vygenerujte link pre stretnutie s druhou stranou</p>
+              <h3 className="text-lg font-medium mb-2 text-center">Vytvorte virtuálnu kanceláriu</h3>
+              <p className="text-muted-foreground mb-6 text-center">Zadajte detaily pre novú virtuálnu kanceláriu</p>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <Label htmlFor="office-name" className="block text-sm font-medium mb-2">
+                    Názov virtuálnej kancelárie
+                  </Label>
+                  <Input
+                    id="office-name"
+                    type="text"
+                    placeholder="napr. Predaj vozidla - Škoda Octavia"
+                    value={officeName}
+                    onChange={(e) => setOfficeName(e.target.value)}
+                    data-testid="input-office-name"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="invited-email" className="block text-sm font-medium mb-2">
+                    Email adresa druhej strany
+                  </Label>
+                  <Input
+                    id="invited-email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={invitedEmail}
+                    onChange={(e) => setInvitedEmail(e.target.value)}
+                    data-testid="input-invited-email"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button onClick={handleCreateOffice} data-testid="button-create-office">
-                  Vytvoriť virtuálnu kanceláriu
+                <Button 
+                  onClick={handleCreateOffice} 
+                  disabled={createOfficeMutation.isPending}
+                  data-testid="button-create-office"
+                >
+                  {createOfficeMutation.isPending ? "Vytvára sa..." : "Vytvoriť novú kanceláriu"}
                 </Button>
                 <Button variant="outline" onClick={handleShowMyOffices} data-testid="button-my-offices">
                   Moje virtuálne kancelárie
@@ -162,53 +230,6 @@ export default function VirtualOffice() {
             </Card>
           )}
 
-          {/* Office Created View */}
-          {currentView === 'created' && (
-            <Card className="p-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-chart-2/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="h-8 w-8 text-chart-2" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">Virtuálna kancelária vytvorená</h3>
-                <p className="text-muted-foreground mb-4">Pošlite tento link druhej strane</p>
-              </div>
-
-              <div className="bg-muted p-4 rounded-lg mb-4">
-                <Label className="block text-sm font-medium mb-2">Link na stretnutie:</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="text"
-                    readOnly
-                    value={meetingLink}
-                    className="flex-1"
-                    data-testid="input-meeting-link"
-                  />
-                  <Button variant="outline" onClick={handleCopyLink} data-testid="button-copy-link">
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="bg-muted p-4 rounded-lg mb-6">
-                <Label className="block text-sm font-medium mb-2">Email adresa druhej strany:</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="email"
-                    placeholder="email@example.com"
-                    className="flex-1"
-                    data-testid="input-recipient-email"
-                  />
-                  <Button onClick={handleSendEmail} data-testid="button-send-email">
-                    Poslať
-                  </Button>
-                </div>
-              </div>
-
-              <Button variant="outline" onClick={handleResetOfficeCreation} className="w-full" data-testid="button-new-office">
-                Vytvoriť novú kanceláriu
-              </Button>
-            </Card>
-          )}
         </Card>
       </div>
 
