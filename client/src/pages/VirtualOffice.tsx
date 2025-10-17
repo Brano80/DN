@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
 import { CompletedTransactionModal } from "@/components/CompletedTransactionModal";
 import { SelectContractDialog } from "@/components/SelectContractDialog";
-import { Plus } from "lucide-react";
+import { Plus, Check, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -228,6 +228,80 @@ export default function VirtualOffice() {
                   </div>
                 )}
               </div>
+
+              {/* Workflow Progress */}
+              {office.contractId && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="font-medium mb-4">Priebeh procesu</h3>
+                  <div className="space-y-3">
+                    {/* Step 1: Contract attached */}
+                    <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg" data-testid="workflow-step-contract">
+                      <div className="w-8 h-8 bg-chart-2/30 rounded-full flex items-center justify-center">
+                        <Check className="h-4 w-4 text-chart-2" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">Zmluva pripojená</p>
+                        <p className="text-sm text-muted-foreground">Zmluva bola úspešne pripojená k virtuálnej kancelárii</p>
+                      </div>
+                      <span className="px-3 py-1 bg-chart-2/20 text-chart-2 rounded-full text-sm">Dokončené</span>
+                    </div>
+
+                    {/* Step 2: Waiting for signatures */}
+                    <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg" data-testid="workflow-step-signing">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        office.status === 'completed' 
+                          ? 'bg-chart-2/30' 
+                          : 'bg-yellow-100 dark:bg-yellow-900'
+                      }`}>
+                        {office.status === 'completed' ? (
+                          <Check className="h-4 w-4 text-chart-2" />
+                        ) : (
+                          <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-200" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">Digitálne podpísanie</p>
+                        <p className="text-sm text-muted-foreground">
+                          {office.status === 'completed' 
+                            ? 'Zmluva bola podpísaná oboma stranami' 
+                            : 'Čaká na podpis oboch strán'}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        office.status === 'completed'
+                          ? 'bg-chart-2/20 text-chart-2'
+                          : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                      }`}>
+                        {office.status === 'completed' ? 'Dokončené' : 'Čaká'}
+                      </span>
+                    </div>
+
+                    {/* Step 3: Process completed (only show if completed) */}
+                    {office.status === 'completed' && (
+                      <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg" data-testid="workflow-step-completed">
+                        <div className="w-8 h-8 bg-chart-2/30 rounded-full flex items-center justify-center">
+                          <Check className="h-4 w-4 text-chart-2" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">Proces dokončený</p>
+                          <p className="text-sm text-muted-foreground">Zmluva je platná a proces je dokončený</p>
+                        </div>
+                        <span className="px-3 py-1 bg-chart-2/20 text-chart-2 rounded-full text-sm">Dokončené</span>
+                      </div>
+                    )}
+
+                    {/* Action button */}
+                    {office.status !== 'completed' && (
+                      <Button 
+                        className="w-full mt-4"
+                        data-testid="button-start-signing"
+                      >
+                        Začať digitálne podpisovanie
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </Card>
           </Card>
         </div>
