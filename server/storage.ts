@@ -40,6 +40,58 @@ export class MemStorage implements IStorage {
     this.virtualOffices = new Map();
   }
 
+  seedExampleData() {
+    console.log('[SEED] Seeding example data for Škoda Octavia...');
+    // Create example contract for Škoda Octavia
+    const contractId = "example-skoda-octavia";
+    const exampleContract: Contract = {
+      id: contractId,
+      title: "Predaj vozidla - Škoda Octavia",
+      type: "vehicle",
+      ownerEmail: "jan.novak@example.com",
+      content: JSON.stringify({
+        seller: {
+          name: "Ján Novák",
+          birthNumber: "750101/1234",
+          address: "Hlavná 15, Bratislava"
+        },
+        buyer: {
+          name: "Tomáš Horváth",
+          birthNumber: "850202/5678",
+          address: "Športová 8, Košice"
+        },
+        vehicle: {
+          brand: "Škoda",
+          model: "Octavia",
+          year: "2019",
+          vin: "TMBJF7NE5K0123456",
+          licensePlate: "BA123AB",
+          mileage: "85000"
+        },
+        price: "18 500",
+        paymentMethod: "bankový prevod",
+        signingPlace: "Bratislava",
+        signingDate: "22.12.2024"
+      }),
+      createdAt: new Date("2024-12-20")
+    };
+    this.contracts.set(contractId, exampleContract);
+
+    // Create example virtual office for Škoda Octavia
+    const officeId = "example-office-skoda-octavia";
+    const exampleOffice: VirtualOffice = {
+      id: officeId,
+      name: "Predaj vozidla - Škoda Octavia",
+      ownerEmail: "jan.novak@example.com",
+      invitedEmail: "tomas.horvath@example.com",
+      status: "completed",
+      contractId: contractId,
+      processType: null,
+      createdAt: new Date("2024-12-22")
+    };
+    this.virtualOffices.set(officeId, exampleOffice);
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
@@ -106,6 +158,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const office: VirtualOffice = { 
       ...insertOffice,
+      status: insertOffice.status ?? 'active',
       contractId: insertOffice.contractId ?? null,
       processType: insertOffice.processType ?? null,
       id,

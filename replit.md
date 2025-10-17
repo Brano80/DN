@@ -6,6 +6,17 @@ Digital Notary is a government/legal application for digital identity verificati
 
 ## Recent Changes
 
+**October 17, 2025 - Latest:**
+- Implemented example Škoda Octavia contract and virtual office:
+  - Added seed data initialization in MemStorage for consistent example display
+  - Created complete vehicle contract with nested JSON structure (seller, buyer, vehicle details)
+  - Created matching virtual office with "completed" status
+  - Applied special green design (bg-green-50) for Škoda example in virtual office list
+  - Added ContractDetailModal integration in virtual office detail view
+  - "Zobraziť zmluvu" button now opens contract details from virtual office
+  - All data properly displays: seller (Ján Novák), buyer (Tomáš Horváth), vehicle (Škoda Octavia 2019, 85,000 km, €18,500)
+  - Successfully tested end-to-end workflow with example data persisting across server restarts
+
 **October 17, 2025:**
 - Refocused application to 2 primary contract workflows: Vehicle Purchase Contracts and Rental Contracts
 - Updated CreateDocument page to display only 2 active templates (vehicle and rental) with dedicated form pages

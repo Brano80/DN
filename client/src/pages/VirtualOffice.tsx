@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
 import { CompletedTransactionModal } from "@/components/CompletedTransactionModal";
 import { SelectContractDialog } from "@/components/SelectContractDialog";
+import { ContractDetailModal } from "@/components/ContractDetailModal";
 import { Plus, Check, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -39,6 +40,7 @@ export default function VirtualOffice() {
   const [officeName, setOfficeName] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
   const [showSelectContract, setShowSelectContract] = useState(false);
+  const [viewContractId, setViewContractId] = useState<string | null>(null);
 
   // Load office data if ID is present
   const { data: office, isLoading: isLoadingOffice } = useQuery<VirtualOfficeType>({
@@ -229,6 +231,7 @@ export default function VirtualOffice() {
                       <Button
                         variant="outline"
                         className="w-full"
+                        onClick={() => setViewContractId(office.contractId)}
                         data-testid="button-view-contract"
                       >
                         Zobraziť zmluvu
@@ -321,6 +324,12 @@ export default function VirtualOffice() {
           onSelectContract={(contractId) => attachContractMutation.mutate(contractId)}
           ownerEmail="jan.novak@example.com"
         />
+        
+        <ContractDetailModal
+          open={viewContractId !== null}
+          onOpenChange={(open) => !open && setViewContractId(null)}
+          contractId={viewContractId}
+        />
       </div>
     );
   }
@@ -411,11 +420,16 @@ export default function VirtualOffice() {
                       ? new Date(office.createdAt).toLocaleDateString('sk-SK')
                       : 'Neznámy dátum';
                     
+                    // Special handling for Škoda Octavia example - use original design
+                    const isSkodaExample = office.name === 'Predaj vozidla - Škoda Octavia';
+                    
                     return (
                       <Card 
                         key={office.id} 
                         className={`p-4 ${
-                          office.status === 'completed' 
+                          isSkodaExample
+                            ? 'bg-green-50 dark:bg-green-950/30'
+                            : office.status === 'completed' 
                             ? 'bg-muted/50' 
                             : office.status === 'active'
                             ? 'bg-blue-50 dark:bg-blue-950/30'
@@ -427,28 +441,43 @@ export default function VirtualOffice() {
                           <div>
                             <h4 className="font-medium" data-testid={`text-office-name-${office.id}`}>{office.name}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Vytvorené: {createdDate}
+                              {isSkodaExample ? 'Vytvorené: 22.12.2024 | Aktívne' : `Vytvorené: ${createdDate}`}
                             </p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-sm ${statusDisplay.className}`}>
-                            {statusDisplay.text}
+                          <span className={`px-3 py-1 rounded-full text-sm ${
+                            isSkodaExample 
+                              ? 'bg-chart-2/20 text-chart-2'
+                              : statusDisplay.className
+                          }`}>
+                            {isSkodaExample ? 'Dokončené' : statusDisplay.text}
                           </span>
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
-                          <p><strong>Vlastník:</strong> {office.ownerEmail}</p>
-                          <p><strong>Pozvaná strana:</strong> {office.invitedEmail}</p>
-                          {office.contractId && (
-                            <p><strong>Zmluva:</strong> Pripojená (ID: {office.contractId.substring(0, 8)}...)</p>
+                          {isSkodaExample ? (
+                            <>
+                              <p><strong>Strany:</strong> Ján Novák → Tomáš Horváth</p>
+                              <p><strong>Vozidlo:</strong> Škoda Octavia 2019, 85 000 km</p>
+                              <p><strong>Cena:</strong> 18 500 €</p>
+                              <p><strong>Stav:</strong> Prevod dokončený, dokumenty odoslané</p>
+                            </>
+                          ) : (
+                            <>
+                              <p><strong>Vlastník:</strong> {office.ownerEmail}</p>
+                              <p><strong>Pozvaná strana:</strong> {office.invitedEmail}</p>
+                              {office.contractId && (
+                                <p><strong>Zmluva:</strong> Pripojená (ID: {office.contractId.substring(0, 8)}...)</p>
+                              )}
+                            </>
                           )}
                         </div>
                         <Button 
-                          variant={office.status === 'completed' ? 'outline' : 'default'} 
+                          variant={office.status === 'completed' || isSkodaExample ? 'outline' : 'default'} 
                           size="sm" 
                           className="mt-3" 
                           onClick={() => setLocation(`/virtual-office/${office.id}`)}
                           data-testid={`button-open-office-${office.id}`}
                         >
-                          {office.status === 'completed' ? 'Otvoriť' : 'Pokračovať v procese'}
+                          {office.status === 'completed' || isSkodaExample ? 'Otvoriť' : 'Pokračovať v procese'}
                         </Button>
                       </Card>
                     );
