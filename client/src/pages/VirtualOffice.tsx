@@ -207,152 +207,219 @@ export default function VirtualOffice() {
       );
     }
 
-    // Office detail view
+    // Office detail view - DN v51 style
+    const isSkodaOffice = office.name === 'Predaj vozidla - Škoda Octavia';
+    const isCompleted = office.status === 'completed';
+    
     return (
-      <div className="min-h-screen bg-background p-4">
+      <div className="min-h-screen bg-gray-100 dark:bg-background p-4">
         <div className="max-w-4xl mx-auto">
-          <Card className="p-8">
-            <BackButton onClick={() => setLocation('/virtual-office')} />
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-2" data-testid="text-office-name">{office.name}</h2>
-              <p className="text-muted-foreground">Virtuálna kancelária</p>
+          {/* DN v51 Header */}
+          <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border">
+            <div className="p-6 border-b border-gray-200 dark:border-border flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200" data-testid="text-office-name">
+                {office.name}
+              </h2>
+              <button 
+                onClick={() => setLocation('/virtual-office')}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <Card className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Vlastník</Label>
-                  <p className="mt-1" data-testid="text-owner-email">{office.ownerEmail}</p>
+            {/* Success Banner - DN v51 style */}
+            {isCompleted && (
+              <div className="mx-6 mt-6 p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center">
+                    <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">Transakcia dokončená</h3>
+                    <p className="text-green-700 dark:text-green-300">Prevod vozidla bol úspešne dokončený 12.12.2024</p>
+                  </div>
                 </div>
+              </div>
+            )}
+
+            {/* Main Content - DN v51 2-column layout */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Left Column - Details */}
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Pozvaná strana</Label>
-                  <p className="mt-1" data-testid="text-invited-email">{office.invitedEmail}</p>
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">
+                    {isSkodaOffice ? 'Detaily vozidla' : 'Detaily kancelárie'}
+                  </h3>
+                  <div className="space-y-3">
+                    {isSkodaOffice ? (
+                      <>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Značka a model</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200">Škoda Octavia</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Rok výroby</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200">2019</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Najazdené km</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200">85 000 km</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Farba</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200">Čierna metalíza</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Vlastník</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200" data-testid="text-owner-email">{office.ownerEmail}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Stav</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200" data-testid="text-office-status">
+                            <span className={`px-3 py-1 rounded-full text-sm ${getStatusDisplay(office.status).className}`}>
+                              {getStatusDisplay(office.status).text}
+                            </span>
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
+
+                {/* Right Column - Parties */}
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Stav</Label>
-                  <p className="mt-1" data-testid="text-office-status">
-                    <span className={`px-3 py-1 rounded-full text-sm ${getStatusDisplay(office.status).className}`}>
-                      {getStatusDisplay(office.status).text}
-                    </span>
-                  </p>
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">
+                    {isSkodaOffice ? 'Strany transakcie' : 'Účastníci'}
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        {isSkodaOffice ? 'Predávajúci' : 'Pozvaná strana'}
+                      </p>
+                      {isSkodaOffice ? (
+                        <div className="space-y-1">
+                          <p className="font-semibold text-gray-800 dark:text-gray-200">Ján Novák</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">RČ: 801201/1234</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Email: jan.novak@example.com</p>
+                        </div>
+                      ) : (
+                        <p className="font-semibold text-gray-800 dark:text-gray-200" data-testid="text-invited-email">{office.invitedEmail}</p>
+                      )}
+                    </div>
+                    {isSkodaOffice && (
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Kupujúci</p>
+                        <div className="space-y-1">
+                          <p className="font-semibold text-gray-800 dark:text-gray-200">Tomáš Horváth</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">RČ: 850615/5678</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Email: tomas.horvath@example.com</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="font-medium mb-4">Zmluva</h3>
-                {!office.contractId ? (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setShowSelectContract(true)}
-                    data-testid="button-upload-contract"
-                  >
-                    Nahrať zmluvu z "Moje zmluvy"
-                  </Button>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="p-3 bg-muted rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Pripojená zmluva:</p>
-                      <p className="font-medium" data-testid="text-attached-contract-id">ID: {office.contractId}</p>
+              {/* Financial Details - DN v51 style */}
+              {isSkodaOffice && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h3 className="text-lg font-medium text-blue-900 dark:text-blue-200 mb-3">Finančné detaily</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">Kúpna cena:</p>
+                      <p className="text-lg font-bold text-blue-900 dark:text-blue-100">18 500 €</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setShowSelectContract(true)}
-                        data-testid="button-change-contract"
-                      >
-                        Zmeniť zmluvu
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setViewContractId(office.contractId)}
-                        data-testid="button-view-contract"
-                      >
-                        Zobraziť zmluvu
-                      </Button>
+                    <div>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">Poplatok DN:</p>
+                      <p className="text-lg font-bold text-blue-900 dark:text-blue-100">65 €</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">Celkom:</p>
+                      <p className="text-lg font-bold text-blue-900 dark:text-blue-100">18 565 €</p>
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Workflow Progress */}
-              {office.contractId && (
-                <div className="mt-6 pt-6 border-t">
-                  <h3 className="font-medium mb-4">Priebeh procesu</h3>
-                  <div className="space-y-3">
-                    {/* Step 1: Contract attached */}
-                    <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg" data-testid="workflow-step-contract">
-                      <div className="w-8 h-8 bg-chart-2/30 rounded-full flex items-center justify-center">
-                        <Check className="h-4 w-4 text-chart-2" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">Zmluva pripojená</p>
-                        <p className="text-sm text-muted-foreground">Zmluva bola úspešne pripojená k virtuálnej kancelárii</p>
-                      </div>
-                      <span className="px-3 py-1 bg-chart-2/20 text-chart-2 rounded-full text-sm">Dokončené</span>
-                    </div>
-
-                    {/* Step 2: Waiting for signatures */}
-                    <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg" data-testid="workflow-step-signing">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        office.status === 'completed' 
-                          ? 'bg-chart-2/30' 
-                          : 'bg-yellow-100 dark:bg-yellow-900'
-                      }`}>
-                        {office.status === 'completed' ? (
-                          <Check className="h-4 w-4 text-chart-2" />
-                        ) : (
-                          <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-200" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">Digitálne podpísanie</p>
-                        <p className="text-sm text-muted-foreground">
-                          {office.status === 'completed' 
-                            ? 'Zmluva bola podpísaná oboma stranami' 
-                            : 'Čaká na podpis oboch strán'}
-                        </p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        office.status === 'completed'
-                          ? 'bg-chart-2/20 text-chart-2'
-                          : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                      }`}>
-                        {office.status === 'completed' ? 'Dokončené' : 'Čaká'}
-                      </span>
-                    </div>
-
-                    {/* Step 3: Process completed (only show if completed) */}
-                    {office.status === 'completed' && (
-                      <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg" data-testid="workflow-step-completed">
-                        <div className="w-8 h-8 bg-chart-2/30 rounded-full flex items-center justify-center">
-                          <Check className="h-4 w-4 text-chart-2" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">Proces dokončený</p>
-                          <p className="text-sm text-muted-foreground">Zmluva je platná a proces je dokončený</p>
-                        </div>
-                        <span className="px-3 py-1 bg-chart-2/20 text-chart-2 rounded-full text-sm">Dokončené</span>
-                      </div>
-                    )}
-
-                    {/* Action button */}
-                    {office.status !== 'completed' && (
-                      <Button 
-                        className="w-full mt-4"
-                        onClick={() => setShowSigning(true)}
-                        data-testid="button-start-signing"
-                      >
-                        Začať digitálne podpisovanie
-                      </Button>
-                    )}
+                  <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                    <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Platba dokončená:</strong> 11.12.2024 09:15</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Spôsob platby:</strong> Bankovým prevodom cez Escrow</p>
                   </div>
                 </div>
               )}
-            </Card>
-          </Card>
+
+              {/* Timeline - DN v51 style */}
+              {isSkodaOffice && isCompleted && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Časová os transakcie</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">Zmluva podpísaná</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">10.12.2024 14:30</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">Platba potvrdená</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">11.12.2024 09:15</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">Podanie na úrad</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">11.12.2024 11:45</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">Registrácia dokončená</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">12.12.2024 10:20</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">Dokumenty archivované</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">12.12.2024 15:30</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-border">
+                <button 
+                  onClick={() => setLocation('/virtual-office')}
+                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Zavrieť
+                </button>
+                {!isCompleted && (
+                  <button 
+                    onClick={() => setShowSigning(true)}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    data-testid="button-start-signing"
+                  >
+                    Pokračovať v procese
+                  </button>
+                )}
+                {isCompleted && (
+                  <button className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    Tlačiť súhrn
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         <SelectContractDialog
