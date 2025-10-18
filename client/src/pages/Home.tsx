@@ -22,6 +22,12 @@ export default function Home() {
     }, 500);
   };
 
+  const handleLogoff = () => {
+    setIsAuthenticated(false);
+    localStorage.clear();
+    setLocation('/');
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-4xl space-y-8">
@@ -44,6 +50,7 @@ export default function Home() {
               onMyContracts={() => setLocation('/my-contracts')}
               onMyDocuments={() => setLocation('/my-documents')}
               onVirtualOffice={() => setLocation('/virtual-office')}
+              onLogoff={handleLogoff}
             />
           )}
         </main>

@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Shield, FileCheck, FolderOpen, Building } from "lucide-react";
+import { FileText, Shield, FileCheck, FolderOpen, Building, LogOut } from "lucide-react";
 
 interface MainMenuProps {
   userName: string;
@@ -9,6 +9,7 @@ interface MainMenuProps {
   onMyContracts: () => void;
   onMyDocuments: () => void;
   onVirtualOffice: () => void;
+  onLogoff: () => void;
 }
 
 export default function MainMenu({
@@ -18,6 +19,7 @@ export default function MainMenu({
   onMyContracts,
   onMyDocuments,
   onVirtualOffice,
+  onLogoff,
 }: MainMenuProps) {
   return (
     <Card className="p-8">
@@ -71,6 +73,17 @@ export default function MainMenu({
       </div>
       <div className="mt-6 text-sm text-center text-muted-foreground">
         Prihlásený ako: <span className="font-medium text-foreground">{userName}</span>
+      </div>
+      <div className="mt-6 border-t pt-6">
+        <Button
+          variant="outline"
+          className="w-full justify-center gap-3"
+          onClick={onLogoff}
+          data-testid="button-logoff"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Odhlásiť sa</span>
+        </Button>
       </div>
     </Card>
   );
