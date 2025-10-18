@@ -560,6 +560,18 @@ export default function VirtualOffice() {
                   <p className="text-center text-green-700 dark:text-green-300 mb-4 font-semibold">
                     Obe strany podpísali zmluvu!
                   </p>
+                  <button
+                    onClick={() => {
+                      toast({
+                        title: "Pokračovanie na platbu",
+                        description: "Pripravuje sa platobný proces...",
+                      });
+                    }}
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+                    data-testid="button-continue-payment"
+                  >
+                    Pokračovať na platbu
+                  </button>
                 </div>
               )}
             </div>
