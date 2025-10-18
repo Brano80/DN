@@ -43,6 +43,7 @@ export default function VirtualOffice() {
   const [showSelectContract, setShowSelectContract] = useState(false);
   const [viewContractId, setViewContractId] = useState<string | null>(null);
   const [showSigning, setShowSigning] = useState(false);
+  const [showWorkflowProgress, setShowWorkflowProgress] = useState(false);
 
   // Load office data if ID is present
   const { data: office, isLoading: isLoadingOffice } = useQuery<VirtualOfficeType>({
@@ -211,6 +212,222 @@ export default function VirtualOffice() {
     const isSkodaOffice = office.name === 'Predaj vozidla - Škoda Octavia';
     const isCompleted = office.status === 'completed';
     
+    // Workflow Progress View
+    if (showWorkflowProgress) {
+      return (
+        <div className="min-h-screen bg-gray-100 dark:bg-background p-4">
+          <div className="max-w-5xl mx-auto">
+            {/* Back Navigation */}
+            <button 
+              onClick={() => setShowWorkflowProgress(false)}
+              className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-4"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              </svg>
+              <span>Späť na virtuálnu kanceláriu</span>
+            </button>
+
+            <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-6">
+              {/* Title */}
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6">
+                {office.name}
+              </h1>
+
+              {/* Progress Steps */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Priebeh procesu</h2>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Krok 1 z 7</span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="flex items-center space-x-2 mb-8">
+                  {/* Step 1 - Active */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                      1
+                    </div>
+                    <div className="h-1 w-full bg-blue-600"></div>
+                    <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
+                  </div>
+
+                  {/* Step 2 - Inactive */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                      2
+                    </div>
+                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Platba</p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                      3
+                    </div>
+                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Podanie na<br/>úrad</p>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                      4
+                    </div>
+                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Registrácia</p>
+                  </div>
+
+                  {/* Step 5 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                      5
+                    </div>
+                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Notárska<br/>zápisnica</p>
+                  </div>
+
+                  {/* Step 6 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                      6
+                    </div>
+                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
+                  </div>
+
+                  {/* Step 7 */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                      7
+                    </div>
+                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content Card */}
+              <div className="bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
+                  Stav transakcie: {isSkodaOffice ? 'Predaj motorového vozidla' : 'Predaj vozidla'}
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column - Participants */}
+                  <div className="space-y-4">
+                    {/* Seller */}
+                    <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200">Ján Novák</h4>
+                            <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full font-medium">
+                              Podpísané
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">(Predávajúci)</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                            Podpísané: 20.12.2024 14:30
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Buyer */}
+                    <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200">Tomáš Horváth</h4>
+                            <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs rounded-full font-medium">
+                              Čaká
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">(Kupujúci)</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                            Čaká na podpis
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Vehicle Details */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
+                    <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily vozidla</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Vozidlo:</strong> Škoda Octavia Combi</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Rok výroby:</strong> 2019</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>VIN:</strong> TMBJF7NE5K0123456</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>EČV:</strong> BA456CD</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Najazdené km:</strong> 85 000 km</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Kúpna cena:</strong> 18 500 €</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setViewContractId(office.contractId || null)}
+                      className="w-full mt-4 px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors font-medium"
+                      data-testid="button-view-contract"
+                    >
+                      Náhľad zmluvy
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Area */}
+              <div className="mt-8 bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-6">
+                <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
+                  Čakáme na podpis kupujúceho...
+                </p>
+                <button
+                  onClick={() => setShowSigning(true)}
+                  className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
+                  data-testid="button-simulate-buyer-sign"
+                >
+                  Simulovať podpis kupujúceho
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ContractDetailModal
+            open={viewContractId !== null}
+            onOpenChange={(open) => !open && setViewContractId(null)}
+            contractId={viewContractId}
+          />
+
+          <DigitalSigningDialog
+            open={showSigning}
+            onOpenChange={setShowSigning}
+            contractName={contract?.title || office?.name || ''}
+            onComplete={handleCompleteSigning}
+          />
+        </div>
+      );
+    }
+    
+    // Detail View
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-background p-4">
         <div className="max-w-4xl mx-auto">
@@ -405,7 +622,7 @@ export default function VirtualOffice() {
                 </button>
                 {!isCompleted && (
                   <button 
-                    onClick={() => setShowSigning(true)}
+                    onClick={() => setShowWorkflowProgress(true)}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     data-testid="button-start-signing"
                   >
