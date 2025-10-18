@@ -101,6 +101,7 @@ export default function VirtualOffice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${officeId}`] });
+      setShowSelectContract(false);
       toast({
         title: "Zmluva pripojená",
         description: "Zmluva bola úspešne pripojená k virtuálnej kancelárii",
@@ -360,37 +361,130 @@ export default function VirtualOffice() {
                     </div>
                   </div>
 
-                  {/* Right Column - Vehicle Details */}
+                  {/* Right Column - Contract Details */}
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-                    <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily vozidla</h4>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Vozidlo:</strong> Škoda Octavia Combi</p>
+                    {!office.contractId ? (
+                      <div className="text-center py-8">
+                        <p className="text-blue-700 dark:text-blue-300 mb-4">Zatiaľ nebola pripojená žiadna zmluva</p>
+                        <button
+                          onClick={() => setShowSelectContract(true)}
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                          data-testid="button-upload-contract-workflow"
+                        >
+                          Nahrať zmluvu
+                        </button>
                       </div>
-                      <div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Rok výroby:</strong> 2019</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>VIN:</strong> TMBJF7NE5K0123456</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>EČV:</strong> BA456CD</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Najazdené km:</strong> 85 000 km</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300"><strong>Kúpna cena:</strong> 18 500 €</p>
-                      </div>
-                    </div>
+                    ) : contract ? (
+                      <>
+                        {contract.type === 'vehicle' ? (() => {
+                          try {
+                            const content = JSON.parse(contract.content);
+                            return (
+                              <>
+                                <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily vozidla</h4>
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Vozidlo:</strong> {content.vehicle?.brand} {content.vehicle?.model}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Rok výroby:</strong> {content.vehicle?.year}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>VIN:</strong> {content.vehicle?.vin}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>EČV:</strong> {content.vehicle?.licensePlate}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Najazdené km:</strong> {content.vehicle?.mileage} km
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Kúpna cena:</strong> {content.price} €
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          } catch (e) {
+                            return (
+                              <div className="text-center py-8">
+                                <p className="text-red-700 dark:text-red-300">Chyba pri načítaní detailov zmluvy</p>
+                              </div>
+                            );
+                          }
+                        })() : contract.type === 'rental' ? (() => {
+                          try {
+                            const content = JSON.parse(contract.content);
+                            return (
+                              <>
+                                <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily prenájmu</h4>
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Adresa:</strong> {content.property?.address}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Typ nehnuteľnosti:</strong> {content.property?.type}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Výmera:</strong> {content.property?.floorArea} m²
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Počet izieb:</strong> {content.property?.rooms}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Mesačné nájomné:</strong> {content.rent} €
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Dátum začiatku nájmu:</strong> {content.startDate}
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          } catch (e) {
+                            return (
+                              <div className="text-center py-8">
+                                <p className="text-red-700 dark:text-red-300">Chyba pri načítaní detailov zmluvy</p>
+                              </div>
+                            );
+                          }
+                        })() : null}
 
-                    <button
-                      onClick={() => setViewContractId(office.contractId || null)}
-                      className="w-full mt-4 px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors font-medium"
-                      data-testid="button-view-contract"
-                    >
-                      Náhľad zmluvy
-                    </button>
+                        <button
+                          onClick={() => setViewContractId(office.contractId)}
+                          className="w-full mt-4 px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors font-medium"
+                          data-testid="button-view-contract"
+                        >
+                          Náhľad zmluvy
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-blue-700 dark:text-blue-300">Načítava sa zmluva...</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -410,6 +504,13 @@ export default function VirtualOffice() {
               </div>
             </div>
           </div>
+
+          <SelectContractDialog
+            open={showSelectContract}
+            onOpenChange={setShowSelectContract}
+            onSelectContract={(contractId) => attachContractMutation.mutate(contractId)}
+            ownerEmail="jan.novak@example.com"
+          />
 
           <ContractDetailModal
             open={viewContractId !== null}
