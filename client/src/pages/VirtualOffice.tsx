@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,8 @@ export default function VirtualOffice() {
   const [viewContractId, setViewContractId] = useState<string | null>(null);
   const [showSigning, setShowSigning] = useState(false);
   const [showWorkflowProgress, setShowWorkflowProgress] = useState(false);
+  const [sellerSigned, setSellerSigned] = useState(false);
+  const [buyerSigned, setBuyerSigned] = useState(false);
 
   // Load office data if ID is present
   const { data: office, isLoading: isLoadingOffice } = useQuery<VirtualOfficeType>({
@@ -63,6 +65,17 @@ export default function VirtualOffice() {
     queryKey: [`/api/virtual-offices?ownerEmail=${ownerEmail}`],
     enabled: currentView === 'list',
   });
+
+  // Initialize signing state based on office status when office changes
+  useEffect(() => {
+    if (office?.status === 'completed') {
+      setSellerSigned(true);
+      setBuyerSigned(true);
+    } else {
+      setSellerSigned(false);
+      setBuyerSigned(false);
+    }
+  }, [officeId, office?.status]);
 
   const createOfficeMutation = useMutation({
     mutationFn: async (data: { name: string; invitedEmail: string }) => {
@@ -174,7 +187,22 @@ export default function VirtualOffice() {
   };
 
   const handleCompleteSigning = () => {
-    completeSigningMutation.mutate();
+    setShowSigning(false);
+    if (!sellerSigned) {
+      setSellerSigned(true);
+      toast({
+        title: "Podpis predávajúceho",
+        description: "Predávajúci úspešne podpísal zmluvu",
+      });
+    } else if (!buyerSigned) {
+      setBuyerSigned(true);
+      toast({
+        title: "Podpis kupujúceho",
+        description: "Kupujúci úspešne podpísal zmluvu",
+      });
+      // After both signed, mark office as completed
+      completeSigningMutation.mutate();
+    }
   };
 
   // Show detail view if we have an office ID
@@ -321,19 +349,31 @@ export default function VirtualOffice() {
                     {/* Seller */}
                     <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-4">
                       <div className="flex items-start space-x-3">
-                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          sellerSigned 
+                            ? 'bg-green-100 dark:bg-green-900/30' 
+                            : 'bg-yellow-100 dark:bg-yellow-900/30'
+                        }`}>
+                          {sellerSigned ? (
+                            <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          ) : (
+                            <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                          )}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <h4 className="font-semibold text-gray-800 dark:text-gray-200">Ján Novák</h4>
-                            <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full font-medium">
-                              Podpísané
+                            <span className={`px-3 py-1 text-xs rounded-full font-medium ${
+                              sellerSigned
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                            }`}>
+                              {sellerSigned ? 'Podpísané' : 'Čaká'}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">(Predávajúci)</p>
                           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                            Podpísané: 20.12.2024 14:30
+                            {sellerSigned ? 'Podpísané: 20.12.2024 14:30' : 'Čaká na podpis'}
                           </p>
                         </div>
                       </div>
@@ -342,19 +382,31 @@ export default function VirtualOffice() {
                     {/* Buyer */}
                     <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-4">
                       <div className="flex items-start space-x-3">
-                        <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          buyerSigned 
+                            ? 'bg-green-100 dark:bg-green-900/30' 
+                            : 'bg-yellow-100 dark:bg-yellow-900/30'
+                        }`}>
+                          {buyerSigned ? (
+                            <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          ) : (
+                            <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                          )}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <h4 className="font-semibold text-gray-800 dark:text-gray-200">Tomáš Horváth</h4>
-                            <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs rounded-full font-medium">
-                              Čaká
+                            <span className={`px-3 py-1 text-xs rounded-full font-medium ${
+                              buyerSigned
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                            }`}>
+                              {buyerSigned ? 'Podpísané' : 'Čaká'}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">(Kupujúci)</p>
                           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                            Čaká na podpis
+                            {buyerSigned ? 'Podpísané: 20.12.2024 15:15' : 'Čaká na podpis'}
                           </p>
                         </div>
                       </div>
@@ -490,18 +542,26 @@ export default function VirtualOffice() {
               </div>
 
               {/* Action Area */}
-              <div className="mt-8 bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-6">
-                <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
-                  Čakáme na podpis kupujúceho...
-                </p>
-                <button
-                  onClick={() => setShowSigning(true)}
-                  className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
-                  data-testid="button-simulate-buyer-sign"
-                >
-                  Simulovať podpis kupujúceho
-                </button>
-              </div>
+              {!sellerSigned || !buyerSigned ? (
+                <div className="mt-8 bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-6">
+                  <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
+                    {!sellerSigned ? 'Čakáme na podpis predávajúceho...' : 'Čakáme na podpis kupujúceho...'}
+                  </p>
+                  <button
+                    onClick={() => setShowSigning(true)}
+                    className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
+                    data-testid={!sellerSigned ? "button-simulate-seller-sign" : "button-simulate-buyer-sign"}
+                  >
+                    {!sellerSigned ? 'Simulovať podpis predávajúceho' : 'Simulovať podpis kupujúceho'}
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-8 bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-6">
+                  <p className="text-center text-green-700 dark:text-green-300 mb-4 font-semibold">
+                    Obe strany podpísali zmluvu!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
