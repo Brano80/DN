@@ -25,8 +25,7 @@ export default function MyContracts() {
   };
 
   const getContractStatusBadge = (contract: Contract) => {
-    // Predaj vozidla - Škoda Octavia is completed
-    if (contract.title === 'Predaj vozidla - Škoda Octavia') {
+    if (contract.status === 'completed') {
       return (
         <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">
           Dokončené
@@ -34,7 +33,6 @@ export default function MyContracts() {
       );
     }
     
-    // For now, all other new contracts are "Čaká na podpis"
     return (
       <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-sm">
         Čaká na podpis

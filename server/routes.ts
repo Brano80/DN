@@ -167,6 +167,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updated) {
         return res.status(404).json({ error: "Office not found" });
       }
+      
+      // If virtual office is marked as completed, update the contract status to completed
+      if (validated.status === 'completed' && updated.contractId) {
+        await storage.updateContract(updated.contractId, { status: 'completed' });
+      }
+      
       res.json(updated);
     } catch (error) {
       res.status(400).json({ error: "Invalid request data" });

@@ -49,6 +49,7 @@ export class MemStorage implements IStorage {
       title: "Predaj vozidla - Škoda Octavia",
       type: "vehicle",
       ownerEmail: "jan.novacek@example.sk",
+      status: "completed",
       content: JSON.stringify({
         seller: {
           name: "Ján Novák",
@@ -122,7 +123,8 @@ export class MemStorage implements IStorage {
   async createContract(insertContract: InsertContract): Promise<Contract> {
     const id = randomUUID();
     const contract: Contract = { 
-      ...insertContract, 
+      ...insertContract,
+      status: insertContract.status ?? 'pending',
       id,
       createdAt: new Date()
     };

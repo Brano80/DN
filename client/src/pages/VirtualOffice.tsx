@@ -128,6 +128,7 @@ export default function VirtualOffice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${officeId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${currentUser?.email || ''}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/contracts?ownerEmail=${currentUser?.email || ''}`] });
     },
     onError: () => {
     },
