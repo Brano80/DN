@@ -1,6 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Check, QrCode, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 
 interface CompletedTransactionModalProps {
   open: boolean;
@@ -9,6 +13,54 @@ interface CompletedTransactionModalProps {
 }
 
 export function CompletedTransactionModal({ open, onOpenChange, transactionId }: CompletedTransactionModalProps) {
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [isSending, setIsSending] = useState(false);
+
+  const generateQRCode = async () => {
+    const transactionData = {
+      id: transactionId,
+      type: 'vehicle',
+      vehicle: 'BMW X5',
+      price: '35000 EUR',
+      status: 'completed',
+      completedDate: '12.12.2024'
+    };
+    
+    try {
+      const url = await QRCode.toDataURL(JSON.stringify(transactionData), {
+        width: 300,
+        margin: 2,
+      });
+      setQrCodeUrl(url);
+      setShowQRCode(true);
+    } catch (err) {
+      console.error('Error generating QR code:', err);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailAddress) return;
+    
+    setIsSending(true);
+    setTimeout(() => {
+      setIsSending(false);
+      setShowEmailForm(false);
+      setEmailAddress("");
+      alert(`Dokument bol úspešne odoslaný na adresu: ${emailAddress}`);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (!open) {
+      setShowQRCode(false);
+      setShowEmailForm(false);
+      setEmailAddress("");
+    }
+  }, [open]);
+
   if (transactionId !== 'bmw-x5') {
     return null;
   }
@@ -160,13 +212,85 @@ export function CompletedTransactionModal({ open, onOpenChange, transactionId }:
           </div>
         </div>
         
-        <div className="flex justify-end space-x-4 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-close-transaction">
-            Zavrieť
-          </Button>
-          <Button variant="secondary" onClick={() => window.print()} data-testid="button-print-summary">
-            Tlačiť súhrn
-          </Button>
+        {/* QR Code Display */}
+        {showQRCode && qrCodeUrl && (
+          <div className="mt-4 p-6 bg-muted rounded-lg text-center border-t">
+            <h3 className="text-lg font-semibold mb-4">QR Kód transakcie</h3>
+            <img src={qrCodeUrl} alt="QR Code" className="mx-auto mb-4" />
+            <p className="text-sm text-muted-foreground">
+              Naskenujte tento QR kód pre zobrazenie detailov transakcie
+            </p>
+          </div>
+        )}
+
+        {/* Email Form */}
+        {showEmailForm && (
+          <div className="mt-4 p-6 bg-muted rounded-lg border-t">
+            <h3 className="text-lg font-semibold mb-4">Preposlať dokument emailom</h3>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email-address-transaction">Emailová adresa príjemcu</Label>
+                <Input
+                  id="email-address-transaction"
+                  type="email"
+                  placeholder="priklad@email.sk"
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  data-testid="input-forward-email-transaction"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEmailForm(false);
+                    setEmailAddress("");
+                  }}
+                  data-testid="button-cancel-email-transaction"
+                >
+                  Zrušiť
+                </Button>
+                <Button
+                  onClick={handleSendEmail}
+                  disabled={!emailAddress || isSending}
+                  data-testid="button-send-email-transaction"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  {isSending ? 'Odosiela sa...' : 'Odoslať'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex justify-between pt-4 border-t">
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              onClick={generateQRCode}
+              disabled={showQRCode}
+              data-testid="button-generate-qr-transaction"
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              Generate QR code
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowEmailForm(!showEmailForm)}
+              data-testid="button-forward-transaction"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Preposlať
+            </Button>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-close-transaction">
+              Zavrieť
+            </Button>
+            <Button variant="secondary" onClick={() => window.print()} data-testid="button-print-summary">
+              Tlačiť súhrn
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
