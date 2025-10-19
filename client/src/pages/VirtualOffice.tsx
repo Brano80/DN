@@ -262,111 +262,127 @@ export default function VirtualOffice() {
                 {office.name}
               </h1>
 
-              {/* Progress Steps */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Priebeh procesu</h2>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Krok 1 z {contract?.type === 'power_of_attorney' ? '3' : '7'}
-                  </span>
+              {/* Show message if no contract attached */}
+              {!office.contractId || !contract ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">Najprv pripojte zmluvu k tejto virtuálnej kancelárii</p>
+                  <button
+                    onClick={() => {
+                      setShowWorkflowProgress(false);
+                      setShowSelectContract(true);
+                    }}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Nahrať zmluvu
+                  </button>
                 </div>
-
-                {/* Progress Bar */}
-                {contract?.type === 'power_of_attorney' ? (
-                  <div className="flex items-center space-x-2 mb-8">
-                    {/* Step 1 - Active */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        1
-                      </div>
-                      <div className="h-1 w-full bg-blue-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
+              ) : (
+                <>
+                  {/* Progress Steps */}
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Priebeh procesu</h2>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Krok 1 z {contract?.type === 'power_of_attorney' ? '3' : '7'}
+                      </span>
                     </div>
 
-                    {/* Step 2 - Inactive */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        2
-                      </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
-                    </div>
+                    {/* Progress Bar */}
+                    {contract?.type === 'power_of_attorney' ? (
+                      <div className="flex items-center space-x-2 mb-8">
+                        {/* Step 1 - Active */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            1
+                          </div>
+                          <div className="h-1 w-full bg-blue-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
+                        </div>
 
-                    {/* Step 3 */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        3
-                      </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 mb-8">
-                    {/* Step 1 - Active */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        1
-                      </div>
-                      <div className="h-1 w-full bg-blue-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
-                    </div>
+                        {/* Step 2 - Inactive */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            2
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
+                        </div>
 
-                    {/* Step 2 - Inactive */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        2
+                        {/* Step 3 */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            3
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
+                        </div>
                       </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Platba</p>
-                    </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 mb-8">
+                        {/* Step 1 - Active */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            1
+                          </div>
+                          <div className="h-1 w-full bg-blue-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
+                        </div>
 
-                    {/* Step 3 */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        3
-                      </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Podanie na<br/>úrad</p>
-                    </div>
+                        {/* Step 2 - Inactive */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            2
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Platba</p>
+                        </div>
 
-                    {/* Step 4 */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        4
-                      </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Registrácia</p>
-                    </div>
+                        {/* Step 3 */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            3
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Podanie na<br/>úrad</p>
+                        </div>
 
-                    {/* Step 5 */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        5
-                      </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Notárska<br/>zápisnica</p>
-                    </div>
+                        {/* Step 4 */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            4
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Registrácia</p>
+                        </div>
 
-                    {/* Step 6 */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        6
-                      </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
-                    </div>
+                        {/* Step 5 */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            5
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Notárska<br/>zápisnica</p>
+                        </div>
 
-                    {/* Step 7 */}
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                        7
+                        {/* Step 6 */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            6
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
+                        </div>
+
+                        {/* Step 7 */}
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                            7
+                          </div>
+                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
+                        </div>
                       </div>
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
-                    </div>
-                  </div>
-                )}
+                    )}
               </div>
 
               {/* Main Content Card */}
@@ -465,7 +481,7 @@ export default function VirtualOffice() {
                       <div className="text-center py-8">
                         <p className="text-blue-700 dark:text-blue-300 mb-4">Zatiaľ nebola pripojená žiadna zmluva</p>
                         <button
-                          onClick={() => setLocation('/my-contracts')}
+                          onClick={() => setShowSelectContract(true)}
                           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                           data-testid="button-upload-contract-workflow"
                         >
@@ -674,6 +690,8 @@ export default function VirtualOffice() {
                   </button>
                 </div>
               )}
+                </>
+              )}
             </div>
           </div>
 
@@ -681,7 +699,7 @@ export default function VirtualOffice() {
             open={showSelectContract}
             onOpenChange={setShowSelectContract}
             onSelectContract={(contractId) => attachContractMutation.mutate(contractId)}
-            ownerEmail="jan.novak@example.com"
+            ownerEmail={currentUser?.email || "jan.novak@example.com"}
           />
 
           <ContractDetailModal
