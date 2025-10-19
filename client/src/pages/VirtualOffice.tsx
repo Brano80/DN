@@ -250,97 +250,95 @@ export default function VirtualOffice() {
 
                     {/* Progress Bar */}
                     {contract?.type === 'power_of_attorney' ? (
-                      <div className="flex items-center space-x-2 mb-8">
+                      <div className="relative flex items-start mb-8">
                         {/* Step 1 - Active */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50 relative z-10">
                             1
                           </div>
-                          <div className="h-1 w-full bg-blue-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
+                          <p className="text-sm text-center text-gray-800 dark:text-gray-200 font-semibold">Podpis<br/>zmluvy</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 2 - Inactive */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             2
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Archivácia</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 3 */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             3
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Dokončené</p>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-2 mb-8">
+                      <div className="relative flex items-start mb-8">
                         {/* Step 1 - Active */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50 relative z-10">
                             1
                           </div>
-                          <div className="h-1 w-full bg-blue-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
+                          <p className="text-sm text-center text-gray-800 dark:text-gray-200 font-semibold">Podpis<br/>zmluvy</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 2 - Inactive */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             2
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Platba</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Platba</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 3 */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             3
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Podanie na<br/>úrad</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Podanie na<br/>úrad</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 4 */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             4
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Registrácia</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Registrácia</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 5 */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             5
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Notárska<br/>zápisnica</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Notárska<br/>zápisnica</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 6 */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             6
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Archivácia</p>
+                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Step 7 */}
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="flex flex-col items-center flex-1 relative">
+                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
                             7
                           </div>
-                          <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                          <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Dokončené</p>
                         </div>
                       </div>
                     )}
