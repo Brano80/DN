@@ -912,45 +912,81 @@ export default function VirtualOffice() {
               )}
 
               {/* Timeline - DN v51 style */}
-              {isSkodaOffice && isCompleted && (
+              {isCompleted && (
                 <div className="mb-6">
                   <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Časová os transakcie</h3>
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">Zmluva podpísaná</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">10.12.2024 14:30</p>
+                    {isSkodaOffice ? (
+                      <>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Zmluva podpísaná</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">10.12.2024 14:30</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Platba potvrdená</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">11.12.2024 09:15</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Podanie na úrad</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">11.12.2024 11:45</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Registrácia dokončená</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">12.12.2024 10:20</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Dokumenty archivované</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">12.12.2024 15:30</p>
+                          </div>
+                        </div>
+                      </>
+                    ) : contract?.type === 'power_of_attorney' ? (
+                      <>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Podpis zmluvy</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{new Date().toLocaleDateString('sk-SK')} {new Date().toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Archivácia</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{new Date().toLocaleDateString('sk-SK')} {new Date().toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">Dokončené</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{new Date().toLocaleDateString('sk-SK')} {new Date().toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <div>
+                          <p className="font-medium text-gray-800 dark:text-gray-200">Proces dokončený</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{new Date().toLocaleDateString('sk-SK')} {new Date().toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">Platba potvrdená</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">11.12.2024 09:15</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">Podanie na úrad</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">11.12.2024 11:45</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">Registrácia dokončená</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">12.12.2024 10:20</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">Dokumenty archivované</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">12.12.2024 15:30</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
