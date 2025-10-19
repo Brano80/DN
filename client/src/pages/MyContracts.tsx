@@ -75,7 +75,14 @@ export default function MyContracts() {
                         Vytvorené: {new Date(contract.createdAt).toLocaleDateString('sk-SK')}
                       </p>
                       <div className="text-sm text-muted-foreground">
-                        <p><strong>Typ:</strong> {contract.type === 'vehicle' ? 'Kúpna zmluva vozidla' : 'Nájomná zmluva'}</p>
+                        <p><strong>Typ:</strong> {
+                          contract.type === 'vehicle' ? 'Kúpna zmluva vozidla' :
+                          contract.type === 'rental' ? 'Nájomná zmluva' :
+                          contract.type === 'power_of_attorney' ? 'Splnomocnenie' :
+                          contract.type === 'employment' ? 'Zamestnanecká zmluva' :
+                          contract.type === 'custom' ? 'Vlastný dokument' :
+                          'Iný dokument'
+                        }</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end space-y-2">

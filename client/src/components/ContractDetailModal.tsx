@@ -163,6 +163,170 @@ export function ContractDetailModal({ open, onOpenChange, contractId }: Contract
     );
   };
 
+  const renderPowerOfAttorney = (content: any) => {
+    return (
+      <div className="bg-background border border-border p-8 text-sm leading-relaxed">
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold mb-2">SPLNOMOCNENIE</h2>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <p className="font-semibold mb-2">SPLNOMOCNITEĽ:</p>
+              <p>{content.principal?.name}</p>
+              <p>Rodné číslo: {content.principal?.birthNumber}</p>
+              <p>Adresa: {content.principal?.address}</p>
+            </div>
+            <div>
+              <p className="font-semibold mb-2">SPLNOMOCNENEC:</p>
+              <p>{content.attorney?.name}</p>
+              <p>Rodné číslo: {content.attorney?.birthNumber}</p>
+              <p>Adresa: {content.attorney?.address}</p>
+            </div>
+          </div>
+          
+          <div>
+            <p className="font-semibold mb-3">ROZSAH SPLNOMOCNENIA:</p>
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="whitespace-pre-wrap">{content.authorizedActions}</p>
+            </div>
+          </div>
+          
+          <div>
+            <p className="font-semibold mb-2">PLATNOSŤ:</p>
+            <p className="text-sm">Od: {content.validFrom}</p>
+            <p className="text-sm">Do: {content.validUntil}</p>
+          </div>
+          
+          {content.additionalTerms && content.additionalTerms !== 'Žiadne dodatočné podmienky' && (
+            <div>
+              <p className="font-semibold mb-2">DODATOČNÉ PODMIENKY:</p>
+              <p className="text-sm whitespace-pre-wrap">{content.additionalTerms}</p>
+            </div>
+          )}
+          
+          <div className="mt-8 pt-6 border-t border-border">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="text-center">
+                <p className="mb-4">V {content.signingPlace}, dňa {content.signingDate}</p>
+                <div className="border-t border-border pt-2">
+                  <p className="font-semibold">{content.principal?.name}</p>
+                  <p className="text-sm text-muted-foreground">splnomocniteľ</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="mb-4">V {content.signingPlace}, dňa {content.signingDate}</p>
+                <div className="border-t border-border pt-2">
+                  <p className="font-semibold">{content.attorney?.name}</p>
+                  <p className="text-sm text-muted-foreground">splnomocnenec</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderEmploymentContract = (content: any) => {
+    return (
+      <div className="bg-background border border-border p-8 text-sm leading-relaxed">
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold mb-2">ZAMESTNANECKÁ ZMLUVA</h2>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <p className="font-semibold mb-2">ZAMESTNÁVATEĽ:</p>
+              <p>{content.employer?.name}</p>
+              <p>IČO: {content.employer?.ico}</p>
+              <p>Sídlo: {content.employer?.address}</p>
+              <p>Zastúpený: {content.employer?.representative}</p>
+            </div>
+            <div>
+              <p className="font-semibold mb-2">ZAMESTNANEC:</p>
+              <p>{content.employee?.name}</p>
+              <p>Rodné číslo: {content.employee?.birthNumber}</p>
+              <p>Bydlisko: {content.employee?.address}</p>
+            </div>
+          </div>
+          
+          <div>
+            <p className="font-semibold mb-3">PRACOVNÉ ZARADENIE:</p>
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p><strong>Pozícia:</strong> {content.employment?.position}</p>
+                  <p><strong>Miesto výkonu:</strong> {content.employment?.workLocation}</p>
+                  <p><strong>Nástup:</strong> {content.employment?.startDate}</p>
+                </div>
+                <div>
+                  <p><strong>Pracovný čas:</strong> {content.employment?.workHours}</p>
+                  <p><strong>Dovolenka:</strong> {content.employment?.vacationDays} dní</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <p className="font-semibold mb-2">MZDA:</p>
+            <div className="bg-primary/10 p-4 rounded-lg">
+              <p className="text-lg font-bold text-primary">Hrubá mzda: {content.employment?.salary} EUR</p>
+            </div>
+          </div>
+          
+          {content.additionalTerms && content.additionalTerms !== 'Žiadne dodatočné podmienky' && (
+            <div>
+              <p className="font-semibold mb-2">DODATOČNÉ PODMIENKY:</p>
+              <p className="text-sm whitespace-pre-wrap">{content.additionalTerms}</p>
+            </div>
+          )}
+          
+          <div className="mt-8 pt-6 border-t border-border">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="text-center">
+                <p className="mb-4">V {content.signingPlace}, dňa {content.signingDate}</p>
+                <div className="border-t border-border pt-2">
+                  <p className="font-semibold">{content.employer?.representative}</p>
+                  <p className="text-sm text-muted-foreground">za zamestnávateľa</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="mb-4">V {content.signingPlace}, dňa {content.signingDate}</p>
+                <div className="border-t border-border pt-2">
+                  <p className="font-semibold">{content.employee?.name}</p>
+                  <p className="text-sm text-muted-foreground">zamestnanec</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCustomDocument = (content: any) => {
+    return (
+      <div className="bg-background border border-border p-8 text-sm leading-relaxed">
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold mb-2">VLASTNÝ DOKUMENT</h2>
+          <p className="text-muted-foreground">{content.fileName}</p>
+        </div>
+        
+        <div className="space-y-6">
+          <div>
+            <p className="text-sm text-muted-foreground mb-4">Nahrané: {content.uploadDate}</p>
+            <div className="bg-muted p-6 rounded-lg max-h-[500px] overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-sm">{content.content}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const getContractContent = () => {
     if (isLoading) {
       return <div className="text-center py-8">Načítavam zmluvu...</div>;
@@ -180,9 +344,15 @@ export function ContractDetailModal({ open, onOpenChange, contractId }: Contract
       return renderVehicleContract(content);
     } else if (contract.type === 'rental') {
       return renderRentalContract(content);
+    } else if (contract.type === 'power_of_attorney') {
+      return renderPowerOfAttorney(content);
+    } else if (contract.type === 'employment') {
+      return renderEmploymentContract(content);
+    } else if (contract.type === 'custom') {
+      return renderCustomDocument(content);
     }
 
-    return <div>Neznámy typ zmluvy</div>;
+    return <div className="text-center py-8 text-muted-foreground">Neznámy typ zmluvy</div>;
   };
 
   return (
