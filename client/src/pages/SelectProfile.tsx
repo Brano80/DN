@@ -68,10 +68,10 @@ export default function SelectProfile() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
           {/* Personal Profile Card */}
           <Card 
-            className="cursor-pointer transition-all hover-elevate active-elevate-2"
+            className="cursor-pointer transition-all hover-elevate active-elevate-2 flex flex-col h-full"
             onClick={() => handleSelectContext('personal')}
             data-testid="card-personal-profile"
           >
@@ -86,7 +86,7 @@ export default function SelectProfile() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               <p className="text-sm text-muted-foreground">
                 V osobnom profile môžete spravovať svoje súkromné zmluvy a dokumenty.
               </p>
@@ -104,7 +104,7 @@ export default function SelectProfile() {
 
           {/* Company Profile Card */}
           <Card 
-            className="transition-all"
+            className="transition-all flex flex-col h-full"
             data-testid="card-company-profile"
           >
             <CardHeader>
@@ -118,14 +118,13 @@ export default function SelectProfile() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               <p className="text-sm text-muted-foreground">
                 Spravujte firemné zmluvy a dokumenty v mene organizácie.
               </p>
             </CardContent>
             <CardFooter>
               <Button 
-                variant="outline"
                 className="w-full" 
                 onClick={() => setShowCompanyProfiles(!showCompanyProfiles)}
                 data-testid="button-enter-company"
