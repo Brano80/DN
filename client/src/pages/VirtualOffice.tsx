@@ -699,7 +699,7 @@ export default function VirtualOffice() {
             open={showSelectContract}
             onOpenChange={setShowSelectContract}
             onSelectContract={(contractId) => attachContractMutation.mutate(contractId)}
-            ownerEmail={currentUser?.email || "jan.novak@example.com"}
+            ownerEmail={currentUser?.email || ""}
           />
 
           <ContractDetailModal
@@ -934,7 +934,7 @@ export default function VirtualOffice() {
           open={showSelectContract}
           onOpenChange={setShowSelectContract}
           onSelectContract={(contractId) => attachContractMutation.mutate(contractId)}
-          ownerEmail="jan.novak@example.com"
+          ownerEmail={currentUser?.email || ""}
         />
         
         <ContractDetailModal
