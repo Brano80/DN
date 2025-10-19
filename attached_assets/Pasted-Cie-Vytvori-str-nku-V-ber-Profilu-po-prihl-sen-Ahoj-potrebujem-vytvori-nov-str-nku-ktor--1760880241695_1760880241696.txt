@@ -1,0 +1,101 @@
+Cieľ: Vytvoriť stránku "Výber Profilu" po prihlásení
+
+Ahoj, potrebujem vytvoriť novú stránku, ktorá sa zobrazí používateľovi ihneď po úspešnom prihlásení (ešte pred vstupom do hlavného menu/dashboardu).
+
+Táto stránka bude slúžiť ako "digitálna recepcia", kde si používateľ vyberie, v akom kontexte (profile) chce v aplikácii vystupovať – či ako súkromná osoba, alebo v mene jednej z firiem, ktoré zastupuje.
+
+Stránka musí byť profesionálna, čistá a postavená pomocou komponentov shadcn/ui.
+
+Časť 1: Backend (Node.js/Express)
+Predtým, ako vytvoríš frontend, uprav prosím backend tak, aby nám posielal dáta pre túto stránku.
+
+Uprav Mock Prihlásenie: Uprav existujúcu "mock" prihlasovaciu rútu (/auth/mock-login), ktorú sme minule vytvorili.
+
+Uprav GET /api/current-user: Uprav tento endpoint tak, aby po novom vracal štruktúru, ktorá obsahuje aj firemné mandáty. Pre účely testovania použi tieto mock (falošné) dáta:
+
+JSON
+
+{
+  "user": {
+    "id": "mock123",
+    "name": "Ján Novák",
+    "email": "jan.novak@example.com"
+  },
+  "mandates": [
+    {
+      "ico": "12345678",
+      "companyName": "TechRiešenia, s.r.o.",
+      "role": "Konateľ"
+    },
+    {
+      "ico": "87654321",
+      "companyName": "Novák Development, a.s.",
+      "role": "Predseda predstavenstva"
+    },
+    {
+      "ico": "11223344",
+      "companyName": "Gastro-Inovácie, v.o.s.",
+      "role": "Spoločník"
+    }
+  ]
+}
+Vytvor Endpoint na "Nastavenie Kontextu":
+
+Vytvor nový endpoint: POST /api/set-context
+
+Tento endpoint prijme v tele požiadavky (body) jedno ID, napríklad { "contextId": "personal" } alebo { "contextId": "12345678" } (čo je IČO firmy).
+
+Úlohou endpointu je uložiť toto contextId do session používateľa (napr. req.session.activeContext = contextId).
+
+Po úspešnom uložení vráti odpoveď { success: true }.
+
+Časť 2: Frontend (React + shadcn/ui)
+Vytvor Novú Stránku (Route):
+
+Vytvor nový komponent/stránku na adrese /app/select-profile.
+
+Zabezpeč, aby bol používateľ po úspešnom prihlásení (z /auth/callback alebo /auth/mock-login) presmerovaný najprv sem (na /app/select-profile), a nie priamo na hlavné menu.
+
+Dizajn Stránky /app/select-profile:
+
+Na vrchu stránky zobraz uvítanie. Použi dáta z endpointu /api/current-user:
+
+Veľký nadpis (napr. <h1>): Vitajte, Ján Novák
+
+Podnadpis (napr. <p>): Prosím, vyberte profil, v ktorom chcete pokračovať.
+
+Použi CSS Grid alebo Flexbox na rozdelenie stránky na dve hlavné sekcie vedľa seba (alebo pod sebou na mobile).
+
+Sekcia 1: Osobný Prístup
+
+Vytvor komponent Card (z shadcn/ui).
+
+CardHeader: Nadpis Osobný profil a popis Vstúpte ako súkromná osoba Ján Novák.
+
+CardContent: Môže obsahovať ikonu (napr. ikonu "user").
+
+CardFooter: Tlačidlo (<Button>) s textom Vstúpiť do osobného profilu.
+
+Akcia: Po kliknutí na túto kartu (alebo tlačidlo) sa zavolá POST /api/set-context s dátami { "contextId": "personal" }. Po úspešnej odpovedi presmeruj používateľa na hlavnú "menu" stránku (napr. /app/dashboard).
+
+Sekcia 2: Firemný Prístup
+
+Zobraz nadpis pre túto sekciu, napr. <h2>Firemné profily</h2>.
+
+Načítaj pole mandates z endpointu /api/current-user.
+
+Zmapuj (loop) toto pole a pre každú firmu v ňom vytvor samostatný komponent Card (z shadcn/ui).
+
+CardHeader:
+
+CardTitle: Názov firmy (napr. TechRiešenia, s.r.o.)
+
+CardDescription: Tvoja funkcia (napr. Konateľ)
+
+CardContent: Zobraz IČO (napr. IČO: 12345678).
+
+CardFooter: Tlačidlo (<Button variant="outline">) s textom Spravovať firmu.
+
+Akcia: Po kliknutí na túto kartu sa zavolá POST /api/set-context s dátami { "contextId": "12345678" } (použi reálne IČO danej firmy). Po úspešnej odpovedi presmeruj používateľa na hlavnú "menu" stránku.
+
+Prosím, zabezpeč, aby bol dizajn čistý, profesionálny a responzívny (aby sa karty na mobile pekne zobrazili pod sebou).

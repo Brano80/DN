@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PrivateRoute from "@/components/PrivateRoute";
 import Home from "@/pages/Home";
+import SelectProfile from "@/pages/SelectProfile";
 import MyDocuments from "@/pages/MyDocuments";
 import MyContracts from "@/pages/MyContracts";
 import CreateDocument from "@/pages/CreateDocument";
@@ -22,6 +23,11 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/select-profile">
+        <PrivateRoute>
+          <SelectProfile />
+        </PrivateRoute>
+      </Route>
       <Route path="/my-documents">
         <PrivateRoute>
           <MyDocuments />

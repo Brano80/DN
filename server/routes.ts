@@ -5,6 +5,12 @@ import { storage } from "./storage";
 import { insertVirtualOfficeSchema, insertContractSchema } from "@shared/schema";
 import type { User } from "./auth";
 
+declare module "express-session" {
+  interface SessionData {
+    activeContext?: string;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/auth/login", (req: Request, res: Response, next) => {
     const oidcIssuer = process.env.OIDC_ISSUER_URL;
@@ -40,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Login failed" });
       }
       console.log("[AUTH] Mock user logged in:", mockUser.email);
-      res.redirect("/");
+      res.redirect("/select-profile");
     });
   });
 
@@ -65,7 +71,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
-    res.json(req.user);
+    
+    // Return user with mock mandates
+    const user = req.user as User;
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      mandates: [
+        {
+          ico: "12345678",
+          companyName: "TechRiešenia, s.r.o.",
+          role: "Konateľ"
+        },
+        {
+          ico: "87654321",
+          companyName: "Novák Development, a.s.",
+          role: "Predseda predstavenstva"
+        },
+        {
+          ico: "11223344",
+          companyName: "Gastro-Inovácie, v.o.s.",
+          role: "Spoločník"
+        }
+      ],
+      activeContext: req.session.activeContext || null
+    });
+  });
+
+  app.post("/api/set-context", (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    const { contextId } = req.body;
+    if (!contextId) {
+      return res.status(400).json({ error: "contextId is required" });
+    }
+    
+    // Store context in session
+    req.session.activeContext = contextId;
+    
+    res.json({ success: true, contextId });
   });
 
   // Virtual Office routes
