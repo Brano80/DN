@@ -2,12 +2,20 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import BackButton from "@/components/BackButton";
 import DocumentTemplateCard from "@/components/DocumentTemplateCard";
-import { Home, Car } from "lucide-react";
+import { Home, Car, Upload, FileCheck, Briefcase } from "lucide-react";
 
 export default function CreateDocument() {
   const [, setLocation] = useLocation();
 
   const templates = [
+    {
+      icon: Upload,
+      iconColor: 'text-blue-600',
+      iconBgColor: 'bg-blue-100',
+      title: 'Nahrať vlastný dokument',
+      description: 'Nahrajte váš vlastný dokument na digitálne podpísanie',
+      route: '/create-upload-document',
+    },
     {
       icon: Car,
       iconColor: 'text-red-600',
@@ -23,6 +31,22 @@ export default function CreateDocument() {
       title: 'Nájomná zmluva',
       description: 'Štandardná slovenská zmluva o nájme bytu, domu alebo nebytového priestoru',
       route: '/create-rental-contract',
+    },
+    {
+      icon: FileCheck,
+      iconColor: 'text-purple-600',
+      iconBgColor: 'bg-purple-100',
+      title: 'Splnomocnenie',
+      description: 'Štandardné slovenské splnomocnenie na zastupovanie',
+      route: '/create-power-of-attorney',
+    },
+    {
+      icon: Briefcase,
+      iconColor: 'text-orange-600',
+      iconBgColor: 'bg-orange-100',
+      title: 'Zamestnanecká zmluva',
+      description: 'Štandardná slovenská pracovná zmluva podľa Zákonníka práce',
+      route: '/create-employment-contract',
     },
   ];
 

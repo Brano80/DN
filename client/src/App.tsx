@@ -10,6 +10,9 @@ import MyContracts from "@/pages/MyContracts";
 import CreateDocument from "@/pages/CreateDocument";
 import CreateVehicleContract from "@/pages/CreateVehicleContract";
 import CreateRentalContract from "@/pages/CreateRentalContract";
+import CreateUploadDocument from "@/pages/CreateUploadDocument";
+import CreatePowerOfAttorney from "@/pages/CreatePowerOfAttorney";
+import CreateEmploymentContract from "@/pages/CreateEmploymentContract";
 import VerifyDocument from "@/pages/VerifyDocument";
 import VirtualOffice from "@/pages/VirtualOffice";
 import DigitalSigning from "@/pages/DigitalSigning";
@@ -42,6 +45,21 @@ function Router() {
       <Route path="/create-rental-contract">
         <PrivateRoute>
           <CreateRentalContract />
+        </PrivateRoute>
+      </Route>
+      <Route path="/create-upload-document">
+        <PrivateRoute>
+          <CreateUploadDocument />
+        </PrivateRoute>
+      </Route>
+      <Route path="/create-power-of-attorney">
+        <PrivateRoute>
+          <CreatePowerOfAttorney />
+        </PrivateRoute>
+      </Route>
+      <Route path="/create-employment-contract">
+        <PrivateRoute>
+          <CreateEmploymentContract />
         </PrivateRoute>
       </Route>
       <Route path="/verify-document">
