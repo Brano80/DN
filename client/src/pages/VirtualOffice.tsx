@@ -90,19 +90,10 @@ export default function VirtualOffice() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Kancelária vytvorená",
-        description: `Email odoslaný na ${data.invitedEmail}`,
-      });
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${currentUser?.email || ''}`] });
       setLocation(`/virtual-office/${data.id}`);
     },
     onError: () => {
-      toast({
-        title: "Chyba",
-        description: "Nepodarilo sa vytvoriť kanceláriu",
-        variant: "destructive",
-      });
     },
   });
 
@@ -116,17 +107,8 @@ export default function VirtualOffice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${officeId}`] });
       setShowSelectContract(false);
-      toast({
-        title: "Zmluva pripojená",
-        description: "Zmluva bola úspešne pripojená k virtuálnej kancelárii",
-      });
     },
     onError: () => {
-      toast({
-        title: "Chyba",
-        description: "Nepodarilo sa pripojiť zmluvu",
-        variant: "destructive",
-      });
     },
   });
 
@@ -140,27 +122,13 @@ export default function VirtualOffice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${officeId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${currentUser?.email || ''}`] });
-      toast({
-        title: "Podpísané",
-        description: "Zmluva bola úspešne podpísaná",
-      });
     },
     onError: () => {
-      toast({
-        title: "Chyba",
-        description: "Nepodarilo sa dokončiť podpisovanie",
-        variant: "destructive",
-      });
     },
   });
 
   const handleCreateOffice = () => {
     if (!officeName || !invitedEmail) {
-      toast({
-        title: "Chyba",
-        description: "Vyplňte všetky povinné polia",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -191,17 +159,8 @@ export default function VirtualOffice() {
     setShowSigning(false);
     if (!sellerSigned) {
       setSellerSigned(true);
-      toast({
-        title: "Podpis predávajúceho",
-        description: "Predávajúci úspešne podpísal zmluvu",
-      });
     } else if (!buyerSigned) {
       setBuyerSigned(true);
-      toast({
-        title: "Podpis kupujúceho",
-        description: "Kupujúci úspešne podpísal zmluvu",
-      });
-      // After both signed, mark office as completed
       completeSigningMutation.mutate();
     }
   };
@@ -685,10 +644,6 @@ export default function VirtualOffice() {
                           <button
                             onClick={() => {
                               setIsArchived(true);
-                              toast({
-                                title: "Archivované",
-                                description: "Dokument bol úspešne archivovaný",
-                              });
                             }}
                             className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
                             data-testid="button-archive"
@@ -704,10 +659,6 @@ export default function VirtualOffice() {
                           <button
                             onClick={() => {
                               setIsProcessCompleted(true);
-                              toast({
-                                title: "Proces úspešne dokončený",
-                                description: "Všetky kroky boli dokončené",
-                              });
                             }}
                             className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
                             data-testid="button-complete-process"
@@ -728,10 +679,6 @@ export default function VirtualOffice() {
                       </p>
                       <button
                         onClick={() => {
-                          toast({
-                            title: "Pokračovanie na platbu",
-                            description: "Pripravuje sa platobný proces...",
-                          });
                         }}
                         className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
                         data-testid="button-continue-payment"
