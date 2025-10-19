@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import PrivateRoute from "@/components/PrivateRoute";
 import Home from "@/pages/Home";
 import MyDocuments from "@/pages/MyDocuments";
 import MyContracts from "@/pages/MyContracts";
@@ -18,15 +19,51 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/my-documents" component={MyDocuments} />
-      <Route path="/my-contracts" component={MyContracts} />
-      <Route path="/create-document" component={CreateDocument} />
-      <Route path="/create-vehicle-contract" component={CreateVehicleContract} />
-      <Route path="/create-rental-contract" component={CreateRentalContract} />
-      <Route path="/verify-document" component={VerifyDocument} />
-      <Route path="/virtual-office/:id" component={VirtualOffice} />
-      <Route path="/virtual-office" component={VirtualOffice} />
-      <Route path="/digital-signing/:type" component={DigitalSigning} />
+      <Route path="/my-documents">
+        <PrivateRoute>
+          <MyDocuments />
+        </PrivateRoute>
+      </Route>
+      <Route path="/my-contracts">
+        <PrivateRoute>
+          <MyContracts />
+        </PrivateRoute>
+      </Route>
+      <Route path="/create-document">
+        <PrivateRoute>
+          <CreateDocument />
+        </PrivateRoute>
+      </Route>
+      <Route path="/create-vehicle-contract">
+        <PrivateRoute>
+          <CreateVehicleContract />
+        </PrivateRoute>
+      </Route>
+      <Route path="/create-rental-contract">
+        <PrivateRoute>
+          <CreateRentalContract />
+        </PrivateRoute>
+      </Route>
+      <Route path="/verify-document">
+        <PrivateRoute>
+          <VerifyDocument />
+        </PrivateRoute>
+      </Route>
+      <Route path="/virtual-office/:id">
+        <PrivateRoute>
+          <VirtualOffice />
+        </PrivateRoute>
+      </Route>
+      <Route path="/virtual-office">
+        <PrivateRoute>
+          <VirtualOffice />
+        </PrivateRoute>
+      </Route>
+      <Route path="/digital-signing/:type">
+        <PrivateRoute>
+          <DigitalSigning />
+        </PrivateRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

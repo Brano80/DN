@@ -1,32 +1,38 @@
-import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import AuthSection from "@/components/AuthSection";
 import MainMenu from "@/components/MainMenu";
 import ThemeToggle from "@/components/ThemeToggle";
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  givenName?: string;
+  familyName?: string;
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('isAuthenticated') === 'true';
+
+  const { data: user, isLoading } = useQuery<User>({
+    queryKey: ['/api/current-user'],
+    retry: false,
   });
-  const [userName] = useState("Ján Novák");
-
-  useEffect(() => {
-    localStorage.setItem('isAuthenticated', isAuthenticated.toString());
-  }, [isAuthenticated]);
-
-  const handleLogin = () => {
-    console.log('EUDI authentication initiated');
-    setTimeout(() => {
-      setIsAuthenticated(true);
-    }, 500);
-  };
 
   const handleLogoff = () => {
-    setIsAuthenticated(false);
-    localStorage.clear();
-    setLocation('/');
+    window.location.href = '/auth/logout';
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-muted-foreground">Načítavam...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -40,11 +46,11 @@ export default function Home() {
         </div>
 
         <main>
-          {!isAuthenticated ? (
-            <AuthSection onLogin={handleLogin} />
+          {!user ? (
+            <AuthSection />
           ) : (
             <MainMenu
-              userName={userName}
+              userName={user.name}
               onCreateDocument={() => setLocation('/create-document')}
               onVerifyDocument={() => setLocation('/verify-document')}
               onMyContracts={() => setLocation('/my-contracts')}

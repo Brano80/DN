@@ -7,15 +7,17 @@ import { ContractDetailModal } from "@/components/ContractDetailModal";
 import { useQuery } from "@tanstack/react-query";
 import type { Contract } from "@shared/schema";
 import { FileText } from "lucide-react";
-import { QUERY_KEYS, OWNER_EMAIL } from "@/lib/queryKeys";
+import { QUERY_KEYS } from "@/lib/queryKeys";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function MyContracts() {
   const [, setLocation] = useLocation();
   const [selectedContract, setSelectedContract] = useState<string | null>(null);
+  const { data: currentUser } = useCurrentUser();
 
-  // Load contracts from database
   const { data: contracts, isLoading } = useQuery<Contract[]>({
-    queryKey: QUERY_KEYS.contracts(OWNER_EMAIL),
+    queryKey: QUERY_KEYS.contracts(currentUser?.email || ''),
+    enabled: !!currentUser?.email,
   });
 
   const handleShowContract = (contractId: string) => {

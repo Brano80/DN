@@ -1,12 +1,16 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield } from "lucide-react";
+import { Shield, TestTube } from "lucide-react";
 
-interface AuthSectionProps {
-  onLogin: () => void;
-}
+export default function AuthSection() {
+  const handleOidcLogin = () => {
+    window.location.href = "/auth/login";
+  };
 
-export default function AuthSection({ onLogin }: AuthSectionProps) {
+  const handleMockLogin = () => {
+    window.location.href = "/auth/mock-login";
+  };
+
   return (
     <Card className="p-8 text-center">
       <div className="flex justify-center mb-6">
@@ -18,14 +22,26 @@ export default function AuthSection({ onLogin }: AuthSectionProps) {
       <p className="text-muted-foreground mb-6">
         Pre spustenie procesu musíte overiť svoju totožnosť pomocou EU Digital Identity Wallet.
       </p>
-      <Button
-        onClick={onLogin}
-        className="w-full"
-        size="lg"
-        data-testid="button-eudi-login"
-      >
-        Prihlásiť sa cez EUDI Wallet
-      </Button>
+      <div className="space-y-3">
+        <Button
+          onClick={handleOidcLogin}
+          className="w-full"
+          size="lg"
+          data-testid="button-eudi-login"
+        >
+          Prihlásiť sa cez eIDentita
+        </Button>
+        <Button
+          onClick={handleMockLogin}
+          variant="outline"
+          className="w-full"
+          size="lg"
+          data-testid="button-mock-login"
+        >
+          <TestTube className="w-4 h-4 mr-2" />
+          Prihlásiť sa ako Test User (Mock)
+        </Button>
+      </div>
     </Card>
   );
 }

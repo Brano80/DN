@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { VirtualOffice as VirtualOfficeType, Contract } from "@shared/schema";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 type ViewType = 'create' | 'list';
 
@@ -59,11 +60,11 @@ export default function VirtualOffice() {
     enabled: !!office?.contractId,
   });
 
-  // Load all offices for the list view
-  const ownerEmail = "jan.novak@example.com"; // TODO: Get from auth
+  const { data: currentUser } = useCurrentUser();
+
   const { data: offices = [], isLoading: isLoadingOffices } = useQuery<VirtualOfficeType[]>({
-    queryKey: [`/api/virtual-offices?ownerEmail=${ownerEmail}`],
-    enabled: currentView === 'list',
+    queryKey: [`/api/virtual-offices?ownerEmail=${currentUser?.email || ''}`],
+    enabled: currentView === 'list' && !!currentUser?.email,
   });
 
   // Initialize signing state based on office status when office changes
@@ -81,7 +82,7 @@ export default function VirtualOffice() {
     mutationFn: async (data: { name: string; invitedEmail: string }) => {
       const response = await apiRequest("POST", "/api/virtual-offices", {
         name: data.name,
-        ownerEmail: "jan.novak@example.com", // TODO: Get from auth
+        ownerEmail: currentUser?.email || '',
         invitedEmail: data.invitedEmail,
       });
       return response.json();
@@ -91,9 +92,7 @@ export default function VirtualOffice() {
         title: "Kancelária vytvorená",
         description: `Email odoslaný na ${data.invitedEmail}`,
       });
-      // Invalidate offices list cache
-      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${ownerEmail}`] });
-      // Redirect to the new office
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${currentUser?.email || ''}`] });
       setLocation(`/virtual-office/${data.id}`);
     },
     onError: () => {
@@ -138,7 +137,7 @@ export default function VirtualOffice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${officeId}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${ownerEmail}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices?ownerEmail=${currentUser?.email || ''}`] });
       toast({
         title: "Podpísané",
         description: "Zmluva bola úspešne podpísaná",

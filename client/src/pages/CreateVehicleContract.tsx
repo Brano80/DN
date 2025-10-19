@@ -9,12 +9,14 @@ import BackButton from "@/components/BackButton";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { QUERY_KEYS, OWNER_EMAIL } from "@/lib/queryKeys";
+import { QUERY_KEYS } from "@/lib/queryKeys";
 import { Car } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function CreateVehicleContract() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { data: currentUser } = useCurrentUser();
 
   // Seller information
   const [sellerName, setSellerName] = useState('');
@@ -73,11 +75,11 @@ export default function CreateVehicleContract() {
         title,
         type: 'vehicle',
         content: JSON.stringify(contractContent),
-        ownerEmail: OWNER_EMAIL,
+        ownerEmail: currentUser?.email || '',
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(OWNER_EMAIL) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
       toast({
         title: "Zmluva vytvorená",
         description: "Zmluva bola úspešne uložená do 'Moje zmluvy'",

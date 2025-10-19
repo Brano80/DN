@@ -1,9 +1,73 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import passport from "passport";
 import { storage } from "./storage";
 import { insertVirtualOfficeSchema, insertContractSchema } from "@shared/schema";
+import type { User } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.get("/auth/login", (req: Request, res: Response, next) => {
+    const oidcIssuer = process.env.OIDC_ISSUER_URL;
+    if (!oidcIssuer || oidcIssuer === "test") {
+      return res.status(400).json({
+        error: "OIDC not configured",
+        message: "OIDC authentication is not configured. Please use mock login or configure OIDC credentials.",
+      });
+    }
+    passport.authenticate("oidc")(req, res, next);
+  });
+
+  app.get(
+    "/auth/callback",
+    passport.authenticate("oidc", {
+      failureRedirect: "/login-failed",
+      successRedirect: "/",
+    })
+  );
+
+  app.get("/auth/mock-login", (req: Request, res: Response) => {
+    const mockUser: User = {
+      id: "mock123",
+      name: "Ján Nováček",
+      email: "jan.novacek@example.sk",
+      givenName: "Ján",
+      familyName: "Nováček",
+    };
+
+    req.login(mockUser, (err) => {
+      if (err) {
+        console.error("[AUTH] Mock login error:", err);
+        return res.status(500).json({ error: "Login failed" });
+      }
+      console.log("[AUTH] Mock user logged in:", mockUser.email);
+      res.redirect("/");
+    });
+  });
+
+  app.get("/auth/logout", (req: Request, res: Response) => {
+    const userEmail = (req.user as User)?.email || "unknown";
+    req.logout((err) => {
+      if (err) {
+        console.error("[AUTH] Logout error:", err);
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      console.log("[AUTH] User logged out:", userEmail);
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("[AUTH] Session destroy error:", err);
+        }
+        res.redirect("/");
+      });
+    });
+  });
+
+  app.get("/api/current-user", (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    res.json(req.user);
+  });
+
   // Virtual Office routes
   app.post("/api/virtual-offices", async (req, res) => {
     try {
