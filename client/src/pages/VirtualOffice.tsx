@@ -244,56 +244,122 @@ export default function VirtualOffice() {
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Priebeh procesu</h2>
                       <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Krok 1 z {contract?.type === 'power_of_attorney' ? '3' : '7'}
+                        Krok {
+                          contract?.type === 'power_of_attorney' 
+                            ? (isProcessCompleted ? '3' : isArchived ? '3' : sellerSigned && buyerSigned ? '2' : '1')
+                            : (sellerSigned && buyerSigned ? '2' : '1')
+                        } z {contract?.type === 'power_of_attorney' ? '3' : '7'}
                       </span>
                     </div>
 
                     {/* Progress Bar */}
                     {contract?.type === 'power_of_attorney' ? (
                       <div className="relative flex items-start mb-8">
-                        {/* Step 1 - Active */}
+                        {/* Step 1 - Podpis zmluvy */}
                         <div className="flex flex-col items-center flex-1 relative">
-                          <div className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50 relative z-10">
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold mb-3 relative z-10 ${
+                            sellerSigned && buyerSigned
+                              ? 'bg-green-600 text-white shadow-lg ring-4 ring-green-100 dark:ring-green-900/50'
+                              : !sellerSigned || !buyerSigned
+                              ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shadow-md'
+                          }`}>
                             1
                           </div>
-                          <p className="text-sm text-center text-gray-800 dark:text-gray-200 font-semibold">Podpis<br/>zmluvy</p>
-                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
+                          <p className={`text-sm text-center ${
+                            sellerSigned && buyerSigned
+                              ? 'text-green-700 dark:text-green-300 font-semibold'
+                              : !sellerSigned || !buyerSigned
+                              ? 'text-gray-800 dark:text-gray-200 font-semibold'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}>Podpis<br/>zmluvy</p>
+                          <div className={`absolute top-7 left-1/2 w-full h-0.5 ${
+                            sellerSigned && buyerSigned ? 'bg-green-400 dark:bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                          }`}></div>
                         </div>
 
-                        {/* Step 2 - Inactive */}
+                        {/* Step 2 - Archivácia */}
                         <div className="flex flex-col items-center flex-1 relative">
-                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold mb-3 relative z-10 ${
+                            isArchived
+                              ? 'bg-green-600 text-white shadow-lg ring-4 ring-green-100 dark:ring-green-900/50'
+                              : sellerSigned && buyerSigned && !isArchived
+                              ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shadow-md'
+                          }`}>
                             2
                           </div>
-                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Archivácia</p>
-                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
+                          <p className={`text-sm text-center ${
+                            isArchived
+                              ? 'text-green-700 dark:text-green-300 font-semibold'
+                              : sellerSigned && buyerSigned && !isArchived
+                              ? 'text-gray-800 dark:text-gray-200 font-semibold'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}>Archivácia</p>
+                          <div className={`absolute top-7 left-1/2 w-full h-0.5 ${
+                            isArchived ? 'bg-green-400 dark:bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                          }`}></div>
                         </div>
 
-                        {/* Step 3 */}
+                        {/* Step 3 - Dokončené */}
                         <div className="flex flex-col items-center flex-1 relative">
-                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold mb-3 relative z-10 ${
+                            isProcessCompleted
+                              ? 'bg-green-600 text-white shadow-lg ring-4 ring-green-100 dark:ring-green-900/50'
+                              : isArchived && !isProcessCompleted
+                              ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shadow-md'
+                          }`}>
                             3
                           </div>
-                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Dokončené</p>
+                          <p className={`text-sm text-center ${
+                            isProcessCompleted
+                              ? 'text-green-700 dark:text-green-300 font-semibold'
+                              : isArchived && !isProcessCompleted
+                              ? 'text-gray-800 dark:text-gray-200 font-semibold'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}>Dokončené</p>
                         </div>
                       </div>
                     ) : (
                       <div className="relative flex items-start mb-8">
-                        {/* Step 1 - Active */}
+                        {/* Step 1 - Podpis zmluvy */}
                         <div className="flex flex-col items-center flex-1 relative">
-                          <div className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50 relative z-10">
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold mb-3 relative z-10 ${
+                            sellerSigned && buyerSigned
+                              ? 'bg-green-600 text-white shadow-lg ring-4 ring-green-100 dark:ring-green-900/50'
+                              : !sellerSigned || !buyerSigned
+                              ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shadow-md'
+                          }`}>
                             1
                           </div>
-                          <p className="text-sm text-center text-gray-800 dark:text-gray-200 font-semibold">Podpis<br/>zmluvy</p>
-                          <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
+                          <p className={`text-sm text-center ${
+                            sellerSigned && buyerSigned
+                              ? 'text-green-700 dark:text-green-300 font-semibold'
+                              : !sellerSigned || !buyerSigned
+                              ? 'text-gray-800 dark:text-gray-200 font-semibold'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}>Podpis<br/>zmluvy</p>
+                          <div className={`absolute top-7 left-1/2 w-full h-0.5 ${
+                            sellerSigned && buyerSigned ? 'bg-green-400 dark:bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                          }`}></div>
                         </div>
 
-                        {/* Step 2 - Inactive */}
+                        {/* Step 2 - Platba */}
                         <div className="flex flex-col items-center flex-1 relative">
-                          <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-3 shadow-md relative z-10">
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold mb-3 relative z-10 ${
+                            sellerSigned && buyerSigned
+                              ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/50'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shadow-md'
+                          }`}>
                             2
                           </div>
-                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">Platba</p>
+                          <p className={`text-sm text-center ${
+                            sellerSigned && buyerSigned
+                              ? 'text-gray-800 dark:text-gray-200 font-semibold'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}>Platba</p>
                           <div className="absolute top-7 left-1/2 w-full h-0.5 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
