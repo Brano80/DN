@@ -48,7 +48,7 @@ export class MemStorage implements IStorage {
       id: contractId,
       title: "Predaj vozidla - Škoda Octavia",
       type: "vehicle",
-      ownerEmail: "jan.novak@example.com",
+      ownerEmail: "jan.novacek@example.sk",
       content: JSON.stringify({
         seller: {
           name: "Ján Novák",
@@ -82,7 +82,7 @@ export class MemStorage implements IStorage {
     const exampleOffice: VirtualOffice = {
       id: officeId,
       name: "Predaj vozidla - Škoda Octavia",
-      ownerEmail: "jan.novak@example.com",
+      ownerEmail: "jan.novacek@example.sk",
       invitedEmail: "tomas.horvath@example.com",
       status: "completed",
       contractId: contractId,
