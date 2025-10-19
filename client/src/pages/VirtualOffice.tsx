@@ -47,6 +47,8 @@ export default function VirtualOffice() {
   const [showWorkflowProgress, setShowWorkflowProgress] = useState(false);
   const [sellerSigned, setSellerSigned] = useState(false);
   const [buyerSigned, setBuyerSigned] = useState(false);
+  const [isArchived, setIsArchived] = useState(false);
+  const [isProcessCompleted, setIsProcessCompleted] = useState(false);
 
   // Load office data if ID is present
   const { data: office, isLoading: isLoadingOffice } = useQuery<VirtualOfficeType>({
@@ -673,21 +675,71 @@ export default function VirtualOffice() {
                 </div>
               ) : (
                 <div className="mt-8 bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-6">
-                  <p className="text-center text-green-700 dark:text-green-300 mb-4 font-semibold">
-                    Obe strany podpísali zmluvu!
-                  </p>
-                  <button
-                    onClick={() => {
-                      toast({
-                        title: "Pokračovanie na platbu",
-                        description: "Pripravuje sa platobný proces...",
-                      });
-                    }}
-                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
-                    data-testid="button-continue-payment"
-                  >
-                    Pokračovať na platbu
-                  </button>
+                  {contract?.type === 'power_of_attorney' || contract?.type === 'employment' ? (
+                    <>
+                      {!isArchived ? (
+                        <>
+                          <p className="text-center text-green-700 dark:text-green-300 mb-4 font-semibold">
+                            Obe strany podpísali zmluvu!
+                          </p>
+                          <button
+                            onClick={() => {
+                              setIsArchived(true);
+                              toast({
+                                title: "Archivované",
+                                description: "Dokument bol úspešne archivovaný",
+                              });
+                            }}
+                            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+                            data-testid="button-archive"
+                          >
+                            Archivácia
+                          </button>
+                        </>
+                      ) : !isProcessCompleted ? (
+                        <>
+                          <p className="text-center text-green-700 dark:text-green-300 mb-4 font-semibold">
+                            Archivované
+                          </p>
+                          <button
+                            onClick={() => {
+                              setIsProcessCompleted(true);
+                              toast({
+                                title: "Proces úspešne dokončený",
+                                description: "Všetky kroky boli dokončené",
+                              });
+                            }}
+                            className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
+                            data-testid="button-complete-process"
+                          >
+                            Dokončiť
+                          </button>
+                        </>
+                      ) : (
+                        <p className="text-center text-green-700 dark:text-green-300 font-semibold text-lg">
+                          Proces úspešne dokončený
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-center text-green-700 dark:text-green-300 mb-4 font-semibold">
+                        Obe strany podpísali zmluvu!
+                      </p>
+                      <button
+                        onClick={() => {
+                          toast({
+                            title: "Pokračovanie na platbu",
+                            description: "Pripravuje sa platobný proces...",
+                          });
+                        }}
+                        className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+                        data-testid="button-continue-payment"
+                      >
+                        Pokračovať na platbu
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
                 </>
