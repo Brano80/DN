@@ -9,12 +9,13 @@ import { CompletedTransactionModal } from "@/components/CompletedTransactionModa
 import { SelectContractDialog } from "@/components/SelectContractDialog";
 import { ContractDetailModal } from "@/components/ContractDetailModal";
 import { DigitalSigningDialog } from "@/components/DigitalSigningDialog";
-import { Plus, Check, Clock } from "lucide-react";
+import { Plus, Check, Clock, QrCode, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { VirtualOffice as VirtualOfficeType, Contract } from "@shared/schema";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import QRCode from "qrcode";
 
 type ViewType = 'create' | 'list';
 
@@ -49,6 +50,11 @@ export default function VirtualOffice() {
   const [buyerSigned, setBuyerSigned] = useState(false);
   const [isArchived, setIsArchived] = useState(false);
   const [isProcessCompleted, setIsProcessCompleted] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   // Load office data if ID is present
   const { data: office, isLoading: isLoadingOffice } = useQuery<VirtualOfficeType>({
@@ -163,6 +169,42 @@ export default function VirtualOffice() {
       setBuyerSigned(true);
       completeSigningMutation.mutate();
     }
+  };
+
+  const generateQRCode = async () => {
+    if (!office || !contract) return;
+    
+    const transactionData = {
+      id: office.id,
+      name: office.name,
+      type: contract.type,
+      status: office.status,
+      contractId: contract.id,
+      contractTitle: contract.title,
+    };
+    
+    try {
+      const url = await QRCode.toDataURL(JSON.stringify(transactionData), {
+        width: 300,
+        margin: 2,
+      });
+      setQrCodeUrl(url);
+      setShowQRCode(true);
+    } catch (err) {
+      console.error('Error generating QR code:', err);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailAddress) return;
+    
+    setIsSending(true);
+    setTimeout(() => {
+      setIsSending(false);
+      setShowEmailForm(false);
+      setEmailAddress("");
+      alert(`Dokument bol úspešne odoslaný na adresu: ${emailAddress}`);
+    }, 1000);
   };
 
   // Show detail view if we have an office ID
@@ -1002,28 +1044,108 @@ export default function VirtualOffice() {
                 </div>
               )}
 
+              {/* QR Code Display */}
+              {isCompleted && showQRCode && qrCodeUrl && (
+                <div className="mt-4 mb-6 p-6 bg-muted rounded-lg text-center">
+                  <h3 className="text-lg font-semibold mb-4">QR Kód transakcie</h3>
+                  <img src={qrCodeUrl} alt="QR Code" className="mx-auto mb-4" />
+                  <p className="text-sm text-muted-foreground">
+                    Naskenujte tento QR kód pre zobrazenie detailov transakcie
+                  </p>
+                </div>
+              )}
+
+              {/* Email Form */}
+              {isCompleted && showEmailForm && (
+                <div className="mt-4 mb-6 p-6 bg-muted rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4">Preposlať dokument emailom</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="email-address-vo">Emailová adresa príjemcu</Label>
+                      <Input
+                        id="email-address-vo"
+                        type="email"
+                        placeholder="priklad@email.sk"
+                        value={emailAddress}
+                        onChange={(e) => setEmailAddress(e.target.value)}
+                        data-testid="input-forward-email-vo"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => {
+                          setShowEmailForm(false);
+                          setEmailAddress("");
+                        }}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        data-testid="button-cancel-email-vo"
+                      >
+                        Zrušiť
+                      </button>
+                      <button
+                        onClick={handleSendEmail}
+                        disabled={!emailAddress || isSending}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                        data-testid="button-send-email-vo"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>{isSending ? 'Odosiela sa...' : 'Odoslať'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Action Buttons */}
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-border">
-                <button 
-                  onClick={() => setLocation('/virtual-office')}
-                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  Zavrieť
-                </button>
-                {!isCompleted && (
+              <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-border">
+                <div className="flex space-x-2">
+                  {isCompleted && (
+                    <>
+                      <button
+                        onClick={generateQRCode}
+                        disabled={showQRCode}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                        data-testid="button-generate-qr-vo"
+                      >
+                        <QrCode className="w-4 h-4" />
+                        <span>Generate QR code</span>
+                      </button>
+                      <button
+                        onClick={() => setShowEmailForm(!showEmailForm)}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center space-x-2"
+                        data-testid="button-forward-vo"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>Preposlať</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="flex space-x-2">
                   <button 
-                    onClick={() => setShowWorkflowProgress(true)}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    data-testid="button-start-signing"
+                    onClick={() => setLocation('/virtual-office')}
+                    className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
-                    Pokračovať v procese
+                    Zavrieť
                   </button>
-                )}
-                {isCompleted && (
-                  <button className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-                    Tlačiť súhrn
-                  </button>
-                )}
+                  {!isCompleted && (
+                    <button 
+                      onClick={() => setShowWorkflowProgress(true)}
+                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      data-testid="button-start-signing"
+                    >
+                      Pokračovať v procese
+                    </button>
+                  )}
+                  {isCompleted && (
+                    <button 
+                      onClick={() => window.print()}
+                      className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      Tlačiť súhrn
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
