@@ -372,7 +372,13 @@ export default function VirtualOffice() {
               {/* Main Content Card */}
               <div className="bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
-                  Stav transakcie: {isSkodaOffice ? 'Predaj motorového vozidla' : 'Predaj vozidla'}
+                  Stav transakcie: {
+                    contract?.type === 'power_of_attorney' ? 'Splnomocnenie' :
+                    contract?.type === 'rental' ? 'Nájomná zmluva' :
+                    contract?.type === 'employment' ? 'Zamestnanecká zmluva' :
+                    contract?.type === 'custom' ? 'Vlastný dokument' :
+                    isSkodaOffice ? 'Predaj motorového vozidla' : 'Predaj vozidla'
+                  }
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -459,7 +465,7 @@ export default function VirtualOffice() {
                       <div className="text-center py-8">
                         <p className="text-blue-700 dark:text-blue-300 mb-4">Zatiaľ nebola pripojená žiadna zmluva</p>
                         <button
-                          onClick={() => setShowSelectContract(true)}
+                          onClick={() => setLocation('/my-contracts')}
                           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                           data-testid="button-upload-contract-workflow"
                         >
@@ -627,14 +633,26 @@ export default function VirtualOffice() {
               {!sellerSigned || !buyerSigned ? (
                 <div className="mt-8 bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-6">
                   <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
-                    {!sellerSigned ? 'Čakáme na podpis predávajúceho...' : 'Čakáme na podpis kupujúceho...'}
+                    {!sellerSigned ? 
+                      (contract?.type === 'power_of_attorney' ? 'Čakáme na podpis splnomocniteľa...' : 
+                       contract?.type === 'rental' ? 'Čakáme na podpis prenajímateľa...' : 
+                       'Čakáme na podpis predávajúceho...') : 
+                      (contract?.type === 'power_of_attorney' ? 'Čakáme na podpis splnomocnenca...' : 
+                       contract?.type === 'rental' ? 'Čakáme na podpis nájomcu...' : 
+                       'Čakáme na podpis kupujúceho...')}
                   </p>
                   <button
                     onClick={() => setShowSigning(true)}
                     className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
                     data-testid={!sellerSigned ? "button-simulate-seller-sign" : "button-simulate-buyer-sign"}
                   >
-                    {!sellerSigned ? 'Simulovať podpis predávajúceho' : 'Simulovať podpis kupujúceho'}
+                    {!sellerSigned ? 
+                      (contract?.type === 'power_of_attorney' ? 'Simulovať podpis splnomocniteľa' : 
+                       contract?.type === 'rental' ? 'Simulovať podpis prenajímateľa' : 
+                       'Simulovať podpis predávajúceho') : 
+                      (contract?.type === 'power_of_attorney' ? 'Simulovať podpis splnomocnenca' : 
+                       contract?.type === 'rental' ? 'Simulovať podpis nájomcu' : 
+                       'Simulovať podpis kupujúceho')}
                   </button>
                 </div>
               ) : (
