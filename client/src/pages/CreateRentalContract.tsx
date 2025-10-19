@@ -19,26 +19,26 @@ export default function CreateRentalContract() {
   const { data: currentUser } = useCurrentUser();
 
   // Landlord information
-  const [landlordName, setLandlordName] = useState('');
-  const [landlordAddress, setLandlordAddress] = useState('');
-  const [landlordIdNumber, setLandlordIdNumber] = useState('');
+  const [landlordName, setLandlordName] = useState('Ján Novák');
+  const [landlordAddress, setLandlordAddress] = useState('Hlavná 123, 811 01 Bratislava');
+  const [landlordIdNumber, setLandlordIdNumber] = useState('900101/1234');
 
   // Tenant information
-  const [tenantName, setTenantName] = useState('');
-  const [tenantAddress, setTenantAddress] = useState('');
-  const [tenantIdNumber, setTenantIdNumber] = useState('');
+  const [tenantName, setTenantName] = useState('Peter Kováč');
+  const [tenantAddress, setTenantAddress] = useState('Vysoká 456, 821 09 Bratislava');
+  const [tenantIdNumber, setTenantIdNumber] = useState('850505/5678');
 
   // Property information
-  const [propertyAddress, setPropertyAddress] = useState('');
-  const [propertyType, setPropertyType] = useState('');
-  const [propertySize, setPropertySize] = useState('');
-  const [propertyRooms, setPropertyRooms] = useState('');
+  const [propertyAddress, setPropertyAddress] = useState('Nová 789, 811 05 Bratislava');
+  const [propertyType, setPropertyType] = useState('2-izbový byt');
+  const [propertySize, setPropertySize] = useState('65');
+  const [propertyRooms, setPropertyRooms] = useState('2');
 
   // Rental details
-  const [monthlyRent, setMonthlyRent] = useState('');
-  const [deposit, setDeposit] = useState('');
+  const [monthlyRent, setMonthlyRent] = useState('850');
+  const [deposit, setDeposit] = useState('1700');
   const [rentStartDate, setRentStartDate] = useState('');
-  const [rentDuration, setRentDuration] = useState('');
+  const [rentDuration, setRentDuration] = useState('Na dobu neurčitú');
   const [additionalTerms, setAdditionalTerms] = useState('');
 
   const createContractMutation = useMutation({

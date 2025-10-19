@@ -19,26 +19,26 @@ export default function CreateVehicleContract() {
   const { data: currentUser } = useCurrentUser();
 
   // Seller information
-  const [sellerName, setSellerName] = useState('');
-  const [sellerAddress, setSellerAddress] = useState('');
-  const [sellerIdNumber, setSellerIdNumber] = useState('');
+  const [sellerName, setSellerName] = useState('Ján Novák');
+  const [sellerAddress, setSellerAddress] = useState('Hlavná 123, 811 01 Bratislava');
+  const [sellerIdNumber, setSellerIdNumber] = useState('900101/1234');
 
   // Buyer information
-  const [buyerName, setBuyerName] = useState('');
-  const [buyerAddress, setBuyerAddress] = useState('');
-  const [buyerIdNumber, setBuyerIdNumber] = useState('');
+  const [buyerName, setBuyerName] = useState('Peter Kováč');
+  const [buyerAddress, setBuyerAddress] = useState('Vysoká 456, 821 09 Bratislava');
+  const [buyerIdNumber, setBuyerIdNumber] = useState('850505/5678');
 
   // Vehicle information
-  const [vehicleBrand, setVehicleBrand] = useState('');
-  const [vehicleModel, setVehicleModel] = useState('');
-  const [vehicleYear, setVehicleYear] = useState('');
-  const [vehicleVin, setVehicleVin] = useState('');
-  const [vehicleLicensePlate, setVehicleLicensePlate] = useState('');
-  const [vehicleMileage, setVehicleMileage] = useState('');
+  const [vehicleBrand, setVehicleBrand] = useState('Škoda');
+  const [vehicleModel, setVehicleModel] = useState('Octavia');
+  const [vehicleYear, setVehicleYear] = useState('2019');
+  const [vehicleVin, setVehicleVin] = useState('TMBJJ6NW5J0123456');
+  const [vehicleLicensePlate, setVehicleLicensePlate] = useState('BA123AB');
+  const [vehicleMileage, setVehicleMileage] = useState('85000');
 
   // Contract details
-  const [purchasePrice, setPurchasePrice] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [purchasePrice, setPurchasePrice] = useState('18500');
+  const [paymentMethod, setPaymentMethod] = useState('Bankový prevod');
   const [additionalTerms, setAdditionalTerms] = useState('');
 
   const createContractMutation = useMutation({

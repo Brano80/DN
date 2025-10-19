@@ -19,23 +19,23 @@ export default function CreateEmploymentContract() {
   const { data: currentUser } = useCurrentUser();
 
   // Employer information
-  const [employerName, setEmployerName] = useState('');
-  const [employerAddress, setEmployerAddress] = useState('');
-  const [employerIdNumber, setEmployerIdNumber] = useState('');
-  const [employerRepresentative, setEmployerRepresentative] = useState('');
+  const [employerName, setEmployerName] = useState('ABC s.r.o.');
+  const [employerAddress, setEmployerAddress] = useState('Hlavná 123, 811 01 Bratislava');
+  const [employerIdNumber, setEmployerIdNumber] = useState('12345678');
+  const [employerRepresentative, setEmployerRepresentative] = useState('Mgr. Ján Novák, konateľ');
 
   // Employee information
-  const [employeeName, setEmployeeName] = useState('');
-  const [employeeAddress, setEmployeeAddress] = useState('');
-  const [employeeIdNumber, setEmployeeIdNumber] = useState('');
+  const [employeeName, setEmployeeName] = useState('Peter Kováč');
+  const [employeeAddress, setEmployeeAddress] = useState('Vysoká 456, 821 09 Bratislava');
+  const [employeeIdNumber, setEmployeeIdNumber] = useState('850505/5678');
 
   // Employment details
-  const [position, setPosition] = useState('');
+  const [position, setPosition] = useState('Softvérový vývojár');
   const [startDate, setStartDate] = useState('');
-  const [workLocation, setWorkLocation] = useState('');
-  const [salary, setSalary] = useState('');
-  const [workHours, setWorkHours] = useState('');
-  const [vacationDays, setVacationDays] = useState('');
+  const [workLocation, setWorkLocation] = useState('Bratislava');
+  const [salary, setSalary] = useState('2500');
+  const [workHours, setWorkHours] = useState('40 hodín týždenne');
+  const [vacationDays, setVacationDays] = useState('25');
   const [additionalTerms, setAdditionalTerms] = useState('');
 
   const createContractMutation = useMutation({

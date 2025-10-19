@@ -19,17 +19,17 @@ export default function CreatePowerOfAttorney() {
   const { data: currentUser } = useCurrentUser();
 
   // Principal (splnomocniteľ) information
-  const [principalName, setPrincipalName] = useState('');
-  const [principalAddress, setPrincipalAddress] = useState('');
-  const [principalIdNumber, setPrincipalIdNumber] = useState('');
+  const [principalName, setPrincipalName] = useState('Ján Novák');
+  const [principalAddress, setPrincipalAddress] = useState('Hlavná 123, 811 01 Bratislava');
+  const [principalIdNumber, setPrincipalIdNumber] = useState('900101/1234');
 
   // Attorney (splnomocnenec) information
-  const [attorneyName, setAttorneyName] = useState('');
-  const [attorneyAddress, setAttorneyAddress] = useState('');
-  const [attorneyIdNumber, setAttorneyIdNumber] = useState('');
+  const [attorneyName, setAttorneyName] = useState('Peter Kováč');
+  const [attorneyAddress, setAttorneyAddress] = useState('Vysoká 456, 821 09 Bratislava');
+  const [attorneyIdNumber, setAttorneyIdNumber] = useState('850505/5678');
 
   // Power of attorney details
-  const [authorizedActions, setAuthorizedActions] = useState('');
+  const [authorizedActions, setAuthorizedActions] = useState('Zastupovanie na úradoch, podpisovanie dokumentov, prevzatie korešpondencie');
   const [validFrom, setValidFrom] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [additionalTerms, setAdditionalTerms] = useState('');
