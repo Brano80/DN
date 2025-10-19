@@ -151,7 +151,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "ownerEmail is required" });
       }
       const offices = await storage.getVirtualOfficesByOwner(ownerEmail);
-      res.json(offices);
+      
+      // Enrich offices with contract titles
+      const enrichedOffices = await Promise.all(
+        offices.map(async (office) => {
+          if (office.contractId) {
+            const contract = await storage.getContract(office.contractId);
+            if (contract) {
+              return {
+                ...office,
+                name: contract.title, // Use contract title as office name
+              };
+            }
+          }
+          return office;
+        })
+      );
+      
+      res.json(enrichedOffices);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch offices" });
     }
