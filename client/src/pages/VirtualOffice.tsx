@@ -105,8 +105,13 @@ export default function VirtualOffice() {
 
   const attachContractMutation = useMutation({
     mutationFn: async (contractId: string) => {
+      // Get contract to extract its title
+      const contractResponse = await apiRequest("GET", `/api/contracts/${contractId}`);
+      const contractData = await contractResponse.json();
+      
       const response = await apiRequest("PATCH", `/api/virtual-offices/${officeId}`, {
         contractId: contractId,
+        name: contractData.title, // Update office name with contract title
       });
       return response.json();
     },
@@ -853,7 +858,14 @@ export default function VirtualOffice() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">Transakcia dokončená</h3>
-                    <p className="text-green-700 dark:text-green-300">Prevod vozidla bol úspešne dokončený 12.12.2024</p>
+                    <p className="text-green-700 dark:text-green-300">
+                      {contract?.type === 'vehicle' ? 'Prevod vozidla bol úspešne dokončený' :
+                       contract?.type === 'power_of_attorney' ? 'Splnomocnenie bolo úspešne podpísané' :
+                       contract?.type === 'employment' ? 'Pracovná zmluva bola úspešne podpísaná' :
+                       contract?.type === 'rental' ? 'Nájomná zmluva bola úspešne podpísaná' :
+                       contract?.type === 'custom' ? 'Dokument bol úspešne podpísaný' :
+                       'Transakcia bola úspešne dokončená'}
+                    </p>
                   </div>
                 </div>
               </div>
