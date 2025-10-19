@@ -1,0 +1,96 @@
+Cieľ: Implementovať prihlasovací sandbox pre DN Aplikáciu
+
+Ahoj, tvojou úlohou je implementovať kompletný prihlasovací workflow pre aplikáciu Digital Notary (DN). V produkcii budeme na prihlásenie používať slovenský eID (aplikáciu eIDentita) cez poskytovateľa Disig, ktorý funguje ako OpenID Connect (OIDC) Identity Broker.
+
+Pre účely vývoja teraz vytvoríme sandboxovú verziu tohto prihlásenia.
+
+Architektúra musí byť rozdelená na Backend (Node.js/Express) a Frontend (React).
+
+Časť 1: Backend (Node.js/Express v priečinku /server)
+Inštalácia Knižníc: Nainštaluj passport, passport-openidconnect a express-session.
+
+Bash
+
+npm install passport passport-openidconnect express-session
+npm install @types/passport @types/passport-openidconnect @types/express-session -D
+Nastavenie Replit Secrets: Priprav nasledujúce premenné v Replit Secrets. Zatiaľ ich môžeme nechať prázdne alebo s hodnotou "test", ale kód ich musí používať:
+
+OIDC_ISSUER_URL (napr. sandbox URL od Disigu)
+
+OIDC_CLIENT_ID (naše klientske ID)
+
+OIDC_CLIENT_SECRET (náš klientsky kľúč)
+
+OIDC_REDIRECT_URI (napr. https://vaša-doména.repl.co/auth/callback)
+
+SESSION_SECRET (vygeneruj silný náhodný reťazec)
+
+Konfigurácia Passport.js:
+
+V hlavnom súbore servera (server.ts alebo index.ts) inicializuj express-session s použitím SESSION_SECRET.
+
+Inicializuj passport (app.use(passport.initialize()) a app.use(passport.session())).
+
+Vytvor serializeUser a deserializeUser funkcie. serializeUser uloží ID používateľa do session, deserializeUser ho načíta (zatiaľ len mock, neskôr to prepojíme s databázou).
+
+Implementácia OIDC Stratégie:
+
+Nakonfiguruj OpenIDConnectStrategy z passport-openidconnect.
+
+Použi všetky OIDC_ premenné zo Secrets.
+
+Ako scope nastav 'openid profile'.
+
+Vo verifikačnej callback funkcii (ktorá prijme issuer, profile atď.) zober profile._json (alebo podobné dáta) a nájdi/vytvor používateľa v našej databáze. Pre tento sandbox stačí, ak profilové dáta uložíš do session.
+
+Vytvorenie Prihlasovacích Rút (Routes):
+
+GET /auth/login: Táto rúta spúšťa OIDC prihlásenie. Zavolá passport.authenticate('oidc').
+
+GET /auth/callback: Toto je OIDC_REDIRECT_URI. Zavolá passport.authenticate('oidc', { failureRedirect: '/login-failed', successRedirect: '/app/dashboard' }).
+
+GET /api/current-user: Zabezpečená rúta, ktorá vráti dáta prihláseného používateľa z req.user. Ak nikto nie je prihlásený, vráti 401.
+
+GET /auth/logout: Zničí session (req.logout(), req.session.destroy()) a presmeruje na domovskú stránku.
+
+Časť 2: Dočasné MOCK Prihlásenie (pre testovanie)
+Keďže nemáme reálne Disig prístupy, potrebujeme spôsob, ako testovať zvyšok aplikácie.
+
+Vytvor Mock Rútu na Backende:
+
+GET /auth/mock-login:
+
+Táto rúta obíde OIDC.
+
+Manuálne vytvorí "falošný" objekt používateľa (napr. { id: 'mock123', name: 'Test Používateľ', email: 'test@user.sk' }).
+
+Manuálne ho uloží do session (req.login(mockUser, ...)).
+
+Presmeruje na /app/dashboard.
+
+Časť 3: Frontend (React v priečinku /client)
+Vytvor Prihlasovaciu Stránku (/login):
+
+Táto stránka sa zobrazí, ak používateľ nie je prihlásený.
+
+Pridaj tlačidlo: <a href="/auth/login">Prihlásiť sa cez eIDentita</a>.
+
+Pridaj druhé, dočasné tlačidlo: <a href="/auth/mock-login">Prihlásiť sa ako Test User (Mock)</a>.
+
+Vytvor Komponent Dashboard.tsx:
+
+Toto bude chránená stránka (napr. /app/dashboard).
+
+Použi useEffect na zavolanie backendu GET /api/current-user.
+
+Ak prídu dáta, zobraz "Vitaj, [meno používateľa]".
+
+Ak príde chyba 401, automaticky presmeruj používateľa na /login.
+
+Nastavenie React Routeru:
+
+Nakonfiguruj React Router tak, aby zobrazoval Dashboard na /app/dashboard a prihlasovaciu stránku na /login.
+
+Implementuj logiku na ochranu ciest (Private Route), ktorá bude kontrolovať stav prihlásenia (napr. volaním /api/current-user).
+
+Záver: Po dokončení tohto tasku by som mal mať plne funkčný prihlasovací OIDC framework pripravený na vloženie reálnych Disig sandbox kľúčov. Zároveň by som mal mať funkčné "mock" prihlásenie, aby som mohol okamžite pokračovať vo vývoji Escrow funkcionality.
