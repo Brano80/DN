@@ -24,8 +24,17 @@ export default function MyContracts() {
     setSelectedContract(contractId);
   };
 
-  const getContractStatusBadge = (type: string) => {
-    // For now, all new contracts are "Čaká na podpis"
+  const getContractStatusBadge = (contract: Contract) => {
+    // Predaj vozidla - Škoda Octavia is completed
+    if (contract.title === 'Predaj vozidla - Škoda Octavia') {
+      return (
+        <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">
+          Dokončené
+        </span>
+      );
+    }
+    
+    // For now, all other new contracts are "Čaká na podpis"
     return (
       <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-sm">
         Čaká na podpis
@@ -86,7 +95,7 @@ export default function MyContracts() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end space-y-2">
-                      {getContractStatusBadge(contract.type)}
+                      {getContractStatusBadge(contract)}
                       <button 
                         onClick={() => handleShowContract(contract.id)} 
                         className="text-primary hover:underline text-sm" 
