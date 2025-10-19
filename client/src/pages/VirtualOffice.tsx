@@ -266,74 +266,107 @@ export default function VirtualOffice() {
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Priebeh procesu</h2>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Krok 1 z 7</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Krok 1 z {contract?.type === 'power_of_attorney' ? '3' : '7'}
+                  </span>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="flex items-center space-x-2 mb-8">
-                  {/* Step 1 - Active */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                      1
+                {contract?.type === 'power_of_attorney' ? (
+                  <div className="flex items-center space-x-2 mb-8">
+                    {/* Step 1 - Active */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        1
+                      </div>
+                      <div className="h-1 w-full bg-blue-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
                     </div>
-                    <div className="h-1 w-full bg-blue-600"></div>
-                    <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
-                  </div>
 
-                  {/* Step 2 - Inactive */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                      2
+                    {/* Step 2 - Inactive */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        2
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
                     </div>
-                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Platba</p>
-                  </div>
 
-                  {/* Step 3 */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                      3
+                    {/* Step 3 */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        3
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
                     </div>
-                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Podanie na<br/>úrad</p>
                   </div>
+                ) : (
+                  <div className="flex items-center space-x-2 mb-8">
+                    {/* Step 1 - Active */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        1
+                      </div>
+                      <div className="h-1 w-full bg-blue-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-700 dark:text-gray-300 font-medium">Podpis<br/>zmluvy</p>
+                    </div>
 
-                  {/* Step 4 */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                      4
+                    {/* Step 2 - Inactive */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        2
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Platba</p>
                     </div>
-                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Registrácia</p>
-                  </div>
 
-                  {/* Step 5 */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                      5
+                    {/* Step 3 */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        3
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Podanie na<br/>úrad</p>
                     </div>
-                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Notárska<br/>zápisnica</p>
-                  </div>
 
-                  {/* Step 6 */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                      6
+                    {/* Step 4 */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        4
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Registrácia</p>
                     </div>
-                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
-                  </div>
 
-                  {/* Step 7 */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
-                      7
+                    {/* Step 5 */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        5
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Notárska<br/>zápisnica</p>
                     </div>
-                    <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
-                    <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
+
+                    {/* Step 6 */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        6
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Archivácia</p>
+                    </div>
+
+                    {/* Step 7 */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        7
+                      </div>
+                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600"></div>
+                      <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Dokončené</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Main Content Card */}
@@ -345,7 +378,7 @@ export default function VirtualOffice() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left Column - Participants */}
                   <div className="space-y-4">
-                    {/* Seller */}
+                    {/* First Party */}
                     <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-4">
                       <div className="flex items-start space-x-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -370,7 +403,10 @@ export default function VirtualOffice() {
                               {sellerSigned ? 'Podpísané' : 'Čaká'}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">(Predávajúci)</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            ({contract?.type === 'power_of_attorney' ? 'Splnomocniteľ' : 
+                              contract?.type === 'rental' ? 'Prenajímateľ' : 'Predávajúci'})
+                          </p>
                           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                             {sellerSigned ? 'Podpísané: 20.12.2024 14:30' : 'Čaká na podpis'}
                           </p>
@@ -378,7 +414,7 @@ export default function VirtualOffice() {
                       </div>
                     </div>
 
-                    {/* Buyer */}
+                    {/* Second Party */}
                     <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border p-4">
                       <div className="flex items-start space-x-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -394,7 +430,9 @@ export default function VirtualOffice() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <h4 className="font-semibold text-gray-800 dark:text-gray-200">Tomáš Horváth</h4>
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+                              {contract?.type === 'power_of_attorney' ? 'Peter Kováč' : 'Tomáš Horváth'}
+                            </h4>
                             <span className={`px-3 py-1 text-xs rounded-full font-medium ${
                               buyerSigned
                                 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
@@ -403,7 +441,10 @@ export default function VirtualOffice() {
                               {buyerSigned ? 'Podpísané' : 'Čaká'}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">(Kupujúci)</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            ({contract?.type === 'power_of_attorney' ? 'Splnomocnenec' : 
+                              contract?.type === 'rental' ? 'Nájomca' : 'Kupujúci'})
+                          </p>
                           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                             {buyerSigned ? 'Podpísané: 20.12.2024 15:15' : 'Čaká na podpis'}
                           </p>
@@ -509,6 +550,48 @@ export default function VirtualOffice() {
                                   <div>
                                     <p className="text-sm text-blue-700 dark:text-blue-300">
                                       <strong>Dátum začiatku nájmu:</strong> {content.startDate}
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          } catch (e) {
+                            return (
+                              <div className="text-center py-8">
+                                <p className="text-red-700 dark:text-red-300">Chyba pri načítaní detailov zmluvy</p>
+                              </div>
+                            );
+                          }
+                        })() : contract.type === 'power_of_attorney' ? (() => {
+                          try {
+                            const content = JSON.parse(contract.content);
+                            return (
+                              <>
+                                <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily splnomocnenia</h4>
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Splnomocniteľ:</strong> {content.principal?.name}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Splnomocnenec:</strong> {content.attorney?.name}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Rozsah splnomocnenia:</strong> {content.authorizedActions}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Platnosť od:</strong> {content.validFrom || 'Neuvedené'}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Platnosť do:</strong> {content.validUntil || 'Do odvolania'}
                                     </p>
                                   </div>
                                 </div>
