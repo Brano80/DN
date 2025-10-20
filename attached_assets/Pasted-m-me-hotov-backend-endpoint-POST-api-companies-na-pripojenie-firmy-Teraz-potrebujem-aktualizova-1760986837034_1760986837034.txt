@@ -1,0 +1,28 @@
+máme hotový backend endpoint `POST /api/companies` na pripojenie firmy. Teraz potrebujem aktualizovať frontend komponent `client/src/pages/AddCompanyForm.tsx`, aby tento endpoint používal.
+
+**Cieľ:**
+Upraviť funkciu `handleConfirm` v súbore `client/src/pages/AddCompanyForm.tsx`.
+
+**Detaily implementácie:**
+
+1.  **Nájsť súbor:** Otvor `client/src/pages/AddCompanyForm.tsx`.
+2.  **Nájsť funkciu:** Nájdi existujúcu funkciu `handleConfirm`.
+3.  **Nahradiť logiku:** Kompletnú logiku vo vnútri funkcie `handleConfirm` nahraď nasledujúcou:
+    * Funkcia musí byť `async`.
+    * Pridaj nový stavový parameter pre loading, napr. `isConfirming`.
+    * Vo vnútri `try...catch` bloku:
+        * Nastav `isConfirming` na `true`.
+        * Zavolaj náš nový endpoint: `apiRequest("POST", "/api/companies", companyData)`. (Premenná `companyData` už v komponente existuje a drží dáta z Mock ORSR API).
+        * Skontroluj, či je odpoveď úspešná (`response.ok`).
+        * Ak áno, zobraz používateľovi úspešnú "toast notifikáciu" s textom "Firma bola úspešne pripojená."
+        * Potom presmeruj používateľa na `/companies` (alebo `/select-company`, podľa toho, čo je vhodnejšie).
+        * Ak odpoveď nie je úspešná (napr. chyba 403, ak používateľ nie je štatutár), prečítaj chybovú správu z JSON odpovede a zobraz ju používateľovi (napr. cez `setError`).
+    * V `finally` bloku nastav `isConfirming` späť na `false`.
+4.  **Uprav tlačidlo:** Uprav tlačidlo "Potvrdiť a pripojiť firmu", aby bolo počas `isConfirming` neaktívne (`disabled`) a zobrazovalo text ako "Pripájam...".
+
+**Dôležité inštrukcie pre AI:**
+* Uisti sa, že `handleConfirm` je `async` funkcia.
+* Správne použi `try...catch...finally` na ošetrenie stavov.
+* Použi existujúcu `apiRequest` utilitu.
+* Pre zobrazenie notifikácií použi nejaký existujúci systém (napr. ak používate `react-hot-toast` alebo `sonner`), alebo dočasne použi `alert()` pre úspech a `setError()` pre chyby.
+* **Poskytni mi upravený kód funkcie `handleConfirm` a prípadné nové `useState` premenné.**

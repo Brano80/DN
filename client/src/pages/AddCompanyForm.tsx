@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import BackButton from "@/components/BackButton";
-import { Building2, Search, Check } from "lucide-react";
+import { Building2, Search, Check, AlertCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface CompanyData {
@@ -35,8 +36,10 @@ export default function AddCompanyForm() {
   const [location, setLocation] = useLocation();
   const [ico, setIco] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Get return URL from query parameter
   const searchParams = new URLSearchParams(window.location.search);
@@ -70,18 +73,41 @@ export default function AddCompanyForm() {
   const handleConfirm = async () => {
     if (!companyData) return;
 
+    setIsConfirming(true);
+    setError(null);
+    setSuccessMessage(null);
+
     try {
-      // Save company to database
-      await apiRequest('POST', '/api/companies', companyData);
+      const response = await apiRequest('POST', '/api/companies', companyData);
       
-      // Invalidate cache to refetch mandates
-      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
-      
-      // Redirect back
-      setLocation(returnTo);
-    } catch (error) {
-      console.error('Error saving company:', error);
-      alert('Nastala chyba pri ukladaní firmy. Skúste to znova.');
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Invalidate cache to refetch mandates
+        queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
+        
+        // Show success message
+        setSuccessMessage(data.message || "Firma bola úspešne pripojená.");
+        
+        // Redirect after a short delay to let user see the success message
+        setTimeout(() => {
+          setLocation(returnTo);
+        }, 1500);
+      } else {
+        // Handle error responses (403, 500, etc.)
+        const errorData = await response.json();
+        
+        if (response.status === 403) {
+          setError(errorData.message || "Nemáte oprávnenie pripojiť túto firmu.");
+        } else {
+          setError(errorData.error || "Nastala chyba pri pripájaní firmy. Skúste to znova.");
+        }
+      }
+    } catch (err) {
+      console.error('Error connecting company:', err);
+      setError("Nastala chyba pri pripájaní firmy. Skúste to znova.");
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -89,6 +115,7 @@ export default function AddCompanyForm() {
     setIco("");
     setCompanyData(null);
     setError(null);
+    setSuccessMessage(null);
   };
 
   return (
@@ -219,16 +246,47 @@ export default function AddCompanyForm() {
                 </div>
               </div>
 
+              {/* Success/Error Messages */}
+              {successMessage && (
+                <Alert className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800" data-testid="alert-success">
+                  <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-900 dark:text-green-100">
+                    {successMessage}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {error && (
+                <Alert variant="destructive" data-testid="alert-error">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               {/* Action Buttons */}
               <div className="flex gap-3">
-                <Button onClick={handleConfirm} data-testid="button-confirm-company">
+                <Button 
+                  onClick={handleConfirm} 
+                  disabled={isConfirming}
+                  data-testid="button-confirm-company"
+                >
                   <Check className="w-4 h-4 mr-2" />
-                  Potvrdiť a pripojiť firmu
+                  {isConfirming ? "Pripájam..." : "Potvrdiť a pripojiť firmu"}
                 </Button>
-                <Button variant="outline" onClick={handleReset} data-testid="button-reset">
+                <Button 
+                  variant="outline" 
+                  onClick={handleReset} 
+                  disabled={isConfirming}
+                  data-testid="button-reset"
+                >
                   Vyhľadať inú firmu
                 </Button>
-                <Button variant="ghost" onClick={() => setLocation(returnTo)} data-testid="button-cancel">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setLocation(returnTo)} 
+                  disabled={isConfirming}
+                  data-testid="button-cancel"
+                >
                   Zrušiť
                 </Button>
               </div>
