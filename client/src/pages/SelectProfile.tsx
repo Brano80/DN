@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +23,6 @@ interface CurrentUserResponse {
 
 export default function SelectProfile() {
   const [, setLocation] = useLocation();
-  const [showCompanyProfiles, setShowCompanyProfiles] = useState(false);
 
   const { data, isLoading } = useQuery<CurrentUserResponse>({
     queryKey: ['/api/current-user'],
@@ -40,8 +38,12 @@ export default function SelectProfile() {
     },
   });
 
-  const handleSelectContext = (contextId: string) => {
-    setContextMutation.mutate(contextId);
+  const handleSelectPersonal = () => {
+    setContextMutation.mutate('personal');
+  };
+
+  const handleGoToCompanies = () => {
+    setLocation('/select-company');
   };
 
   if (isLoading) {
@@ -72,7 +74,7 @@ export default function SelectProfile() {
           {/* Personal Profile Card */}
           <Card 
             className="cursor-pointer transition-all hover-elevate active-elevate-2 flex flex-col h-full"
-            onClick={() => handleSelectContext('personal')}
+            onClick={handleSelectPersonal}
             data-testid="card-personal-profile"
           >
             <CardHeader>
@@ -126,7 +128,7 @@ export default function SelectProfile() {
             <CardFooter>
               <Button 
                 className="w-full" 
-                onClick={() => setShowCompanyProfiles(!showCompanyProfiles)}
+                onClick={handleGoToCompanies}
                 data-testid="button-enter-company"
               >
                 Vstúpiť do firemného profilu
@@ -134,54 +136,6 @@ export default function SelectProfile() {
             </CardFooter>
           </Card>
         </div>
-
-        {/* Company Profiles List - shown after clicking */}
-        {showCompanyProfiles && (
-          <div className="mt-8 space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Vyberte firmu
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {data.mandates.map((mandate) => (
-                <Card 
-                  key={mandate.ico}
-                  className="cursor-pointer transition-all hover-elevate active-elevate-2"
-                  onClick={() => handleSelectContext(mandate.ico)}
-                  data-testid={`card-company-${mandate.ico}`}
-                >
-                  <CardHeader>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <Building2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-base">{mandate.companyName}</CardTitle>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      {mandate.role}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      IČO: {mandate.ico}
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      disabled={setContextMutation.isPending}
-                      data-testid={`button-manage-${mandate.ico}`}
-                    >
-                      Vybrať túto firmu
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

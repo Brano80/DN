@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import PrivateRoute from "@/components/PrivateRoute";
 import Home from "@/pages/Home";
 import SelectProfile from "@/pages/SelectProfile";
+import SelectCompany from "@/pages/SelectCompany";
 import MyDocuments from "@/pages/MyDocuments";
 import MyContracts from "@/pages/MyContracts";
 import CompanyList from "@/pages/CompanyList";
@@ -28,6 +29,11 @@ function Router() {
       <Route path="/select-profile">
         <PrivateRoute>
           <SelectProfile />
+        </PrivateRoute>
+      </Route>
+      <Route path="/select-company">
+        <PrivateRoute>
+          <SelectCompany />
         </PrivateRoute>
       </Route>
       <Route path="/my-documents">

@@ -12,13 +12,27 @@ interface User {
   familyName?: string;
 }
 
+interface CurrentUserResponse {
+  user: User;
+  mandates: Array<{
+    ico: string;
+    companyName: string;
+    role: string;
+  }>;
+  activeContext?: string | null;
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
 
-  const { data: user, isLoading } = useQuery<User>({
+  const { data, isLoading } = useQuery<CurrentUserResponse>({
     queryKey: ['/api/current-user'],
     retry: false,
   });
+
+  const user = data?.user;
+  const activeContext = data?.activeContext;
+  const isCompanyContext = activeContext && activeContext !== 'personal';
 
   const handleLogoff = () => {
     window.location.href = '/auth/logout';
@@ -51,11 +65,12 @@ export default function Home() {
           ) : (
             <MainMenu
               userName={user.name}
+              isCompanyContext={!!isCompanyContext}
               onCreateDocument={() => setLocation('/create-document')}
               onVerifyDocument={() => setLocation('/verify-document')}
               onMyContracts={() => setLocation('/my-contracts')}
               onMyDocuments={() => setLocation('/my-documents')}
-              onMyCompanies={() => setLocation('/companies')}
+              onMyCompanies={!isCompanyContext ? () => setLocation('/companies') : undefined}
               onVirtualOffice={() => setLocation('/virtual-office')}
               onLogoff={handleLogoff}
             />
