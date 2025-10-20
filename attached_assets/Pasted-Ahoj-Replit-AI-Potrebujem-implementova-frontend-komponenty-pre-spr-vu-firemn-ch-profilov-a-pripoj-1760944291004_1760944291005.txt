@@ -1,0 +1,43 @@
+Ahoj Replit AI,
+
+Potrebujem implementovať frontend komponenty pre správu firemných profilov a pripojenie nových firiem v React aplikácii (adresár `client`).
+
+**Cieľ:**
+1.  **Obrazovka "Firemný profil" / "Moje firmy":** Zobrazí zoznam už pripojených firiem používateľa a tlačidlo "Pripojiť novú firmu".
+2.  **Formulár "Pripojiť novú firmu":** Pre zadanie IČO a vyhľadanie firmy cez Mock API.
+3.  **Zobrazenie detailov firmy:** Po vyhľadaní zobrazí dáta z Mock API a umožní "Potvrdiť a pripojiť firmu".
+
+**Detaily implementácie:**
+
+**A. Nové Komponenty (vytvor ich v `client/src/components` alebo vhodnom podadresári):**
+
+1.  **`CompanyList.tsx`:**
+    * Bude zobrazovať zoznam firiem, ktoré používateľ už pripojil. Pre MVP to môže byť zatiaľ prázdne, alebo zobrazovať fiktívne firmy, kým neimplementujeme reálne načítanie z databázy.
+    * Bude obsahovať tlačidlo **"Pripojiť novú firmu"**, ktoré po kliknutí presmeruje na formulár pre pridanie firmy.
+    * **Poznámka:** Prepojenie na reálne dáta z Drizzle DB (`Companies` a `UserCompanyMandates`) zatiaľ neimplementujeme, to bude Krok 4. Teraz sa sústredíme na UI/UX a volanie Mock API.
+
+2.  **`AddCompanyForm.tsx`:**
+    * Bude obsahovať formulár pre zadanie **IČO** (string input) a tlačidlo **"Vyhľadať firmu"**.
+    * **Stav komponentu:** Bude udržiavať IČO a prípadné výsledky vyhľadávania/chyby.
+    * **Logika vyhľadávania:** Po kliknutí na "Vyhľadať firmu" zavolá **POST** endpoint `/api/mock-orsr-search` (ktorý sme už vytvorili na serveri) s odoslaným IČO.
+    * **Zobrazenie výsledkov:** Ak je vyhľadávanie úspešné (HTTP 200), zobrazí detailné informácie o firme z Mock API (`nazov`, `sidlo`, `ico`, `statutari` atď.) (viď dátová štruktúra z predchádzajúceho promptu).
+    * **Tlačidlá po vyhľadaní:**
+        * **"Potvrdiť a pripojiť firmu"**: Toto tlačidlo bude zatiaľ len simulovať úspešné pripojenie a presmeruje späť na `CompanyList`. Reálna logika uloženia do databázy a KEP podpisu príde v Kroku 4.
+        * **"Späť / Zrušiť"**: Vráti sa na formulár na zadanie IČO alebo presmeruje na `CompanyList`.
+    * **Chybové správy:** Zobrazí relevantnú chybovú správu, ak firma nebola nájdená (napr. pre HTTP 404).
+
+**B. Integrácia Routing a Menu:**
+
+1.  **Routing:** Potrebujem vytvoriť nový route (cesta) pre `CompanyList` a `AddCompanyForm`. Predpokladajme, že máte `react-router-dom`.
+    * **`/profile/companies`**: Pre zoznam firiem (`CompanyList`).
+    * **`/profile/companies/add`**: Pre formulár pridania firmy (`AddCompanyForm`).
+2.  **Navigácia:**
+    * Uprav existujúce menu (pravdepodobne v `client/src/App.tsx` alebo `client/src/layout/NavBar.tsx`) tak, aby obsahovalo položku **"Moje firmy"** (alebo "Firemný profil", ak máte takú hlavnú sekciu), ktorá bude odkazovať na `/profile/companies`.
+
+**Dôležité inštrukcie pre AI:**
+
+* Použi existujúce štýly a komponenty (napr. tlačidlá, inputy), ak nejaké máte. Ak nie, vytvor jednoduché, funkčné štýly.
+* Zabezpeč, aby `<AddCompanyForm>` vedel volať vaše API. Môžeš predpokladať, že máte globálnu utilitu `apiRequest` (ako je naznačené v predchádzajúcom summary AI).
+* Použi `useState` a `useEffect` pre správu stavu a životného cyklu komponentov.
+* Ak potrebujete nejaké mock dáta pre `CompanyList`, vytvorte jednoduché `dummyCompanies` array.
+* **Poskytni mi zoznam všetkých vytvorených/upravených súborov a ich relevantné úryvky (najmä pre routing a komponenty).**
