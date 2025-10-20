@@ -1,0 +1,50 @@
+Ahoj Replit AI,
+
+Potrebujem rozšíriť databázové schémy v súbore `shared/schema.ts` o dve nové tabuľky pre Drizzle ORM + PostgreSQL. Už mám definované schémy pre `contracts` a `virtualOffices`.
+
+Nové tabuľky budú:
+
+1.  **`companies` (Firmy):**
+    * `id`: UUID, primárny kľúč.
+    * `ico`: VARCHAR(10), unikátny, NOT NULL.
+    * `dic`: VARCHAR(12), voliteľný (nullable).
+    * `icDph`: VARCHAR(15), voliteľný (nullable).
+    * `nazov`: VARCHAR(255), NOT NULL.
+    * `sidloUlica`: VARCHAR(255), voliteľný (nullable).
+    * `sidloCislo`: VARCHAR(50), voliteľný (nullable).
+    * `sidloMesto`: VARCHAR(255), voliteľný (nullable).
+    * `sidloPsc`: VARCHAR(20), voliteľný (nullable).
+    * `registracnySud`: VARCHAR(255), voliteľný (nullable).
+    * `cisloVlozky`: VARCHAR(255), voliteľný (nullable).
+    * `datumZapisu`: DATE, voliteľný (nullable).
+    * `pravnaForma`: VARCHAR(255), voliteľný (nullable).
+    * `stat`: VARCHAR(2), NOT NULL, predvolená hodnota 'SK'.
+    * `stav`: ENUM ('active', 'inactive', 'pending_verification', 'verification_failed'), NOT NULL, predvolená hodnota 'pending_verification'.
+    * `lastVerifiedAt`: TIMESTAMP s časovým pásmom, voliteľný (nullable).
+    * `createdAt`: TIMESTAMP s časovým pásmom, NOT NULL, predvolené na aktuálny čas.
+    * `updatedAt`: TIMESTAMP s časovým pásmom, NOT NULL, predvolené na aktuálny čas a automaticky aktualizované pri zmene.
+
+2.  **`userCompanyMandates` (Mandáty používateľov pre firmy):**
+    * `id`: UUID, primárny kľúč.
+    * `userId`: UUID, Foreign Key na `users.id` (ak už existuje tabuľka `users`, ak nie, vytvoríme si mock tabuľku `users` pre tento účel). PREDPOKLADAJME, že tabuľka `users` existuje a má stĺpec `id` typu UUID.
+    * `companyId`: UUID, Foreign Key na `companies.id`, NOT NULL.
+    * `rola`: VARCHAR(255), NOT NULL (napr. "Konateľ", "Prokurista", "Splnomocnenec").
+    * `rozsahOpravneni`: ENUM ('samostatne', 'spolocne_s_inym', 'obmedzene'), NOT NULL.
+    * `platnyOd`: DATE, NOT NULL.
+    * `platnyDo`: DATE, voliteľný (nullable).
+    * `zdrojOverenia`: VARCHAR(255), NOT NULL, predvolená hodnota 'OR SR Mock'.
+    * `stav`: ENUM ('active', 'inactive', 'pending_confirmation', 'revoked', 'expired'), NOT NULL, predvolená hodnota 'pending_confirmation'.
+    * `isVerifiedByKep`: BOOLEAN, NOT NULL, predvolená hodnota FALSE.
+    * `createdAt`: TIMESTAMP s časovým pásmom, NOT NULL, predvolené na aktuálny čas.
+    * `updatedAt`: TIMESTAMP s časovým pásmom, NOT NULL, predvolené na aktuálny čas a automaticky aktualizované pri zmene.
+
+**Dôležité inštrukcie pre AI:**
+* Použi `pgTable`, `uuid`, `varchar`, `date`, `timestamp`, `boolean`, `pgEnum` z `drizzle-orm/pg-core`.
+* Zabezpeč správne definície pre primárne kľúče, NOT NULL obmedzenia a predvolené hodnoty.
+* Pre stĺpce `createdAt` a `updatedAt` použi `default: sql` a `onUpdate: sql` funkcie na automatickú správu časových pečiatok.
+* Pre `pgEnum` definuj enum hodnoty tak, ako sú uvedené vyššie.
+* Uisti sa, že importuješ všetky potrebné moduly z Drizzle.
+* Ak tabuľka `users` neexistuje, vytvor aspoň minimalistickú `users` tabuľku s `id` (uuid) a `email` (varchar), aby sme mohli definovať Foreign Key na `userId` v `userCompanyMandates`.
+* Exportuj všetky nové tabuľky a enums.
+
+Po vygenerovaní kódu mi prosím pošli len relevantné časti, ktoré boli pridané alebo zmenené v `shared/schema.ts`.

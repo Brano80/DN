@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, date, boolean, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -53,3 +53,81 @@ export const insertVirtualOfficeSchema = createInsertSchema(virtualOffices).omit
 
 export type InsertVirtualOffice = z.infer<typeof insertVirtualOfficeSchema>;
 export type VirtualOffice = typeof virtualOffices.$inferSelect;
+
+// Enums for companies and mandates
+export const companyStatusEnum = pgEnum("company_status", [
+  "active",
+  "inactive",
+  "pending_verification",
+  "verification_failed"
+]);
+
+export const mandateRozsahOpravneniEnum = pgEnum("mandate_rozsah_opravneni", [
+  "samostatne",
+  "spolocne_s_inym",
+  "obmedzene"
+]);
+
+export const mandateStatusEnum = pgEnum("mandate_status", [
+  "active",
+  "inactive",
+  "pending_confirmation",
+  "revoked",
+  "expired"
+]);
+
+// Companies table
+export const companies = pgTable("companies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ico: varchar("ico", { length: 10 }).notNull().unique(),
+  dic: varchar("dic", { length: 12 }),
+  icDph: varchar("ic_dph", { length: 15 }),
+  nazov: varchar("nazov", { length: 255 }).notNull(),
+  sidloUlica: varchar("sidlo_ulica", { length: 255 }),
+  sidloCislo: varchar("sidlo_cislo", { length: 50 }),
+  sidloMesto: varchar("sidlo_mesto", { length: 255 }),
+  sidloPsc: varchar("sidlo_psc", { length: 20 }),
+  registracnySud: varchar("registracny_sud", { length: 255 }),
+  cisloVlozky: varchar("cislo_vlozky", { length: 255 }),
+  datumZapisu: date("datum_zapisu"),
+  pravnaForma: varchar("pravna_forma", { length: 255 }),
+  stat: varchar("stat", { length: 2 }).notNull().default("SK"),
+  stav: companyStatusEnum("stav").notNull().default("pending_verification"),
+  lastVerifiedAt: timestamp("last_verified_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export const insertCompanySchema = createInsertSchema(companies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type Company = typeof companies.$inferSelect;
+
+// User Company Mandates table
+export const userCompanyMandates = pgTable("user_company_mandates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  companyId: varchar("company_id").notNull().references(() => companies.id),
+  rola: varchar("rola", { length: 255 }).notNull(),
+  rozsahOpravneni: mandateRozsahOpravneniEnum("rozsah_opravneni").notNull(),
+  platnyOd: date("platny_od").notNull(),
+  platnyDo: date("platny_do"),
+  zdrojOverenia: varchar("zdroj_overenia", { length: 255 }).notNull().default("OR SR Mock"),
+  stav: mandateStatusEnum("stav").notNull().default("pending_confirmation"),
+  isVerifiedByKep: boolean("is_verified_by_kep").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export const insertUserCompanyMandateSchema = createInsertSchema(userCompanyMandates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertUserCompanyMandate = z.infer<typeof insertUserCompanyMandateSchema>;
+export type UserCompanyMandate = typeof userCompanyMandates.$inferSelect;
