@@ -232,6 +232,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mock ORSR (Obchodný register SR) API endpoint
+  app.post("/api/mock-orsr-search", async (req, res) => {
+    try {
+      const { ico } = req.body;
+      
+      if (!ico) {
+        return res.status(400).json({ error: "IČO je povinné" });
+      }
+
+      // Mock data for DIGITAL NOTARY s.r.o.
+      if (ico === "36723246") {
+        return res.json({
+          ico: "36723246",
+          dic: "SK2022323246",
+          icDph: null,
+          nazov: "DIGITAL NOTARY s.r.o.",
+          sidloUlica: "Digitalna",
+          sidloCislo: "1",
+          sidloMesto: "Bratislava",
+          sidloPsc: "81102",
+          registracnySud: "Okresný súd Bratislava I",
+          cisloVlozky: "123456/B",
+          datumZapisu: "2020-01-15",
+          pravnaForma: "Spoločnosť s ručením obmedzeným",
+          stat: "SK",
+          statutari: [
+            {
+              meno: "Ján",
+              priezvisko: "Nováček",
+              rola: "Konateľ",
+              rozsahOpravneni: "samostatne",
+              platnostOd: "2020-01-15"
+            }
+          ]
+        });
+      }
+
+      // Mock data for EXAMPLE CORP s.r.o.
+      if (ico === "12345678") {
+        return res.json({
+          ico: "12345678",
+          dic: "SK2012345678",
+          icDph: "SK2012345678",
+          nazov: "EXAMPLE CORP s.r.o.",
+          sidloUlica: "Príkladová",
+          sidloCislo: "10",
+          sidloMesto: "Košice",
+          sidloPsc: "04001",
+          registracnySud: "Okresný súd Košice I",
+          cisloVlozky: "98765/K",
+          datumZapisu: "2018-05-20",
+          pravnaForma: "Spoločnosť s ručením obmedzeným",
+          stat: "SK",
+          statutari: [
+            {
+              meno: "Petra",
+              priezvisko: "Veselá",
+              rola: "Konateľ",
+              rozsahOpravneni: "samostatne",
+              platnostOd: "2018-05-20"
+            },
+            {
+              meno: "Tomáš",
+              priezvisko: "Smutný",
+              rola: "Konateľ",
+              rozsahOpravneni: "spolocne_s_inym",
+              platnostOd: "2018-05-20"
+            }
+          ]
+        });
+      }
+
+      // Company not found
+      return res.status(404).json({ 
+        message: "Firma s týmto IČO nebola nájdená v Mock registri." 
+      });
+
+    } catch (error) {
+      console.error("[MOCK ORSR] Error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

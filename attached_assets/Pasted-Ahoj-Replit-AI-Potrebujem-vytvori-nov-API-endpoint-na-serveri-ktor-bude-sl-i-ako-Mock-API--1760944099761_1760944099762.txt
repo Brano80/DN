@@ -1,0 +1,87 @@
+Ahoj Replit AI,
+
+Potrebujem vytvoriť nový API endpoint na serveri, ktorý bude slúžiť ako "Mock API" pre Obchodný register SR. Tento endpoint bude simulovať vyhľadávanie firmy na základe IČO a vráti testovacie dáta.
+
+**Cieľ:**
+Vytvoriť nový POST endpoint `/api/mock-orsr-search`.
+
+**Správanie endpointu:**
+1.  **Metóda:** POST
+2.  **URL:** `/api/mock-orsr-search`
+3.  **Vstup (request body):** Bude očakávať JSON objekt s kľúčom `ico` (STRING).
+    * Príklad: `{ "ico": "36723246" }`
+4.  **Výstup (response):**
+    * Ak je `ico` **"36723246"**: Vrátte JSON objekt s detailmi "DIGITAL NOTARY s.r.o.".
+    * Ak je `ico` **"12345678"**: Vrátte JSON objekt s detailmi "EXAMPLE CORP s.r.o.".
+    * Pre akékoľvek iné IČO: Vrátte HTTP status 404 (Not Found) a JSON objekt `{ "message": "Firma s týmto IČO nebola nájdená v Mock registri." }`.
+
+**Detaily pre "DIGITAL NOTARY s.r.o." (ico: "36723246"):**
+```json
+{
+  "ico": "36723246",
+  "dic": "SK2022323246",
+  "icDph": null,
+  "nazov": "DIGITAL NOTARY s.r.o.",
+  "sidloUlica": "Digitalna",
+  "sidloCislo": "1",
+  "sidloMesto": "Bratislava",
+  "sidloPsc": "81102",
+  "registracnySud": "Okresný súd Bratislava I",
+  "cisloVlozky": "123456/B",
+  "datumZapisu": "2020-01-15",
+  "pravnaForma": "Spoločnosť s ručením obmedzeným",
+  "stat": "SK",
+  "statutari": [
+    {
+      "meno": "Ján",
+      "priezvisko": "Nováček",
+      "rola": "Konateľ",
+      "rozsahOpravneni": "samostatne",
+      "platnostOd": "2020-01-15"
+    }
+  ]
+}
+Detaily pre "EXAMPLE CORP s.r.o." (ico: "12345678"):
+
+JSON
+
+{
+  "ico": "12345678",
+  "dic": "SK2012345678",
+  "icDph": "SK2012345678",
+  "nazov": "EXAMPLE CORP s.r.o.",
+  "sidloUlica": "Príkladová",
+  "sidloCislo": "10",
+  "sidloMesto": "Košice",
+  "sidloPsc": "04001",
+  "registracnySud": "Okresný súd Košice I",
+  "cisloVlozky": "98765/K",
+  "datumZapisu": "2018-05-20",
+  "pravnaForma": "Spoločnosť s ručením obmedzeným",
+  "stat": "SK",
+  "statutari": [
+    {
+      "meno": "Petra",
+      "priezvisko": "Veselá",
+      "rola": "Konateľ",
+      "rozsahOpravneni": "samostatne",
+      "platnostOd": "2018-05-20"
+    },
+    {
+      "meno": "Tomáš",
+      "priezvisko": "Smutný",
+      "rola": "Konateľ",
+      "rozsahOpravneni": "spolocne_s_inym",
+      "platnostOd": "2018-05-20"
+    }
+  ]
+}
+Dôležité inštrukcie pre AI:
+
+Vytvor nový súbor pre tento endpoint, napr. server/routes/mockOrsr.ts alebo integrovaný do existujúceho server/index.ts (ak je jednoduchý). Predpokladám Express.js.
+
+Zabezpeč, aby bol tento router správne pridaný do hlavnej aplikácie (napr. v server/index.ts).
+
+Použi express.Router() ak bude v samostatnom súbore.
+
+Daj mi vedieť, kde bol kód pridaný a čo presne treba spustiť na otestovanie.
