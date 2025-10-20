@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building2, ArrowLeft } from "lucide-react";
+import { Building2, ArrowLeft, Plus } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Mandate {
@@ -68,13 +68,23 @@ export default function SelectCompany() {
           </Button>
         </div>
 
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Vyberte firmu
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             V ktorej firme chcete pokračovať?
           </p>
+        </div>
+
+        <div className="flex justify-center mb-6">
+          <Button 
+            onClick={() => setLocation('/companies/add?returnTo=/select-company')}
+            data-testid="button-add-new-company"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Pripojiť novú firmu
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -32,11 +32,15 @@ interface CompanyData {
 }
 
 export default function AddCompanyForm() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [ico, setIco] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Get return URL from query parameter
+  const searchParams = new URLSearchParams(window.location.search);
+  const returnTo = searchParams.get('returnTo') || '/companies';
 
   const handleSearch = async () => {
     if (!ico.trim()) {
@@ -67,7 +71,7 @@ export default function AddCompanyForm() {
     // Pre MVP zatiaľ len presmerujeme späť
     // V Kroku 4 tu implementujeme uloženie do databázy a KEP podpis
     alert("Firma bola úspešne pripojená! (Mock - reálne uloženie príde v Kroku 4)");
-    setLocation('/companies');
+    setLocation(returnTo);
   };
 
   const handleReset = () => {
@@ -80,7 +84,7 @@ export default function AddCompanyForm() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
         <Card className="p-8">
-          <BackButton onClick={() => setLocation('/companies')} />
+          <BackButton onClick={() => setLocation(returnTo)} />
           
           <h2 className="text-2xl font-semibold mb-6">Pripojiť novú firmu</h2>
 
@@ -213,7 +217,7 @@ export default function AddCompanyForm() {
                 <Button variant="outline" onClick={handleReset} data-testid="button-reset">
                   Vyhľadať inú firmu
                 </Button>
-                <Button variant="ghost" onClick={() => setLocation('/companies')} data-testid="button-cancel">
+                <Button variant="ghost" onClick={() => setLocation(returnTo)} data-testid="button-cancel">
                   Zrušiť
                 </Button>
               </div>
