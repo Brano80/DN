@@ -67,38 +67,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/api/current-user", (req: Request, res: Response) => {
+  app.get("/api/current-user", async (req: Request, res: Response) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
     
-    // Return user with mock mandates
-    const user = req.user as User;
-    res.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-      mandates: [
-        {
-          ico: "12345678",
-          companyName: "TechRiešenia, s.r.o.",
-          role: "Konateľ"
+    try {
+      const user = req.user as User;
+      
+      // Get user mandates from storage
+      const userMandates = await storage.getUserMandates(user.id);
+      
+      // Transform mandates to frontend format
+      const mandates = userMandates.map((mandate) => ({
+        ico: mandate.company.ico,
+        companyName: mandate.company.nazov,
+        role: mandate.rola
+      }));
+      
+      res.json({
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
         },
-        {
-          ico: "87654321",
-          companyName: "Novák Development, a.s.",
-          role: "Predseda predstavenstva"
+        mandates,
+        activeContext: req.session.activeContext || null
+      });
+    } catch (error) {
+      console.error('[API] Error fetching user mandates:', error);
+      // If no mandates, return empty array
+      res.json({
+        user: {
+          id: (req.user as User).id,
+          name: (req.user as User).name,
+          email: (req.user as User).email,
         },
-        {
-          ico: "11223344",
-          companyName: "Gastro-Inovácie, v.o.s.",
-          role: "Spoločník"
-        }
-      ],
-      activeContext: req.session.activeContext || null
-    });
+        mandates: [],
+        activeContext: req.session.activeContext || null
+      });
+    }
   });
 
   app.post("/api/set-context", (req: Request, res: Response) => {
@@ -312,6 +320,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("[MOCK ORSR] Error:", error);
       return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Company management endpoint
+  app.post("/api/companies", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const companyData = req.body;
+      
+      // Check if company already exists
+      let company = await storage.getCompanyByIco(companyData.ico);
+      
+      if (!company) {
+        // Create new company
+        company = await storage.createCompany({
+          ico: companyData.ico,
+          dic: companyData.dic,
+          icDph: companyData.icDph,
+          nazov: companyData.nazov,
+          sidloUlica: companyData.sidloUlica,
+          sidloCislo: companyData.sidloCislo,
+          sidloMesto: companyData.sidloMesto,
+          sidloPsc: companyData.sidloPsc,
+          registracnySud: companyData.registracnySud,
+          cisloVlozky: companyData.cisloVlozky,
+          datumZapisu: companyData.datumZapisu,
+          pravnaForma: companyData.pravnaForma,
+          stat: companyData.stat || 'SK',
+          stav: 'active',
+          lastVerifiedAt: new Date()
+        });
+      }
+
+      // Create mandate for the user
+      // Use the first statutar from the company data as the mandate
+      const firstStatutar = companyData.statutari?.[0];
+      const mandate = await storage.createUserMandate({
+        userId: user.id,
+        companyId: company.id,
+        rola: firstStatutar?.rola || 'Konateľ',
+        rozsahOpravneni: firstStatutar?.rozsahOpravneni || 'samostatne',
+        platnyOd: firstStatutar?.platnostOd || new Date().toISOString().split('T')[0],
+        platnyDo: null,
+        zdrojOverenia: 'OR SR Mock',
+        stav: 'active',
+        isVerifiedByKep: false
+      });
+
+      res.json({ 
+        success: true, 
+        company,
+        mandate 
+      });
+    } catch (error) {
+      console.error("[API] Error creating company:", error);
+      res.status(500).json({ error: "Failed to create company" });
     }
   });
 

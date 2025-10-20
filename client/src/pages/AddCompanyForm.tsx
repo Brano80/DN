@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
 import { Building2, Search, Check } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface CompanyData {
   ico: string;
@@ -67,11 +67,22 @@ export default function AddCompanyForm() {
     }
   };
 
-  const handleConfirm = () => {
-    // Pre MVP zatiaľ len presmerujeme späť
-    // V Kroku 4 tu implementujeme uloženie do databázy a KEP podpis
-    alert("Firma bola úspešne pripojená! (Mock - reálne uloženie príde v Kroku 4)");
-    setLocation(returnTo);
+  const handleConfirm = async () => {
+    if (!companyData) return;
+
+    try {
+      // Save company to database
+      await apiRequest('POST', '/api/companies', companyData);
+      
+      // Invalidate cache to refetch mandates
+      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
+      
+      // Redirect back
+      setLocation(returnTo);
+    } catch (error) {
+      console.error('Error saving company:', error);
+      alert('Nastala chyba pri ukladaní firmy. Skúste to znova.');
+    }
   };
 
   const handleReset = () => {

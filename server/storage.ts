@@ -4,7 +4,11 @@ import {
   type Contract, 
   type InsertContract,
   type VirtualOffice,
-  type InsertVirtualOffice
+  type InsertVirtualOffice,
+  type Company,
+  type InsertCompany,
+  type UserCompanyMandate,
+  type InsertUserCompanyMandate
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -27,17 +31,28 @@ export interface IStorage {
   createVirtualOffice(office: InsertVirtualOffice): Promise<VirtualOffice>;
   updateVirtualOffice(id: string, updates: Partial<VirtualOffice>): Promise<VirtualOffice | undefined>;
   deleteVirtualOffice(id: string): Promise<boolean>;
+  
+  getCompany(id: string): Promise<Company | undefined>;
+  getCompanyByIco(ico: string): Promise<Company | undefined>;
+  createCompany(company: InsertCompany): Promise<Company>;
+  
+  getUserMandates(userId: string): Promise<Array<UserCompanyMandate & { company: Company }>>;
+  createUserMandate(mandate: InsertUserCompanyMandate): Promise<UserCompanyMandate>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private contracts: Map<string, Contract>;
   private virtualOffices: Map<string, VirtualOffice>;
+  private companies: Map<string, Company>;
+  private userMandates: Map<string, UserCompanyMandate>;
 
   constructor() {
     this.users = new Map();
     this.contracts = new Map();
     this.virtualOffices = new Map();
+    this.companies = new Map();
+    this.userMandates = new Map();
   }
 
   seedExampleData() {
@@ -182,6 +197,69 @@ export class MemStorage implements IStorage {
 
   async deleteVirtualOffice(id: string): Promise<boolean> {
     return this.virtualOffices.delete(id);
+  }
+
+  async getCompany(id: string): Promise<Company | undefined> {
+    return this.companies.get(id);
+  }
+
+  async getCompanyByIco(ico: string): Promise<Company | undefined> {
+    return Array.from(this.companies.values()).find(
+      (company) => company.ico === ico
+    );
+  }
+
+  async createCompany(insertCompany: InsertCompany): Promise<Company> {
+    const id = randomUUID();
+    const company: Company = {
+      ...insertCompany,
+      id,
+      dic: insertCompany.dic ?? null,
+      icDph: insertCompany.icDph ?? null,
+      sidloUlica: insertCompany.sidloUlica ?? null,
+      sidloCislo: insertCompany.sidloCislo ?? null,
+      sidloMesto: insertCompany.sidloMesto ?? null,
+      sidloPsc: insertCompany.sidloPsc ?? null,
+      registracnySud: insertCompany.registracnySud ?? null,
+      cisloVlozky: insertCompany.cisloVlozky ?? null,
+      datumZapisu: insertCompany.datumZapisu ?? null,
+      pravnaForma: insertCompany.pravnaForma ?? null,
+      stav: insertCompany.stav ?? 'pending_verification',
+      stat: insertCompany.stat ?? 'SK',
+      lastVerifiedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.companies.set(id, company);
+    return company;
+  }
+
+  async getUserMandates(userId: string): Promise<Array<UserCompanyMandate & { company: Company }>> {
+    const mandates = Array.from(this.userMandates.values()).filter(
+      (mandate) => mandate.userId === userId
+    );
+    
+    return mandates.map((mandate) => {
+      const company = this.companies.get(mandate.companyId);
+      if (!company) throw new Error(`Company ${mandate.companyId} not found`);
+      return { ...mandate, company };
+    });
+  }
+
+  async createUserMandate(insertMandate: InsertUserCompanyMandate): Promise<UserCompanyMandate> {
+    const id = randomUUID();
+    const mandate: UserCompanyMandate = {
+      ...insertMandate,
+      id,
+      platnyDo: insertMandate.platnyDo ?? null,
+      zdrojOverenia: insertMandate.zdrojOverenia ?? 'OR SR Mock',
+      stav: insertMandate.stav ?? 'pending_confirmation',
+      isVerifiedByKep: insertMandate.isVerifiedByKep ?? false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.userMandates.set(id, mandate);
+    return mandate;
   }
 }
 
