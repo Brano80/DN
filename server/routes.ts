@@ -323,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Company management endpoint
+  // Company management endpoint - Connect/Add company with verification
   app.post("/api/companies", async (req, res) => {
     try {
       if (!req.isAuthenticated() || !req.user) {
@@ -333,11 +333,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as User;
       const companyData = req.body;
       
+      // Verify that the user is a statutory representative
+      const userGivenName = user.givenName || user.name.split(' ')[0];
+      const userFamilyName = user.familyName || user.name.split(' ').slice(1).join(' ');
+      
+      const statutari = companyData.statutari || [];
+      const userStatutar = statutari.find((stat: any) => {
+        const menoMatch = stat.meno.toLowerCase() === userGivenName.toLowerCase();
+        const priezviskoMatch = stat.priezvisko.toLowerCase() === userFamilyName.toLowerCase();
+        return menoMatch && priezviskoMatch;
+      });
+
+      if (!userStatutar) {
+        console.log(`[API] User ${user.name} is not a statutory representative of company ${companyData.nazov}`);
+        return res.status(403).json({ 
+          error: "Nemáte oprávnenie pripojiť túto firmu.",
+          message: "Nie ste uvedený ako štatutárny zástupca tejto firmy."
+        });
+      }
+
+      console.log(`[API] User ${user.name} verified as statutory representative (${userStatutar.rola})`);
+      
       // Check if company already exists
       let company = await storage.getCompanyByIco(companyData.ico);
       
       if (!company) {
         // Create new company
+        console.log(`[API] Creating new company: ${companyData.nazov} (IČO: ${companyData.ico})`);
         company = await storage.createCompany({
           ico: companyData.ico,
           dic: companyData.dic,
@@ -355,31 +377,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
           stav: 'active',
           lastVerifiedAt: new Date()
         });
+      } else {
+        // Company exists - update it
+        console.log(`[API] Updating existing company: ${companyData.nazov} (IČO: ${companyData.ico})`);
+        await storage.updateCompany(company.id, {
+          nazov: companyData.nazov,
+          dic: companyData.dic,
+          icDph: companyData.icDph,
+          sidloUlica: companyData.sidloUlica,
+          sidloCislo: companyData.sidloCislo,
+          sidloMesto: companyData.sidloMesto,
+          sidloPsc: companyData.sidloPsc,
+          registracnySud: companyData.registracnySud,
+          cisloVlozky: companyData.cisloVlozky,
+          datumZapisu: companyData.datumZapisu,
+          pravnaForma: companyData.pravnaForma,
+          stav: 'active',
+          lastVerifiedAt: new Date()
+        });
       }
 
-      // Create mandate for the user
-      // Use the first statutar from the company data as the mandate
-      const firstStatutar = companyData.statutari?.[0];
+      // Check if mandate already exists
+      const existingMandates = await storage.getUserMandates(user.id);
+      const existingMandate = existingMandates.find(m => m.companyId === company.id);
+
+      if (existingMandate) {
+        console.log(`[API] Mandate already exists for user ${user.name} and company ${company.nazov}`);
+        return res.json({ 
+          success: true, 
+          message: "Firma je už pripojená.",
+          company,
+          mandate: existingMandate
+        });
+      }
+
+      // Create mandate for the user using verified statutory data
       const mandate = await storage.createUserMandate({
         userId: user.id,
         companyId: company.id,
-        rola: firstStatutar?.rola || 'Konateľ',
-        rozsahOpravneni: firstStatutar?.rozsahOpravneni || 'samostatne',
-        platnyOd: firstStatutar?.platnostOd || new Date().toISOString().split('T')[0],
+        rola: userStatutar.rola,
+        rozsahOpravneni: userStatutar.rozsahOpravneni || 'samostatne',
+        platnyOd: userStatutar.platnostOd || new Date().toISOString().split('T')[0],
         platnyDo: null,
         zdrojOverenia: 'OR SR Mock',
         stav: 'active',
         isVerifiedByKep: false
       });
 
-      res.json({ 
+      console.log(`[API] Company ${company.nazov} successfully connected for user ${user.name}`);
+      res.status(201).json({ 
         success: true, 
+        message: "Firma bola úspešne pripojená.",
         company,
         mandate 
       });
     } catch (error) {
-      console.error("[API] Error creating company:", error);
-      res.status(500).json({ error: "Failed to create company" });
+      console.error("[API] Error connecting company:", error);
+      res.status(500).json({ error: "Nepodarilo sa pripojiť firmu. Skúste to znova." });
     }
   });
 

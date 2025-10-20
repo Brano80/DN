@@ -1,0 +1,74 @@
+Ahoj Replit AI,
+
+Máme hotový frontend komponent `AddCompanyForm.tsx`, ktorý úspešne vyhľadáva firmy cez Mock API `/api/mock-orsr-search` a zobrazuje ich detaily.
+
+Teraz potrebujem implementovať backendovú logiku pre tlačidlo **"Potvrdiť a pripojiť firmu"**.
+
+**Cieľ:**
+Vytvoriť nový **POST** endpoint `/api/companies/connect`, ktorý:
+1.  Prijme dáta o firme (ktoré frontend získal z Mock API) a ID používateľa (z jeho session).
+2.  Overí, či prihlásený používateľ je skutočne uvedený ako štatutár vo firemných dátach.
+3.  Uloží alebo aktualizuje dáta firmy v tabuľke `companies` (Drizzle ORM).
+4.  Vytvorí nový záznam o mandáte v tabuľke `userCompanyMandates` (Drizzle ORM).
+5.  (Zatiaľ preskočíme KEP podpis potvrdenia).
+
+**Detaily implementácie (Backend - `server/routes.ts` alebo nový súbor):**
+
+1.  **Nový Endpoint:** Vytvor `POST /api/companies/connect`.
+2.  **Ochrana:** Zabezpeč, aby bol tento endpoint prístupný len pre prihlásených používateľov (použi existujúci middleware na overenie session/autentifikácie).
+3.  **Vstup (request body):** Endpoint bude očakávať JSON objekt obsahujúci celé dáta firmy získané z Mock API. Predpokladajme, že frontend pošle presne tú štruktúru, ktorú vracia `/api/mock-orsr-search`, napr.:
+    ```json
+    {
+      "ico": "36723246",
+      "nazov": "DIGITAL NOTARY s.r.o.",
+      "sidloUlica": "Digitalna",
+      // ... všetky ostatné polia firmy ...
+      "statutari": [
+        {
+          "meno": "Ján",
+          "priezvisko": "Nováček",
+          "rola": "Konateľ",
+          "rozsahOpravneni": "samostatne",
+          "platnostOd": "2020-01-15"
+        }
+        // ... prípadne ďalší štatutári ...
+      ]
+    }
+    ```
+4.  **Získanie ID používateľa:** Získaj ID prihláseného používateľa z `req.user.id` (alebo ekvivalentu podľa tvojej implementácie Passport.js/session). Získaj aj jeho meno a priezvisko pre overenie.
+5.  **Overenie Štatutára:**
+    * Prejdi pole `statutari` z prijatých dát.
+    * Nájdi záznam, ktorý zodpovedá prihlásenému používateľovi (porovnaj meno a priezvisko - pre MVP to stačí, neskôr môžeme pridať porovnanie rodného čísla alebo iného unikátneho identifikátora, ak ho budeme mať z eID).
+    * Ak sa používateľ nenájde medzi štatutármi, vráť HTTP status 403 (Forbidden) s chybovou správou: "Nemáte oprávnenie pripojiť túto firmu."
+    * Ak sa nájde, zapamätaj si jeho `rola` a `rozsahOpravneni` z dát.
+
+6.  **Uloženie/Aktualizácia firmy (tabuľka `companies`):**
+    * Použi Drizzle ORM.
+    * Skús nájsť firmu podľa `ico` v tabuľke `companies`.
+    * **Ak firma neexistuje:** Vytvor nový záznam v `companies` s dátami z requestu. Nastav `stav` na `'active'` (pretože sme ju práve overili) a `lastVerifiedAt` na aktuálny čas.
+    * **Ak firma už existuje:** Aktualizuj jej údaje (sídlo, názov atď.) a hlavne aktualizuj `lastVerifiedAt` na aktuálny čas a `stav` na `'active'`.
+    * Zapamätaj si `companyId` (či už novovytvorenej alebo existujúcej firmy).
+
+7.  **Vytvorenie Mandátu (tabuľka `userCompanyMandates`):**
+    * Použi Drizzle ORM.
+    * Skontroluj, či už **neexistuje** aktívny mandát pre kombináciu `userId` a `companyId`.
+    * Ak neexistuje, vytvor nový záznam v `userCompanyMandates`:
+        * `userId`: ID prihláseného používateľa.
+        * `companyId`: ID firmy z predchádzajúceho kroku.
+        * `rola`: Rola používateľa zistená v kroku 5.
+        * `rozsahOpravneni`: Rozsah oprávnení zistený v kroku 5.
+        * `platnyOd`: Dátum platnosti zistený v kroku 5 (alebo aktuálny dátum, ak nie je k dispozícii).
+        * `zdrojOverenia`: Zatiaľ `'OR SR Mock'`.
+        * `stav`: `'active'`.
+        * `isVerifiedByKep`: Zatiaľ `false` (tento krok preskakujeme).
+
+8.  **Výstup (response):**
+    * Ak všetko prebehlo úspešne, vráť HTTP status 201 (Created) alebo 200 (OK) a JSON objekt `{ success: true, message: "Firma bola úspešne pripojená." }`.
+    * V prípade chýb vráť príslušný HTTP status (napr. 500) a chybovú správu.
+
+**Dôležité inštrukcie pre AI:**
+* Nezabudni na import schém (`companies`, `userCompanyMandates`, `users`) z `shared/schema.ts` a Drizzle klienta (`db`) z `server/db.ts`.
+* Použi `db.insert().values()...` alebo `db.update().set()...` a `db.select()...` metódy Drizzle.
+* Implementuj základné spracovanie chýb (try-catch bloky).
+* Pridaj tento nový endpoint do existujúceho routingu (pravdepodobne v `server/routes.ts`).
+* **Poskytni mi kód nového endpointu a zmeny v routingu.**

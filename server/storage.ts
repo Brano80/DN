@@ -35,6 +35,7 @@ export interface IStorage {
   getCompany(id: string): Promise<Company | undefined>;
   getCompanyByIco(ico: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
+  updateCompany(id: string, updates: Partial<Company>): Promise<Company | undefined>;
   
   getUserMandates(userId: string): Promise<Array<UserCompanyMandate & { company: Company }>>;
   createUserMandate(mandate: InsertUserCompanyMandate): Promise<UserCompanyMandate>;
@@ -232,6 +233,16 @@ export class MemStorage implements IStorage {
     };
     this.companies.set(id, company);
     return company;
+  }
+
+  async updateCompany(id: string, updates: Partial<Company>): Promise<Company | undefined> {
+    const company = this.companies.get(id);
+    if (!company) return undefined;
+    
+    const { id: _id, createdAt: _createdAt, ...safeUpdates } = updates;
+    const updated = { ...company, ...safeUpdates, updatedAt: new Date() };
+    this.companies.set(id, updated);
+    return updated;
   }
 
   async getUserMandates(userId: string): Promise<Array<UserCompanyMandate & { company: Company }>> {
