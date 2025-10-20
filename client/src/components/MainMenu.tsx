@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Shield, FileCheck, FolderOpen, Building2, Building, LogOut } from "lucide-react";
+import { FileText, Shield, FileCheck, FolderOpen, Building2, Building, LogOut, ArrowLeft } from "lucide-react";
 
 interface MainMenuProps {
   userName: string;
@@ -11,6 +11,7 @@ interface MainMenuProps {
   onMyDocuments: () => void;
   onMyCompanies?: () => void;
   onVirtualOffice: () => void;
+  onBack: () => void;
   onLogoff: () => void;
 }
 
@@ -23,10 +24,21 @@ export default function MainMenu({
   onMyDocuments,
   onMyCompanies,
   onVirtualOffice,
+  onBack,
   onLogoff,
 }: MainMenuProps) {
   return (
     <Card className="p-8">
+      <div className="mb-4">
+        <Button 
+          variant="ghost" 
+          onClick={onBack}
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Späť
+        </Button>
+      </div>
       <h2 className="text-2xl font-semibold mb-6">Menu</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Button

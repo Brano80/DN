@@ -34,6 +34,15 @@ export default function Home() {
   const activeContext = data?.activeContext;
   const isCompanyContext = activeContext && activeContext !== 'personal';
 
+  const handleBack = () => {
+    // Go back to profile selection
+    if (isCompanyContext) {
+      setLocation('/select-company');
+    } else {
+      setLocation('/select-profile');
+    }
+  };
+
   const handleLogoff = () => {
     window.location.href = '/auth/logout';
   };
@@ -72,6 +81,7 @@ export default function Home() {
               onMyDocuments={() => setLocation('/my-documents')}
               onMyCompanies={!isCompanyContext ? () => setLocation('/companies') : undefined}
               onVirtualOffice={() => setLocation('/virtual-office')}
+              onBack={handleBack}
               onLogoff={handleLogoff}
             />
           )}
