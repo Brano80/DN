@@ -358,6 +358,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new mandate (invite user to company)
+  app.post("/api/companies/:ico/mandates", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const { ico } = req.params;
+      const { email, rola, rozsahOpravneni } = req.body;
+
+      console.log(`[API] User ${user.name} attempting to invite ${email} to company ${ico}`);
+
+      // Validate input
+      if (!email || !rola || !rozsahOpravneni) {
+        return res.status(400).json({ 
+          error: "Chybajúce údaje",
+          message: "E-mail, rola a rozsah oprávnení sú povinné."
+        });
+      }
+
+      // Security check: Verify user has an active mandate for this company
+      const userMandates = await storage.getUserMandates(user.id);
+      const userActiveMandate = userMandates.find(
+        (m) => m.company.ico === ico && m.stav === 'active'
+      );
+
+      if (!userActiveMandate) {
+        console.log(`[API] User ${user.name} attempted to invite users without authorization for company ${ico}`);
+        return res.status(403).json({ 
+          error: "Prístup zamietnutý",
+          message: "Nemáte oprávnenie pozývať používateľov pre túto firmu."
+        });
+      }
+
+      // Additional check: Only "Konateľ" or admin roles can invite users
+      const authorizedRoles = ['Konateľ', 'Prokurista'];
+      if (!authorizedRoles.includes(userActiveMandate.rola)) {
+        console.log(`[API] User ${user.name} with role ${userActiveMandate.rola} attempted to invite users`);
+        return res.status(403).json({ 
+          error: "Nedostatočné oprávnenia",
+          message: "Len konatelia a prokuristi môžu pozývať nových používateľov."
+        });
+      }
+
+      // Find company by ICO
+      const company = await storage.getCompanyByIco(ico);
+      if (!company) {
+        return res.status(404).json({ 
+          error: "Firma nenájdená",
+          message: "Firma s týmto IČO neexistuje."
+        });
+      }
+
+      // Check if invited user exists (username is used as email in our system)
+      const invitedUser = await storage.getUserByUsername(email);
+      
+      if (!invitedUser) {
+        // MVP Simplification: User must already be registered
+        console.log(`[API] Attempted to invite non-existent user: ${email}`);
+        return res.status(404).json({ 
+          error: "Používateľ nenájdený",
+          message: "Používateľ s týmto e-mailom zatiaľ nie je v systéme Digital Notary. Používateľ sa musí najprv zaregistrovať."
+        });
+      }
+
+      // Check if user already has a mandate for this company
+      const existingMandates = await storage.getUserMandates(invitedUser.id);
+      const existingMandate = existingMandates.find(m => m.companyId === company.id);
+
+      if (existingMandate) {
+        console.log(`[API] User ${email} already has mandate for company ${company.nazov}`);
+        return res.status(409).json({ 
+          error: "Mandát už existuje",
+          message: "Používateľ už má pridelený mandát pre túto firmu."
+        });
+      }
+
+      // Create new mandate with pending_confirmation status
+      const newMandate = await storage.createUserMandate({
+        userId: invitedUser.id,
+        companyId: company.id,
+        rola: rola,
+        rozsahOpravneni: rozsahOpravneni,
+        platnyOd: new Date().toISOString().split('T')[0],
+        platnyDo: null,
+        zdrojOverenia: `Pozvánka od ${user.name}`,
+        stav: 'pending_confirmation',
+        isVerifiedByKep: false
+      });
+
+      // TODO: Send notification email to invited user
+      console.log(`[TODO] Poslať notifikačný e-mail používateľovi ${email} o novom mandáte.`);
+
+      console.log(`[API] Successfully created pending mandate for ${email} at company ${company.nazov}`);
+      res.status(201).json({ 
+        success: true,
+        message: "Pozvánka bola úspešne odoslaná.",
+        mandate: newMandate
+      });
+    } catch (error) {
+      console.error("[API] Error creating mandate:", error);
+      res.status(500).json({ error: "Nepodarilo sa vytvoriť mandát. Skúste to znova." });
+    }
+  });
+
   // Company management endpoint - Connect/Add company with verification
   app.post("/api/companies", async (req, res) => {
     try {

@@ -1,0 +1,43 @@
+Frontend stránka `ManageMandatesPage` teraz posiela dáta z formulára na pozvanie používateľa. Potrebujem vytvoriť backend endpoint, ktorý túto požiadavku spracuje.
+
+**Cieľ:** Vytvoriť `POST /api/companies/:ico/mandates`
+
+**Detaily implementácie (v tvojom backendovom routeri, napr. `server/routes/companyRoutes.ts`):**
+
+1.  **Definuj routu:** `POST /api/companies/:ico/mandates`
+2.  **Zabezpečenie (Middleware):** Uisti sa, že je ruta chránená (`isAuthenticated` middleware).
+3.  **Logika handlera:**
+    * Získaj `ico` z `req.params`.
+    * Získaj `userId` prihláseného administrátora z `req.session.userId`.
+    * Získaj dáta z formulára (`email`, `rola`, `rozsahOpravneni`) z `req.body`.
+    * **Bezpečnostná kontrola:** Over, či prihlásený používateľ (`userId`) má oprávnenie spravovať mandáty pre firmu s daným `ico`. (Napr. či je "Konateľ" alebo má admin rolu pre túto firmu).
+        * Ak nemá oprávnenie, vráť status `403 Forbidden` ("Nemáte oprávnenie pozývať používateľov pre túto firmu.").
+    * **Nájdi IČO firmy:** Nájdi `companyId` (naše interné UUID) podľa `ico`.
+    * **Spracuj pozvaného používateľa:**
+        * **A) Skontroluj, či používateľ s daným `email`-om už existuje v `User` tabuľke:**
+            * `const pozvanyUser = await prisma.user.findUnique({ where: { email } });`
+        * **B) Ak používateľ NEEXISTUJE:**
+            * Vytvor "dočasného" (placeholder) používateľa s týmto e-mailom a vygeneruj pre neho pozývací token. (Toto je zložitý tok, zjednodušme to).
+            * **ZJEDNODUŠENIE PRE MVP:** Vráť chybu `404 Not Found` so správou "Používateľ s týmto e-mailom zatiaľ nie je v systéme Digital Notary. Používateľ sa musí najprv zaregistrovať."
+        * **C) Ak používateľ EXISTUJE (`pozvanyUser`):**
+            * Skontroluj, či už náhodou **nemá** aktívny mandát pre túto firmu.
+            * Ak už mandát má, vráť chybu `409 Conflict` ("Používateľ už má pridelený mandát pre túto firmu.").
+            * **Ak mandát nemá:** Vytvor nový záznam v `UserCompanyMandate` tabuľke:
+                ```javascript
+                await prisma.userCompanyMandate.create({
+                  data: {
+                    userId: pozvanyUser.id,
+                    companyId: company.id, // ID firmy (UUID)
+                    companyIco: ico,         // IČO firmy
+                    rola: rola,
+                    rozsahOpravneni: rozsahOpravneni,
+                    stav: 'PENDING_CONFIRMATION', // Dôležité: Používateľ to musí ešte potvrdiť
+                    zdrojOverenia: 'Pozvánka od ' + req.user.name, // Alebo podobný audit log
+                    platnyOd: new Date(),
+                  }
+                });
+                ```
+    * **Odošli notifikáciu:** (Simulácia) Vypíš do konzoly `console.log("TODO: Poslať notifikačný e-mail používateľovi ${email} o novom mandáte.");`
+    * **Odpoveď:** Vráť status `201 Created` a novo vytvorený mandát ako JSON.
+
+**Dôležité:** Daj mi vedieť, keď bude endpoint pripravený, a ukáž mi kód, ktorý si pridal do súboru s routami.

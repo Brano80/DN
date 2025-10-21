@@ -60,7 +60,7 @@ export class MemStorage implements IStorage {
   seedExampleData() {
     console.log('[SEED] Seeding example data for Škoda Octavia...');
     
-    // Create mock user
+    // Create mock user 1 - Ján Nováček (will have a company)
     const mockUserId = "mock123";
     const mockUser: User = {
       id: mockUserId,
@@ -68,6 +68,17 @@ export class MemStorage implements IStorage {
       password: "mock-password-hash"
     };
     this.users.set(mockUserId, mockUser);
+    
+    // Create mock user 2 - Petra Veselá (can be invited to a company)
+    const mockUser2Id = "mock456";
+    const mockUser2: User = {
+      id: mockUser2Id,
+      username: "petra.vesela@example.sk",
+      password: "mock-password-hash-2"
+    };
+    this.users.set(mockUser2Id, mockUser2);
+    
+    console.log('[SEED] Created 2 mock users');
     
     // Create DIGITAL NOTARY s.r.o. company
     const companyId = "company-digital-notary";
