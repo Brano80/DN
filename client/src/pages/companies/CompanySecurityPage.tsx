@@ -176,6 +176,7 @@ export default function CompanySecurityPage() {
             checked={company.enforceTwoFactorAuth}
             onCheckedChange={handleSwitchChange}
             disabled={updateSecurityMutation.isPending}
+            className="data-[state=checked]:bg-green-600"
             data-testid="switch-enforce-2fa"
           />
         </CardFooter>
