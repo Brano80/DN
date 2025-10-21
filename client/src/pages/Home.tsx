@@ -1,8 +1,9 @@
-import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import AuthSection from "@/components/AuthSection";
-import MainMenu from "@/components/MainMenu";
-import ThemeToggle from "@/components/ThemeToggle";
+import PersonalDashboard from "@/components/dashboards/PersonalDashboard";
+import CompanyDashboard from "@/components/dashboards/CompanyDashboard";
 
 interface User {
   id: string;
@@ -12,41 +13,25 @@ interface User {
   familyName?: string;
 }
 
+interface Mandate {
+  ico: string;
+  companyName: string;
+  role: string;
+}
+
 interface CurrentUserResponse {
   user: User;
-  mandates: Array<{
-    ico: string;
-    companyName: string;
-    role: string;
-  }>;
-  activeContext?: string | null;
+  mandates: Mandate[];
+  activeContext: string | null;
 }
 
 export default function Home() {
-  const [, setLocation] = useLocation();
-
   const { data, isLoading } = useQuery<CurrentUserResponse>({
     queryKey: ['/api/current-user'],
     retry: false,
   });
 
-  const user = data?.user;
-  const activeContext = data?.activeContext;
-  const isCompanyContext = activeContext && activeContext !== 'personal';
-
-  const handleBack = () => {
-    // Go back to profile selection
-    if (isCompanyContext) {
-      setLocation('/select-company');
-    } else {
-      setLocation('/select-profile');
-    }
-  };
-
-  const handleLogoff = () => {
-    window.location.href = '/auth/logout';
-  };
-
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -57,35 +42,53 @@ export default function Home() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl space-y-8">
-        <div className="flex items-center justify-between">
-          <header className="text-center flex-1">
+  // Not authenticated - show auth section
+  if (!data || !data.user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl space-y-8">
+          <header className="text-center">
             <h1 className="text-4xl font-bold">Digital Notary</h1>
             <p className="text-muted-foreground mt-2">Digital Identity & Signature Manager</p>
           </header>
-          <ThemeToggle />
-        </div>
-
-        <main>
-          {!user ? (
+          <main>
             <AuthSection />
-          ) : (
-            <MainMenu
-              userName={user.name}
-              isCompanyContext={!!isCompanyContext}
-              onCreateDocument={() => setLocation('/create-document')}
-              onVerifyDocument={() => setLocation('/verify-document')}
-              onMyContracts={() => setLocation('/my-contracts')}
-              onMyDocuments={() => setLocation('/my-documents')}
-              onVirtualOffice={() => setLocation('/virtual-office')}
-              onBack={handleBack}
-              onLogoff={handleLogoff}
-            />
-          )}
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  // Authenticated - determine which dashboard to show
+  const { user, mandates, activeContext } = data;
+
+  // Personal context (or no context set)
+  if (!activeContext || activeContext === 'personal') {
+    return <PersonalDashboard />;
+  }
+
+  // Company context - find the active company
+  const activeCompany = mandates.find(mandate => mandate.ico === activeContext);
+
+  if (!activeCompany) {
+    // Error state - company context set but company not found
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Aktívny firemný kontext sa nenašiel. IČO: {activeContext}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Show company dashboard
+  return (
+    <CompanyDashboard
+      companyName={activeCompany.companyName}
+      ico={activeCompany.ico}
+    />
   );
 }

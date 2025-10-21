@@ -1,0 +1,47 @@
+Potrebujeme, aby naša hlavná stránka dynamicky reagovala na zvolený kontext používateľa (ktorý sa nastavuje v Navbar-e).
+
+**Cieľ:** Upraviť hlavnú stránku aplikácie (napr. `client/src/pages/HomePage.tsx` alebo `Dashboard.tsx` - nájdi súbor, ktorý obsluhuje routu `/`) a vytvoriť dva nové komponenty pre dashboardy.
+
+**Detaily implementácie:**
+
+1.  **Vytvoriť komponent `PersonalDashboard.tsx`:**
+    * Vytvor nový súbor `client/src/components/dashboards/PersonalDashboard.tsx`.
+    * Komponent by mal zobrazovať:
+        * Nadpis: `Váš osobný profil`
+        * Text: `Spravujte svoje osobné dokumenty a digitálne úkony.`
+        * Použi shadcn/ui komponenty (napr. `Card`) na profesionálny vzhľad.
+    * Tento komponent zatiaľ nepotrebuje žiadne dáta, je len vizuálny.
+
+2.  **Vytvoriť komponent `CompanyDashboard.tsx`:**
+    * Vytvor nový súbor `client/src/components/dashboards/CompanyDashboard.tsx`.
+    * Komponent musí prijímať `props`: `companyName: string` a `ico: string`.
+    * Komponent by mal zobrazovať:
+        * Nadpis: `Firemný dashboard pre: [companyName]`
+        * Podnadpis: `IČO: [ico]`
+        * Text: `Spravujte firemné dokumenty a digitálne úkony v mene tejto spoločnosti.`
+    * Opäť použi shadcn/ui komponenty.
+
+3.  **Upraviť hlavnú stránku (napr. `HomePage.tsx` alebo `Dashboard.tsx`):**
+    * V tomto komponente použi `useQuery` hook na načítanie dát z `/api/current-user` (rovnako ako v `Navbar.tsx`). Bude to rýchle, lebo dáta sú už v cache.
+    * Získaj z dát `data`, `isLoading`.
+    * **Spracuj stavy:**
+        * Ak `isLoading`, zobraz loading indikátor.
+        * Ak `!data` (alebo `!data.user`), presmeruj na `/login` alebo zobraz uvítaciu stránku pre neprihlásených (podľa toho, ako je to teraz).
+    * **Podmienené zobrazenie (Conditional Rendering):**
+        * Získaj `activeContext` a `mandates` z `data`.
+        * **Ak `activeContext` je `'personal'` (alebo `null`):**
+            * Zobraz komponent `<PersonalDashboard />`.
+        * **Ak `activeContext` je IČO (nie je 'personal' a nie je null):**
+            * Nájdi v poli `mandates` firmu, ktorej `ico === activeContext` (rovnaká logika ako v `Navbar.tsx`).
+            * Ak firmu nájdeš, zobraz `<CompanyDashboard companyName={foundCompany.companyName} ico={foundCompany.ico} />`.
+            * Ak firmu z nejakého dôvodu nenájdeš, zobraz chybovú správu (napr. "Aktívny firemný kontext sa nenašiel.").
+
+**Dôležité inštrukcie pre AI:**
+
+* Zabezpeč správny import nových komponentov `PersonalDashboard` a `CompanyDashboard` do hlavnej stránky.
+* Použi `react-query` na načítanie dát.
+* Zdieľanie dát z `useQuery(['/api/current-user'])` medzi `Navbar` a touto stránkou je v poriadku a očakávané (vďaka cache).
+* **Poskytni mi kompletný kód pre všetky TRI upravené/nové súbory:**
+    1.  `client/src/pages/HomePage.tsx` (alebo `Dashboard.tsx`)
+    2.  `client/src/components/dashboards/PersonalDashboard.tsx`
+    3.  `client/src/components/dashboards/CompanyDashboard.tsx`
