@@ -72,9 +72,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/auth/logout", async (req: Request, res: Response) => {
     const userEmail = (req.user as User)?.email || "unknown";
     
-    // Reset all data to seed state for testing purposes
-    await storage.resetToSeedData();
-    
     req.logout((err) => {
       if (err) {
         console.error("[AUTH] Logout error:", err);
@@ -88,6 +85,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.redirect("/");
       });
     });
+  });
+
+  // Reset all data to seed state (for testing purposes)
+  app.post("/api/reset-data", async (req: Request, res: Response) => {
+    try {
+      console.log("[RESET] Manual data reset requested");
+      await storage.resetToSeedData();
+      res.json({ success: true, message: "Dáta boli vymazané a obnovené na základný stav." });
+    } catch (error) {
+      console.error("[RESET] Error resetting data:", error);
+      res.status(500).json({ error: "Nepodarilo sa vymazať dáta." });
+    }
   });
 
   app.get("/api/current-user", async (req: Request, res: Response) => {

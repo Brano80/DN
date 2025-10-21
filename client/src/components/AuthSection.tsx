@@ -1,8 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, User } from "lucide-react";
+import { Shield, User, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AuthSection() {
+  const { toast } = useToast();
+  const [isResetting, setIsResetting] = useState(false);
+
   const handleOidcLogin = () => {
     window.location.href = "/auth/login";
   };
@@ -13,6 +18,43 @@ export default function AuthSection() {
 
   const handlePetraLogin = () => {
     window.location.href = "/auth/mock-login-petra";
+  };
+
+  const handleResetData = async () => {
+    if (!confirm("Naozaj chcete vymazať všetky dáta a obnoviť základný stav? Táto akcia je nevratná.")) {
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const response = await fetch("/api/reset-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Reset failed");
+      }
+
+      toast({
+        title: "Dáta vymazané",
+        description: "Všetky dáta boli vymazané a obnovené na základný stav.",
+      });
+
+      // Refresh page to reflect changes
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error("Error resetting data:", error);
+      toast({
+        title: "Chyba",
+        description: "Nepodarilo sa vymazať dáta.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   return (
@@ -73,6 +115,21 @@ export default function AuthSection() {
               <div className="font-medium">Petra Ambroz</div>
               <div className="text-xs text-muted-foreground">ARIAN s.r.o.</div>
             </div>
+          </Button>
+        </div>
+
+        {/* Reset Data Button */}
+        <div className="mt-6 pt-6 border-t">
+          <Button
+            onClick={handleResetData}
+            variant="ghost"
+            size="sm"
+            className="w-full text-muted-foreground hover:text-destructive"
+            disabled={isResetting}
+            data-testid="button-reset-data"
+          >
+            <Trash2 className="w-3 h-3 mr-2" />
+            {isResetting ? "Vymazávam..." : "Vymazať všetky dáta"}
           </Button>
         </div>
       </div>
