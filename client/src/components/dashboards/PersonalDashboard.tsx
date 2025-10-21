@@ -2,9 +2,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { User, FileText, Shield, Briefcase, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { QUERY_KEYS } from "@/lib/queryKeys";
+import type { Contract, VirtualOffice } from "@shared/schema";
 
 export default function PersonalDashboard() {
   const [, setLocation] = useLocation();
+  const { data: currentUser } = useCurrentUser();
+
+  // Fetch contracts for the current user
+  const { data: contracts } = useQuery<Contract[]>({
+    queryKey: QUERY_KEYS.contracts(currentUser?.email || ''),
+    enabled: !!currentUser?.email,
+  });
+
+  // Fetch virtual offices for the current user
+  const { data: virtualOffices } = useQuery<VirtualOffice[]>({
+    queryKey: QUERY_KEYS.virtualOffices(currentUser?.email || ''),
+    enabled: !!currentUser?.email,
+  });
+
+  // Calculate counts
+  const contractsCount = contracts?.length || 0;
+  const virtualOfficesCount = virtualOffices?.length || 0;
+  // TODO: E-dokumenty count - for now using 0, will implement when documents storage is ready
+  const documentsCount = 0;
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="personal-dashboard">
@@ -28,7 +51,7 @@ export default function PersonalDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{contractsCount}</div>
             <p className="text-xs text-muted-foreground">Celkový počet zmlúv</p>
           </CardContent>
         </Card>
@@ -43,8 +66,8 @@ export default function PersonalDashboard() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Podpísané dokumenty</p>
+            <div className="text-2xl font-bold">{documentsCount}</div>
+            <p className="text-xs text-muted-foreground">Moje e-dokumenty</p>
           </CardContent>
         </Card>
 
@@ -58,7 +81,7 @@ export default function PersonalDashboard() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{virtualOfficesCount}</div>
             <p className="text-xs text-muted-foreground">Aktívne kancelárie</p>
           </CardContent>
         </Card>
