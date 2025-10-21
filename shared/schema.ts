@@ -86,7 +86,8 @@ export const auditActionTypeEnum = pgEnum("audit_action_type", [
   "USER_LOGIN",
   "USER_LOGOUT",
   // Firma
-  "COMPANY_CONNECTED"
+  "COMPANY_CONNECTED",
+  "SECURITY_SETTINGS_UPDATED"
 ]);
 
 // Companies table
@@ -107,6 +108,7 @@ export const companies = pgTable("companies", {
   stat: varchar("stat", { length: 2 }).notNull().default("SK"),
   stav: companyStatusEnum("stav").notNull().default("pending_verification"),
   lastVerifiedAt: timestamp("last_verified_at", { withTimezone: true }),
+  enforceTwoFactorAuth: boolean("enforce_two_factor_auth").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

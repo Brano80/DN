@@ -1,0 +1,51 @@
+Ahoj Replit AI,
+
+Potrebujeme začať pracovať na sekcii "Zabezpečenie" pre firmy. Začneme pridaním nového nastavenia do databázy a vytvorením endpointov na jeho správu.
+
+**Časť A: Úprava Databázovej Schémy (napr. `prisma.schema`)**
+
+1.  Nájdi model `Company`.
+2.  Pridaj do modelu `Company` nový stĺpec:
+    
+    ```prisma
+    model Company {
+      // ... vsetky existujuce polia ...
+    
+      // NOVE POLE PRE ZABEZPECENIE
+      enforceTwoFactorAuth   Boolean  @default(false)
+    }
+    ```
+3.  Prosím, vygeneruj a spusti migráciu pre túto zmenu.
+
+**Časť B: Endpoint na Zmenu Nastavenia (napr. `server/routes/companyRoutes.ts`)**
+
+Vytvor nový endpoint `PATCH /api/companies/:ico/security-settings`:
+
+1.  **Definuj routu:** `PATCH /api/companies/:ico/security-settings`
+2.  **Zabezpečenie (Middleware):** Uisti sa, že je ruta chránená (`isAuthenticated`).
+3.  **Logika handlera:**
+    * Získaj `ico` z `req.params` a `userId` z `req.session`.
+    * Získaj nové nastavenie `enforceTwoFactorAuth` (typu boolean) z `req.body`.
+    * **Bezpečnostná kontrola:** Over, či má prihlásený používateľ oprávnenie meniť nastavenia firmy (napr. je "Konateľ" alebo "Admin" - použi rovnakú logiku ako pri pozývaní používateľov). Ak nemá, vráť 403 Forbidden.
+    * Ak kontrola prejde, nájdi `companyId` podľa `ico`.
+    * **Aktualizuj nastavenie v DB:**
+        ```javascript
+        const updatedCompany = await prisma.company.update({
+          where: { id: company.id },
+          data: { enforceTwoFactorAuth: enforceTwoFactorAuth }
+        });
+        ```
+    * **Pridaj Audit Log:** Zaznamenaj túto dôležitú zmenu.
+        ```javascript
+        await storage.createAuditLog({
+          actionType: "SECURITY_SETTINGS_UPDATED", // (Tento typ budeš musieť pridať do Enum-u!)
+          details: `${user.name} ${enforceTwoFactorAuth ? 'zapol' : 'vypol'} vynútenie 2FA pre firmu.`,
+          userId: user.id,
+          companyId: company.id,
+        });
+        ```
+    * **Odpoveď:** Vráť status `200 OK` a aktualizovaný objekt `updatedCompany`.
+
+**Dôležité:** Nezabudni pridať `SECURITY_SETTINGS_UPDATED` do `AuditActionType` enum-u v `prisma.schema` a spustiť migráciu.
+
+Ukáž mi kód nového endpointu a potvrď migráciu.

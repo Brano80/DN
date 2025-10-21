@@ -112,6 +112,7 @@ export class MemStorage implements IStorage {
       stat: "SK",
       stav: "active",
       lastVerifiedAt: new Date(),
+      enforceTwoFactorAuth: false,
       createdAt: new Date("2020-01-15"),
       updatedAt: new Date()
     };
@@ -156,6 +157,7 @@ export class MemStorage implements IStorage {
       stat: "SK",
       stav: "active",
       lastVerifiedAt: new Date(),
+      enforceTwoFactorAuth: false,
       createdAt: new Date("2021-05-10"),
       updatedAt: new Date()
     };
@@ -385,6 +387,7 @@ export class MemStorage implements IStorage {
       stav: insertCompany.stav ?? 'pending_verification',
       stat: insertCompany.stat ?? 'SK',
       lastVerifiedAt: null,
+      enforceTwoFactorAuth: insertCompany.enforceTwoFactorAuth ?? false,
       createdAt: new Date(),
       updatedAt: new Date()
     };
