@@ -124,6 +124,50 @@ export class MemStorage implements IStorage {
     
     console.log('[SEED] Created company and mandate for mock user');
     
+    // Create second company - EXAMPLE CORP s.r.o.
+    const company2Id = "company-example-corp";
+    const company2: Company = {
+      id: company2Id,
+      ico: "12345678",
+      dic: "SK2012345678",
+      icDph: null,
+      nazov: "EXAMPLE CORP s.r.o.",
+      sidloUlica: "Testovacia",
+      sidloCislo: "10",
+      sidloMesto: "Košice",
+      sidloPsc: "04001",
+      registracnySud: "Okresný súd Košice I",
+      cisloVlozky: "789012/B",
+      datumZapisu: "2021-05-10",
+      pravnaForma: "Spoločnosť s ručením obmedzeným",
+      stat: "SK",
+      stav: "active",
+      lastVerifiedAt: new Date(),
+      createdAt: new Date("2021-05-10"),
+      updatedAt: new Date()
+    };
+    this.companies.set(company2Id, company2);
+    
+    // Create pending mandate invitation for Jan Novacek
+    const pendingMandateId = "mandate-pending-jan";
+    const pendingMandate: UserCompanyMandate = {
+      id: pendingMandateId,
+      userId: mockUserId,
+      companyId: company2Id,
+      rola: "Prokurista",
+      rozsahOpravneni: "spolocne_s_inym",
+      platnyOd: new Date().toISOString().split('T')[0],
+      platnyDo: null,
+      zdrojOverenia: "Pozvánka od konateľa",
+      stav: "pending_confirmation",
+      isVerifiedByKep: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.userMandates.set(pendingMandateId, pendingMandate);
+    
+    console.log('[SEED] Created pending mandate invitation for Jan Novacek');
+    
     // Create example contract for Škoda Octavia
     const contractId = "example-skoda-octavia";
     const exampleContract: Contract = {
