@@ -227,22 +227,14 @@ export default function PersonalDashboard() {
         </CardContent>
       </Card>
 
-      {/* Pending Mandate Invitations */}
-      <Card id="pending-mandates-section">
-        <CardHeader>
-          <CardTitle>Čakajúce úkony ({pendingMandates.length})</CardTitle>
-          <CardDescription>Pozvánky na spoluprácu so spoločnosťami</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingUser ? (
-            <div className="text-sm text-muted-foreground text-center py-4">
-              Načítavam úkony...
-            </div>
-          ) : pendingMandates.length === 0 ? (
-            <div className="text-sm text-muted-foreground text-center py-8">
-              Nemáte žiadne čakajúce úkony
-            </div>
-          ) : (
+      {/* Pending Mandate Invitations - Detail View */}
+      {pendingMandates.length > 0 && (
+        <Card id="pending-mandates-section">
+          <CardHeader>
+            <CardTitle>Pozvánky na spoluprácu</CardTitle>
+            <CardDescription>Skontrolujte a potvrďte pozvánky od spoločností</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
               {pendingMandates.map((mandate) => (
                 <div
@@ -294,9 +286,9 @@ export default function PersonalDashboard() {
                 </div>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity */}
       <Card>
