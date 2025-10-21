@@ -284,6 +284,95 @@ export function ContractDetailModal({ open, onOpenChange, contractId }: Contract
     );
   };
 
+  const renderPropertyContract = (content: any) => {
+    return (
+      <div className="bg-background border border-border p-8 text-sm leading-relaxed">
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold mb-2">KÚPNO-PREDAJNÁ ZMLUVA NEHNUTEĽNOSTI</h2>
+          <p className="text-muted-foreground">na predaj nehnuteľnosti</p>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <p className="font-semibold mb-2">PREDÁVAJÚCI:</p>
+              <p>{content.seller?.name}</p>
+              <p>Rodné číslo: {content.seller?.birthNumber}</p>
+              <p>Adresa: {content.seller?.address}</p>
+            </div>
+            <div>
+              <p className="font-semibold mb-2">KUPUJÚCI:</p>
+              <p>{content.buyer?.name}</p>
+              <p>Rodné číslo: {content.buyer?.birthNumber}</p>
+              <p>Adresa: {content.buyer?.address}</p>
+            </div>
+          </div>
+          
+          <div>
+            <p className="font-semibold mb-3">PREDMET ZMLUVY - NEHNUTEĽNOSŤ:</p>
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p><strong>Adresa:</strong> {content.property?.address}</p>
+                  <p><strong>Typ:</strong> {content.property?.type}</p>
+                  <p><strong>Podlahová plocha:</strong> {content.property?.floorArea} m²</p>
+                </div>
+                <div>
+                  {content.property?.cadastralArea && (
+                    <p><strong>Katastrálne územie:</strong> {content.property.cadastralArea}</p>
+                  )}
+                  {content.property?.landRegistryNumber && (
+                    <p><strong>LV číslo:</strong> {content.property.landRegistryNumber}</p>
+                  )}
+                  {content.property?.parcelNumber && (
+                    <p><strong>Parcelné číslo:</strong> {content.property.parcelNumber}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <p className="font-semibold mb-2">KÚPNA CENA A PLATOBNÉ PODMIENKY:</p>
+            <div className="bg-primary/10 p-4 rounded-lg">
+              <p className="text-lg font-bold text-primary">Kúpna cena: {content.price} EUR</p>
+              <p className="text-sm mt-2">Spôsob platby: {content.paymentMethod}</p>
+              {content.handoverDate && content.handoverDate !== 'Podľa dohody' && (
+                <p className="text-sm">Dátum odovzdania: {content.handoverDate}</p>
+              )}
+            </div>
+          </div>
+          
+          {content.additionalTerms && content.additionalTerms !== 'Žiadne dodatočné podmienky' && (
+            <div>
+              <p className="font-semibold mb-2">DODATOČNÉ PODMIENKY:</p>
+              <p className="text-sm whitespace-pre-wrap">{content.additionalTerms}</p>
+            </div>
+          )}
+          
+          <div className="mt-8 pt-6 border-t border-border">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="text-center">
+                <p className="mb-4">V {content.signingPlace}, dňa {content.signingDate}</p>
+                <div className="border-t border-border pt-2">
+                  <p className="font-semibold">{content.seller?.name}</p>
+                  <p className="text-sm text-muted-foreground">predávajúci</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="mb-4">V {content.signingPlace}, dňa {content.signingDate}</p>
+                <div className="border-t border-border pt-2">
+                  <p className="font-semibold">{content.buyer?.name}</p>
+                  <p className="text-sm text-muted-foreground">kupujúci</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderEmploymentContract = (content: any) => {
     return (
       <div className="bg-background border border-border p-8 text-sm leading-relaxed">
@@ -399,6 +488,8 @@ export function ContractDetailModal({ open, onOpenChange, contractId }: Contract
       return renderVehicleContract(content);
     } else if (contract.type === 'rental') {
       return renderRentalContract(content);
+    } else if (contract.type === 'property') {
+      return renderPropertyContract(content);
     } else if (contract.type === 'power_of_attorney') {
       return renderPowerOfAttorney(content);
     } else if (contract.type === 'employment') {
