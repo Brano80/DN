@@ -344,6 +344,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get company profile - returns detailed information about a company
+  app.get("/api/companies/:ico/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const { ico } = req.params;
+
+      console.log(`[API] User ${user.name} requesting profile for company ${ico}`);
+
+      // Security check: Verify user has an active mandate for this company
+      const userMandates = await storage.getUserMandates(user.id);
+      const userActiveMandate = userMandates.find(
+        (m) => m.company.ico === ico && m.stav === 'active'
+      );
+
+      if (!userActiveMandate) {
+        console.log(`[API] User ${user.name} attempted to access company profile without active mandate for ${ico}`);
+        return res.status(403).json({ 
+          error: "Prístup zamietnutý",
+          message: "Nemáte oprávnenie zobraziť profil tejto firmy."
+        });
+      }
+
+      // Fetch company by ICO
+      const company = await storage.getCompanyByIco(ico);
+      
+      if (!company) {
+        console.log(`[API] Company with ICO ${ico} not found`);
+        return res.status(404).json({ 
+          error: "Firma nenájdená",
+          message: "Firma s týmto IČO neexistuje."
+        });
+      }
+
+      console.log(`[API] User ${user.name} successfully retrieved profile for company ${company.nazov}`);
+      res.status(200).json(company);
+    } catch (error) {
+      console.error("[API] Error fetching company profile:", error);
+      res.status(500).json({ error: "Nepodarilo sa načítať profil firmy." });
+    }
+  });
+
   // Get company mandates - returns all users who have mandate for a specific company
   app.get("/api/companies/:ico/mandates", async (req, res) => {
     try {
