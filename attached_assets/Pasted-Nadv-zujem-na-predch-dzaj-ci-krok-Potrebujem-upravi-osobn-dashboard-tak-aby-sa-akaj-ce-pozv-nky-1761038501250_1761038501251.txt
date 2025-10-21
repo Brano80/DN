@@ -1,0 +1,29 @@
+Nadväzujem na predchádzajúci krok. Potrebujem upraviť osobný dashboard tak, aby sa čakajúce pozvánky na mandáty zobrazili vnútri už existujúcej karty "Čakajúce úkony".
+
+**Cieľ:** Upraviť komponent `client/src/components/dashboards/PersonalDashboard.tsx`.
+
+**Detaily implementácie:**
+
+1.  **Načítať dáta:** V komponente `PersonalDashboard.tsx` použi `useQuery` na načítanie dát z `GET /api/current-user`.
+    * `const { data, isLoading } = useQuery(['/api/current-user']);`
+    * (Tieto dáta sú už pravdepodobne v cache, takže to bude rýchle).
+2.  **Filtrovať pozvánky:** Ak sú dáta k dispozícii, vytvor nový zoznam len s čakajúcimi pozvánkami:
+    * `const pendingMandates = data?.mandates?.filter(m => m.status === 'pending_confirmation') || [];`
+3.  **Nájsť kartu "Čakajúce úkony":** Nájdi v JSX kóde komponent `<Card>`, ktorý má `<CardTitle>` nastavený na "Čakajúce úkony".
+4.  **Upraviť `CardContent` tejto karty:**
+    * **Ak `isLoading`:** Zobraz vnútri `CardContent` nejaký placeholder, napr. `<p>Načítavam úkony...</p>` alebo `<Skeleton>`.
+    * **Ak `!isLoading` a `pendingMandates.length > 0`:**
+        * Zmapuj (`map`) pole `pendingMandates` a pre každú pozvánku (`mandate`) zobraz:
+        * Štruktúrovaný riadok (napr. v `div` s `flex justify-between items-center`):
+            * Naľavo: Text, napr. `<div><p className="font-medium">Pozvánka: {mandate.companyName}</p><p className="text-sm text-muted-foreground">Ponúknutá rola: {mandate.role}</p></div>`
+            * Napravo: Dve tlačidlá: `<Button size="sm">Prijať</Button>` a `<Button size="sm" variant="outline">Odmietnuť</Button>`.
+    * **Ak `!isLoading` a `pendingMandates.length === 0`:**
+        * Zobraz správu: `<p className="text-muted-foreground">Aktuálne nemáte žiadne čakajúce úkony.</p>`
+    * **DÔLEŽITÉ:** Ak tam boli predtým nejaké statické (hard-coded) úkony, zmaž ich a nahraď touto novou dynamickou logikou.
+5.  **Poznámka:** Tlačidlá "Prijať" a "Odmietnuť" zatiaľ **nemusia nič robiť** (môžu byť `disabled`). Implementujeme ich v ďalšom kroku.
+
+**Dôležité inštrukcie pre AI:**
+
+* Uprav existujúci súbor `client/src/components/dashboards/PersonalDashboard.tsx`.
+* Zameraj sa na úpravu obsahu **existujúcej** karty "Čakajúce úkony".
+* **Poskytni mi kompletný kód upraveného súboru `client/src/components/dashboards/PersonalDashboard.tsx`.**

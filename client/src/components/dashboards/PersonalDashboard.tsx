@@ -7,9 +7,32 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { QUERY_KEYS } from "@/lib/queryKeys";
 import type { Contract, VirtualOffice } from "@shared/schema";
 
+interface Mandate {
+  mandateId: string;
+  ico: string;
+  companyName: string;
+  role: string;
+  status: string;
+}
+
+interface CurrentUserResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  mandates: Mandate[];
+  activeContext: string | null;
+}
+
 export default function PersonalDashboard() {
   const [, setLocation] = useLocation();
   const { data: currentUser } = useCurrentUser();
+
+  // Fetch current user data including mandates
+  const { data: userData, isLoading: isLoadingUser } = useQuery<CurrentUserResponse>({
+    queryKey: ['/api/current-user'],
+  });
 
   // Fetch contracts for the current user
   const { data: contracts } = useQuery<Contract[]>({
@@ -23,11 +46,14 @@ export default function PersonalDashboard() {
     enabled: !!currentUser?.email,
   });
 
+  // Filter pending mandate invitations
+  const pendingMandates = userData?.mandates?.filter(m => m.status === 'pending_confirmation') || [];
+
   // Calculate counts
   const contractsCount = contracts?.length || 0;
   const virtualOfficesCount = virtualOffices?.length || 0;
-  // TODO: E-dokumenty count - for now using 0, will implement when documents storage is ready
   const documentsCount = 0;
+  const pendingTasksCount = pendingMandates.length;
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="personal-dashboard">
@@ -92,7 +118,7 @@ export default function PersonalDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{pendingTasksCount}</div>
             <p className="text-xs text-muted-foreground">Na podpis/schválenie</p>
           </CardContent>
         </Card>
@@ -147,6 +173,62 @@ export default function PersonalDashboard() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Pending Mandate Invitations */}
+      {pendingMandates.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Čakajúce úkony</CardTitle>
+            <CardDescription>Pozvánky na spoluprácu so spoločnosťami</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingUser ? (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                Načítavam úkony...
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingMandates.map((mandate) => (
+                  <div
+                    key={mandate.mandateId}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
+                    data-testid={`mandate-invitation-${mandate.mandateId}`}
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium" data-testid="text-company-name">
+                        Pozvánka: {mandate.companyName}
+                      </p>
+                      <p className="text-sm text-muted-foreground" data-testid="text-role">
+                        Ponúknutá rola: {mandate.role}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        IČO: {mandate.ico}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        disabled
+                        data-testid={`button-accept-${mandate.mandateId}`}
+                      >
+                        Prijať
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled
+                        data-testid={`button-reject-${mandate.mandateId}`}
+                      >
+                        Odmietnuť
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity */}
       <Card>
