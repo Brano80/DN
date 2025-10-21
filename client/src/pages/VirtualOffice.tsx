@@ -38,28 +38,11 @@ export default function VirtualOffice() {
   const [match, params] = useRoute("/virtual-office/:id");
   const officeId = match ? params?.id : null;
   
-  // Initialize view from URL query parameter
-  const getInitialView = (): ViewType => {
-    const queryString = location.includes('?') ? location.split('?')[1] : '';
-    const urlParams = new URLSearchParams(queryString);
-    const viewParam = urlParams.get('view');
-    return viewParam === 'list' ? 'list' : 'create';
-  };
-  
-  const [currentView, setCurrentView] = useState<ViewType>(getInitialView);
-  
-  // Update view when URL changes
-  useEffect(() => {
-    const queryString = location.includes('?') ? location.split('?')[1] : '';
-    const urlParams = new URLSearchParams(queryString);
-    const viewParam = urlParams.get('view');
-    
-    if (viewParam === 'list') {
-      setCurrentView('list');
-    } else if (!officeId) {
-      setCurrentView('create');
-    }
-  }, [location, officeId]);
+  // Derive currentView directly from URL - no state needed
+  const queryString = location.includes('?') ? location.split('?')[1] : '';
+  const urlParams = new URLSearchParams(queryString);
+  const viewParam = urlParams.get('view');
+  const currentView: ViewType = viewParam === 'list' ? 'list' : 'create';
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [officeName, setOfficeName] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
@@ -173,11 +156,11 @@ export default function VirtualOffice() {
 
 
   const handleShowMyOffices = () => {
-    setCurrentView('list');
+    setLocation('/virtual-office?view=list');
   };
 
   const handleShowCreateView = () => {
-    setCurrentView('create');
+    setLocation('/virtual-office');
   };
 
   const handleOpenTransaction = (transactionId: string) => {
