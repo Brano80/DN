@@ -98,10 +98,7 @@ export default function AuthSection() {
             data-testid="button-mock-login-jan"
           >
             <User className="w-4 h-4 mr-2" />
-            <div className="text-left flex-1">
-              <div className="font-medium">Ján Nováček</div>
-              <div className="text-xs text-muted-foreground">eGarant s.r.o.</div>
-            </div>
+            <div className="font-medium">Ján Nováček</div>
           </Button>
           <Button
             onClick={handlePetraLogin}
@@ -111,10 +108,7 @@ export default function AuthSection() {
             data-testid="button-mock-login-petra"
           >
             <User className="w-4 h-4 mr-2" />
-            <div className="text-left flex-1">
-              <div className="font-medium">Petra Ambroz</div>
-              <div className="text-xs text-muted-foreground">ARIAN s.r.o.</div>
-            </div>
+            <div className="font-medium">Petra Ambroz</div>
           </Button>
         </div>
 
