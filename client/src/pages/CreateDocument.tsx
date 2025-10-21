@@ -2,12 +2,37 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import BackButton from "@/components/BackButton";
 import DocumentTemplateCard from "@/components/DocumentTemplateCard";
-import { Home, Car, Upload, FileCheck, Briefcase } from "lucide-react";
+import { Home, Car, Upload, FileCheck, Briefcase, Building2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
+interface CurrentUserResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  mandates: Array<{
+    ico: string;
+    companyName: string;
+    role: string;
+  }>;
+  activeContext: string | null;
+}
 
 export default function CreateDocument() {
   const [, setLocation] = useLocation();
 
-  const templates = [
+  // Get current user and active context
+  const { data: userData } = useQuery<CurrentUserResponse>({
+    queryKey: ['/api/current-user'],
+    retry: false,
+  });
+
+  const activeContext = userData?.activeContext;
+  const isCompanyContext = activeContext && activeContext !== 'personal';
+
+  // All available templates
+  const allTemplates = [
     {
       icon: Upload,
       iconColor: 'text-blue-600',
@@ -15,6 +40,7 @@ export default function CreateDocument() {
       title: 'Nahrať vlastný dokument',
       description: 'Nahrajte váš vlastný dokument na digitálne podpísanie',
       route: '/create-upload-document',
+      context: 'both' as const,
     },
     {
       icon: Car,
@@ -23,6 +49,16 @@ export default function CreateDocument() {
       title: 'Kúpna zmluva vozidla',
       description: 'Štandardná slovenská kúpno-predajná zmluva na kúpu motorového vozidla',
       route: '/create-vehicle-contract',
+      context: 'both' as const,
+    },
+    {
+      icon: Building2,
+      iconColor: 'text-amber-600',
+      iconBgColor: 'bg-amber-100',
+      title: 'Kúpno-predajná zmluva nehnuteľnosti',
+      description: 'Štandardná slovenská zmluva na kúpu/predaj nehnuteľnosti',
+      route: '/create-property-contract',
+      context: 'both' as const,
     },
     {
       icon: Home,
@@ -31,6 +67,7 @@ export default function CreateDocument() {
       title: 'Nájomná zmluva',
       description: 'Štandardná slovenská zmluva o nájme bytu, domu alebo nebytového priestoru',
       route: '/create-rental-contract',
+      context: 'both' as const,
     },
     {
       icon: FileCheck,
@@ -39,6 +76,7 @@ export default function CreateDocument() {
       title: 'Splnomocnenie',
       description: 'Štandardné slovenské splnomocnenie na zastupovanie',
       route: '/create-power-of-attorney',
+      context: 'both' as const,
     },
     {
       icon: Briefcase,
@@ -47,8 +85,16 @@ export default function CreateDocument() {
       title: 'Zamestnanecká zmluva',
       description: 'Štandardná slovenská pracovná zmluva podľa Zákonníka práce',
       route: '/create-employment-contract',
+      context: 'company' as const,
     },
   ];
+
+  // Filter templates based on context
+  const templates = allTemplates.filter(template => {
+    if (template.context === 'both') return true;
+    if (template.context === 'company') return isCompanyContext;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-background p-4">
