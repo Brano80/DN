@@ -1,0 +1,29 @@
+Potrebujem vylepšiť navigáciu (Navbar) tak, aby zobrazovala aktuálny aktívny kontext používateľa.
+
+**Cieľ:** Upraviť súbor `client/src/components/Navbar.tsx`.
+
+**Detaily implementácie:**
+
+1.  **Načítať dáta o používateľovi:** V rámci `Navbar.tsx` (alebo kdekoľvek je aktuálna navigácia) použijeme `useQuery` hook pre `/api/current-user`, aby sme získali dáta o používateľovi, jeho mandátoch a hlavne `activeContext`.
+    * Ak sa dáta načítavajú (`isLoading`), zobraz nejaký placeholder (napr. "Načítavam kontext...").
+2.  **Zobraziť Aktívny Kontext:**
+    * **Ak je `activeContext` null (fyzická osoba):**
+        * Zobraz meno a priezvisko používateľa (napr. "Ján Nováček (Fyzická osoba)").
+    * **Ak je `activeContext` ID firmy (ICO):**
+        * Nájdi príslušnú firmu v poli `data.mandates` podľa `activeContext`.
+        * Zobraz názov firmy a IČO (napr. "DIGITAL NOTARY s.r.o. (36723246)").
+        * Ak sa firma nenašla (aj keď by nemala, ale pre istotu), zobraz len IČO.
+3.  **Dropdown / Možnosť Zmeny Kontextu:**
+    * Pridaj v Navbare (vedľa zobrazeného aktívneho kontextu) malú ikonku šípky dole (napr. `ChevronDown` z `lucide-react`) alebo text "Zmeniť kontext".
+    * Po kliknutí na túto ikonu/text by sa mal zobraziť **dropdown menu**, ktoré ponúkne:
+        * Možnosť "Môj osobný profil" (s presmerovaním na `/select-profile` alebo `/dashboard` ak `activeContext` je `null`).
+        * Odkaz na "Vybrať firemný profil" (s presmerovaním na `/select-company`).
+        * **Ideálne:** Priamo v dropdowne zoznam všetkých dostupných firemných mandátov (ako karty/riadky) s tlačidlom "Vybrať" pre rýchle prepínanie kontextu. Ak sa klikne na "Vybrať" pre inú firmu, malo by to použiť `useMutation` na volanie `POST /api/set-context` (rovnako ako na `/select-company` stránke) a po úspechu invalidovať cache a zmeniť zobrazený kontext.
+
+**Dôležité inštrukcie pre AI:**
+
+* Použi `react-query` pre načítanie dát.
+* Na dropdown použi existujúce UI komponenty (napr. `DropdownMenu` z `shadcn/ui`, ak je k dispozícii, inak si to môže AI navrhnúť).
+* Zabezpeč dynamické zobrazenie na základe `activeContext`.
+* Pri zmene kontextu cez dropdown, použi `useMutation` na volanie `POST /api/set-context` a následne invaliduj cache pre `/api/current-user` a obnov stránku (alebo presmeruj na `/`).
+* **Poskytni mi kompletný kód upraveného súboru `client/src/components/Navbar.tsx`.**
