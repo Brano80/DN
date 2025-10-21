@@ -72,10 +72,7 @@ export default function PersonalDashboard() {
   // Accept mandate mutation
   const acceptMandateMutation = useMutation({
     mutationFn: async (mandateId: string) => {
-      return await apiRequest(`/api/mandates/${mandateId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ stav: 'active' })
-      });
+      return await apiRequest('PATCH', `/api/mandates/${mandateId}`, { stav: 'active' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
@@ -96,10 +93,7 @@ export default function PersonalDashboard() {
   // Reject mandate mutation
   const rejectMandateMutation = useMutation({
     mutationFn: async (mandateId: string) => {
-      return await apiRequest(`/api/mandates/${mandateId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ stav: 'rejected' })
-      });
+      return await apiRequest('PATCH', `/api/mandates/${mandateId}`, { stav: 'rejected' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });

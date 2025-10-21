@@ -485,6 +485,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update mandate status (accept/reject invitation)
+  app.patch("/api/mandates/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const { id } = req.params;
+      const { stav } = req.body;
+
+      // Validate status
+      const validStatuses = ['active', 'rejected'];
+      if (!validStatuses.includes(stav)) {
+        return res.status(400).json({ 
+          error: "Neplatný stav",
+          message: "Stav musí byť 'active' alebo 'rejected'."
+        });
+      }
+
+      // Get the mandate
+      const mandate = await storage.getUserMandate(id);
+      if (!mandate) {
+        return res.status(404).json({ 
+          error: "Mandát nenájdený",
+          message: "Mandát s týmto ID neexistuje."
+        });
+      }
+
+      // Check if the mandate belongs to the current user
+      if (mandate.userId !== user.id) {
+        console.log(`[API] User ${user.name} attempted to update mandate that doesn't belong to them`);
+        return res.status(403).json({ 
+          error: "Nedostatočné oprávnenia",
+          message: "Nemôžete upraviť mandát, ktorý vám nepatrí."
+        });
+      }
+
+      // Check if mandate is in pending_confirmation status
+      if (mandate.stav !== 'pending_confirmation') {
+        return res.status(400).json({ 
+          error: "Neplatná operácia",
+          message: "Môžete aktualizovať len mandáty so stavom 'pending_confirmation'."
+        });
+      }
+
+      // Update mandate status
+      const updated = await storage.updateUserMandate(id, { stav });
+      
+      if (!updated) {
+        return res.status(500).json({ error: "Nepodarilo sa aktualizovať mandát." });
+      }
+
+      console.log(`[API] User ${user.name} ${stav === 'active' ? 'accepted' : 'rejected'} mandate ${id}`);
+      res.status(200).json({ 
+        success: true,
+        message: stav === 'active' ? "Mandát bol prijatý." : "Mandát bol odmietnutý.",
+        mandate: updated
+      });
+    } catch (error) {
+      console.error("[API] Error updating mandate:", error);
+      res.status(500).json({ error: "Nepodarilo sa aktualizovať mandát. Skúste to znova." });
+    }
+  });
+
   // Company management endpoint - Connect/Add company with verification
   app.post("/api/companies", async (req, res) => {
     try {
