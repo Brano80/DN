@@ -1,7 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, FileText, Users, Shield, Briefcase, Clock } from "lucide-react";
+import { Building2, FileText, Shield, Briefcase, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { QUERY_KEYS } from "@/lib/queryKeys";
+import type { VirtualOffice } from "@shared/schema";
 
 interface CompanyDashboardProps {
   companyName: string;
@@ -10,6 +14,16 @@ interface CompanyDashboardProps {
 
 export default function CompanyDashboard({ companyName, ico }: CompanyDashboardProps) {
   const [, setLocation] = useLocation();
+  const { data: currentUser } = useCurrentUser();
+
+  // Fetch virtual offices for the current user
+  const { data: virtualOffices } = useQuery<VirtualOffice[]>({
+    queryKey: QUERY_KEYS.virtualOffices(currentUser?.email || ''),
+    enabled: !!currentUser?.email,
+  });
+
+  // Calculate count
+  const virtualOfficesCount = virtualOffices?.length || 0;
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="company-dashboard">
@@ -53,14 +67,18 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover-elevate active-elevate-2"
+          onClick={() => setLocation('/virtual-office/list')}
+          data-testid="card-virtual-offices"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Používatelia s mandátom</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Virtuálne kancelárie</CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
-            <p className="text-xs text-muted-foreground">Oprávnení zástupcovia</p>
+            <div className="text-2xl font-bold">{virtualOfficesCount}</div>
+            <p className="text-xs text-muted-foreground">Aktívne kancelárie</p>
           </CardContent>
         </Card>
 
