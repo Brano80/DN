@@ -79,7 +79,9 @@ export class MemStorage implements IStorage {
     const mockUser: User = {
       id: mockUserId,
       username: "jan.novacek@example.sk",
-      password: "mock-password-hash"
+      password: "mock-password-hash",
+      name: "Ján Nováček",
+      email: "jan.novacek@example.sk"
     };
     this.users.set(mockUserId, mockUser);
     
@@ -88,7 +90,9 @@ export class MemStorage implements IStorage {
     const mockUser2: User = {
       id: mockUser2Id,
       username: "petra.ambroz@example.sk",
-      password: "mock-password-hash-2"
+      password: "mock-password-hash-2",
+      name: "Petra Ambroz",
+      email: "petra.ambroz@example.sk"
     };
     this.users.set(mockUser2Id, mockUser2);
     
