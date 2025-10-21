@@ -113,13 +113,8 @@ export default function ManageMandatesPage() {
     mutationFn: async (data: InviteFormData) => {
       if (!activeContext) throw new Error("Nie je vybraný firemný kontext");
       
-      return await apiRequest(`/api/companies/${activeContext}/mandates`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('POST', `/api/companies/${activeContext}/mandates`, data);
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate cache to refresh the table

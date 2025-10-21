@@ -80,20 +80,20 @@ export class MemStorage implements IStorage {
     
     console.log('[SEED] Created 2 mock users');
     
-    // Create DIGITAL NOTARY s.r.o. company
-    const companyId = "company-digital-notary";
+    // Create eGarant s.r.o. company (for Ján Nováček)
+    const companyId = "company-egarant";
     const company: Company = {
       id: companyId,
-      ico: "36723246",
-      dic: "SK2022323246",
+      ico: "54321098",
+      dic: "SK2054321098",
       icDph: null,
-      nazov: "DIGITAL NOTARY s.r.o.",
-      sidloUlica: "Digitalna",
-      sidloCislo: "1",
+      nazov: "eGarant s.r.o.",
+      sidloUlica: "Hlavná",
+      sidloCislo: "25",
       sidloMesto: "Bratislava",
       sidloPsc: "81102",
       registracnySud: "Okresný súd Bratislava I",
-      cisloVlozky: "123456/B",
+      cisloVlozky: "654321/B",
       datumZapisu: "2020-01-15",
       pravnaForma: "Spoločnosť s ručením obmedzeným",
       stat: "SK",
