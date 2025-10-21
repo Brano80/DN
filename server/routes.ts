@@ -80,9 +80,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Transform mandates to frontend format
       const mandates = userMandates.map((mandate) => ({
+        mandateId: mandate.id,
         ico: mandate.company.ico,
         companyName: mandate.company.nazov,
-        role: mandate.rola
+        role: mandate.rola,
+        status: mandate.stav
       }));
       
       res.json({
