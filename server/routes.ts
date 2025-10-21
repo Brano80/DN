@@ -819,6 +819,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isVerifiedByKep: false
       });
 
+      // Create audit log for company connection
+      await storage.createAuditLog({
+        actionType: "COMPANY_CONNECTED",
+        details: `Firma ${company.nazov} bola pripojená používateľom ${user.name} (overený ako ${userStatutar.rola})`,
+        userId: user.id,
+        companyId: company.id,
+      });
+
       console.log(`[API] Company ${company.nazov} successfully connected for user ${user.name}`);
       res.status(201).json({ 
         success: true, 
