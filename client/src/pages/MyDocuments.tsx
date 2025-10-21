@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import BackButton from "@/components/BackButton";
 import DocumentCategoryCard from "@/components/DocumentCategoryCard";
-import { FileText, GraduationCap, Home } from "lucide-react";
+import { FileText, Home } from "lucide-react";
 
 export default function MyDocuments() {
   const [, setLocation] = useLocation();
@@ -20,23 +20,6 @@ export default function MyDocuments() {
       title: 'Vodičský preukaz',
       subtitle: 'Platný do: 22.03.2032',
       status: 'Aktívny',
-      statusVariant: 'default' as const,
-    },
-  ];
-
-  const educationDocuments = [
-    {
-      id: 'university-diploma',
-      title: 'Vysokoškolský diplom',
-      subtitle: 'Ing. - Informatika, STU 2018',
-      status: 'Overený',
-      statusVariant: 'default' as const,
-    },
-    {
-      id: 'high-school-diploma',
-      title: 'Maturitné vysvedčenie',
-      subtitle: 'Gymnázium, 2014',
-      status: 'Overený',
       statusVariant: 'default' as const,
     },
   ];
@@ -63,24 +46,15 @@ export default function MyDocuments() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Card className="p-8">
           <BackButton onClick={() => setLocation('/')} />
-          <h2 className="text-2xl font-semibold mb-6">Moje e-dokumenty</h2>
+          <h2 className="text-2xl font-semibold mb-6">E-dokumenty</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DocumentCategoryCard
               icon={FileText}
               iconColor="text-blue-600"
               iconBgColor="bg-blue-100"
               title="Doklady totožnosti"
               documents={identityDocuments}
-              onDocumentClick={(id) => console.log('Document clicked:', id)}
-            />
-
-            <DocumentCategoryCard
-              icon={GraduationCap}
-              iconColor="text-purple-600"
-              iconBgColor="bg-purple-100"
-              title="Vzdelanie"
-              documents={educationDocuments}
               onDocumentClick={(id) => console.log('Document clicked:', id)}
             />
 
