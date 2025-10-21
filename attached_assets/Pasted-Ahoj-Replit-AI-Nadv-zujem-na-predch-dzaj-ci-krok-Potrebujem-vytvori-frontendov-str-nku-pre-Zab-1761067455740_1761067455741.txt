@@ -1,0 +1,38 @@
+Ahoj Replit AI,
+
+Nadväzujem na predchádzajúci krok. Potrebujem vytvoriť frontendovú stránku pre "Zabezpečenie", ktorá bude používať nové API endpointy.
+
+**Cieľ:** Vytvoriť stránku `client/src/pages/companies/CompanySecurityPage.tsx` a prepojiť ju.
+
+**Detaily implementácie:**
+
+1.  **Vytvoriť súbor:** Vytvor `client/src/pages/companies/CompanySecurityPage.tsx`.
+2.  **Pridať routu:** Uprav hlavný router aplikácie (napr. `App.tsx`) a pridaj novú routu: `<Route path="/companies/security" component={CompanySecurityPage} />`.
+3.  **Upraviť `CompanyList.tsx`:** Nájdi kartu "Zabezpečenie" a zabezpeč, aby odkazovala na novú cestu `/companies/security` a nastav `available: true`.
+4.  **Obsah `CompanySecurityPage.tsx`:**
+    * Použi `useQuery(['/api/current-user'])` na získanie `activeContext` (ICO firmy) a názov firmy.
+    * Ak nie je firemný kontext, zobraz chybu.
+    * Na základe `activeContext` (napr. `activeIco`) zavolaj dotaz na načítanie *profilu firmy*, aby sme získali aktuálne nastavenie:
+        * `const { data: company, isLoading, refetch } = useQuery({ queryKey: ['/api/companies', activeIco, '/profile'], ... });`
+    * Zobraz `isLoading` a `isError` stavy.
+    * **Ak sa dáta úspešne načítajú (`data: company`):**
+        * Zobraz tlačidlo "Späť" (`<Button variant="ghost">`), ktoré vedie naspäť na `/companies`.
+        * Zobraz nadpis: `<h1>Zabezpečenie</h1>` a podnadpis `<p>Nastavenia bezpečnosti pre firmu: [Názov Firmy]</p>`.
+        * Zobraz komponent `<Card>`.
+        * **`CardHeader`:** `<CardTitle>Dvojfaktorová autentifikácia (2FA)</CardTitle>`
+        * **`CardContent`:** Zobraz popis, napr. "Vynútiť 2FA pre všetkých používateľov s mandátom pre túto firmu."
+        * **`CardFooter`:** Zobraz komponent `<Switch />` (z `shadcn/ui`).
+            * Nastav `checked={company.enforceTwoFactorAuth}`.
+            * Pri zmene (`onCheckedChange`) zavolaj mutáciu.
+    * **Mutácia:**
+        * Vytvor `useMutation` (z `react-query`), ktoré bude volať `PATCH /api/companies/:activeIco/security-settings`.
+        * `mutationFn` bude posielať `{ enforceTwoFactorAuth: noveNastavenie }`.
+        * **`onSuccess`:** Zobraz "toast" notifikáciu "Nastavenia uložené" a zavolaj `refetch()` pre `/profile`, aby sa `Switch` aktualizoval.
+
+**Dôležité inštrukcie pre AI:**
+
+* Použi komponenty z `shadcn/ui` (`Switch`, `Card`, `Button`).
+* **Poskytni mi kompletný kód pre všetky TRI upravené/nové súbory:**
+    1.  `client/src/pages/companies/CompanySecurityPage.tsx`
+    2.  Súbor, kde si pridal routu (napr. `client/src/App.tsx`).
+    3.  `client/src/pages/CompanyList.tsx` (s upraveným odkazom).
