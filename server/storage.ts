@@ -8,7 +8,9 @@ import {
   type Company,
   type InsertCompany,
   type UserCompanyMandate,
-  type InsertUserCompanyMandate
+  type InsertUserCompanyMandate,
+  type AuditLog,
+  type InsertAuditLog
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -42,6 +44,10 @@ export interface IStorage {
   createUserMandate(mandate: InsertUserCompanyMandate): Promise<UserCompanyMandate>;
   updateUserMandate(id: string, updates: Partial<UserCompanyMandate>): Promise<UserCompanyMandate | undefined>;
   getUserMandate(id: string): Promise<UserCompanyMandate | undefined>;
+  
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogsByCompany(companyId: string, limit?: number): Promise<Array<AuditLog & { user: User }>>;
+  getAuditLogsByUser(userId: string, limit?: number): Promise<Array<AuditLog>>;
 }
 
 export class MemStorage implements IStorage {
@@ -50,6 +56,7 @@ export class MemStorage implements IStorage {
   private virtualOffices: Map<string, VirtualOffice>;
   private companies: Map<string, Company>;
   private userMandates: Map<string, UserCompanyMandate>;
+  private auditLogs: Map<string, AuditLog>;
 
   constructor() {
     this.users = new Map();
@@ -57,6 +64,7 @@ export class MemStorage implements IStorage {
     this.virtualOffices = new Map();
     this.companies = new Map();
     this.userMandates = new Map();
+    this.auditLogs = new Map();
   }
 
   seedExampleData() {
@@ -219,6 +227,40 @@ export class MemStorage implements IStorage {
       createdAt: new Date("2024-12-22")
     };
     this.virtualOffices.set(officeId, exampleOffice);
+    
+    // Create sample audit logs for EXAMPLE CORP
+    const auditLog1: AuditLog = {
+      id: "audit-log-1",
+      timestamp: new Date("2021-05-10T10:00:00Z"),
+      actionType: "COMPANY_CONNECTED",
+      details: "Petra Veselá pripojila firmu EXAMPLE CORP s.r.o.",
+      userId: mockUser2Id,
+      companyId: company2Id,
+    };
+    this.auditLogs.set(auditLog1.id, auditLog1);
+    
+    const auditLog2: AuditLog = {
+      id: "audit-log-2",
+      timestamp: new Date("2021-06-15T14:30:00Z"),
+      actionType: "MANDATE_CREATED",
+      details: "Petra Veselá pozval používateľa test@example.com ako Prokurist",
+      userId: mockUser2Id,
+      companyId: company2Id,
+    };
+    this.auditLogs.set(auditLog2.id, auditLog2);
+    
+    // Create sample audit logs for eGarant
+    const auditLog3: AuditLog = {
+      id: "audit-log-3",
+      timestamp: new Date("2020-01-15T09:00:00Z"),
+      actionType: "COMPANY_CONNECTED",
+      details: "Ján Nováček pripojil firmu eGarant s.r.o.",
+      userId: mockUserId,
+      companyId: companyId,
+    };
+    this.auditLogs.set(auditLog3.id, auditLog3);
+    
+    console.log('[SEED] Created sample audit logs');
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -417,6 +459,39 @@ export class MemStorage implements IStorage {
 
   async getUserMandate(id: string): Promise<UserCompanyMandate | undefined> {
     return this.userMandates.get(id);
+  }
+
+  async createAuditLog(insertLog: InsertAuditLog): Promise<AuditLog> {
+    const id = randomUUID();
+    const log: AuditLog = {
+      ...insertLog,
+      id,
+      timestamp: new Date(),
+      companyId: insertLog.companyId ?? null,
+    };
+    this.auditLogs.set(id, log);
+    console.log(`[AUDIT] ${insertLog.actionType}: ${insertLog.details}`);
+    return log;
+  }
+
+  async getAuditLogsByCompany(companyId: string, limit: number = 100): Promise<Array<AuditLog & { user: User }>> {
+    const logs = Array.from(this.auditLogs.values())
+      .filter((log) => log.companyId === companyId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+    
+    return logs.map((log) => {
+      const user = this.users.get(log.userId);
+      if (!user) throw new Error(`User ${log.userId} not found`);
+      return { ...log, user };
+    });
+  }
+
+  async getAuditLogsByUser(userId: string, limit: number = 100): Promise<Array<AuditLog>> {
+    return Array.from(this.auditLogs.values())
+      .filter((log) => log.userId === userId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
   }
 }
 

@@ -76,6 +76,19 @@ export const mandateStatusEnum = pgEnum("mandate_status", [
   "expired"
 ]);
 
+export const auditActionTypeEnum = pgEnum("audit_action_type", [
+  // Mandáty
+  "MANDATE_CREATED",
+  "MANDATE_ACCEPTED",
+  "MANDATE_REJECTED",
+  "MANDATE_REVOKED",
+  // Používateľ
+  "USER_LOGIN",
+  "USER_LOGOUT",
+  // Firma
+  "COMPANY_CONNECTED"
+]);
+
 // Companies table
 export const companies = pgTable("companies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -131,3 +144,21 @@ export const insertUserCompanyMandateSchema = createInsertSchema(userCompanyMand
 
 export type InsertUserCompanyMandate = z.infer<typeof insertUserCompanyMandateSchema>;
 export type UserCompanyMandate = typeof userCompanyMandates.$inferSelect;
+
+// Audit Logs table
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+  actionType: auditActionTypeEnum("action_type").notNull(),
+  details: text("details").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  companyId: varchar("company_id").references(() => companies.id),
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;

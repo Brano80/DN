@@ -389,6 +389,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get company activity/audit logs
+  app.get("/api/companies/:ico/activity", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const { ico } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
+
+      console.log(`[API] User ${user.name} requesting activity logs for company ${ico}`);
+
+      // Security check: Verify user has an active mandate for this company
+      const userMandates = await storage.getUserMandates(user.id);
+      const userActiveMandate = userMandates.find(
+        (m) => m.company.ico === ico && m.stav === 'active'
+      );
+
+      if (!userActiveMandate) {
+        console.log(`[API] User ${user.name} attempted to access activity logs without active mandate for ${ico}`);
+        return res.status(403).json({ 
+          error: "Prístup zamietnutý",
+          message: "Nemáte oprávnenie zobraziť aktivity tejto firmy."
+        });
+      }
+
+      // Get the company to get its ID
+      const company = await storage.getCompanyByIco(ico);
+      if (!company) {
+        return res.status(404).json({ 
+          error: "Firma nenájdená",
+          message: "Firma s týmto IČO neexistuje."
+        });
+      }
+
+      // Fetch audit logs for the company
+      const logs = await storage.getAuditLogsByCompany(company.id, limit);
+
+      console.log(`[API] User ${user.name} retrieved ${logs.length} activity logs for company ${company.nazov}`);
+      res.status(200).json(logs);
+    } catch (error) {
+      console.error("[API] Error fetching company activity logs:", error);
+      res.status(500).json({ error: "Nepodarilo sa načítať aktivity firmy." });
+    }
+  });
+
   // Get company mandates - returns all users who have mandate for a specific company
   app.get("/api/companies/:ico/mandates", async (req, res) => {
     try {
@@ -515,6 +562,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isVerifiedByKep: false
       });
 
+      // Create audit log
+      await storage.createAuditLog({
+        actionType: "MANDATE_CREATED",
+        details: `${user.name} pozval používateľa ${email} ako ${rola}`,
+        userId: user.id,
+        companyId: company.id,
+      });
+
       // TODO: Send notification email to invited user
       console.log(`[TODO] Poslať notifikačný e-mail používateľovi ${email} o novom mandáte.`);
 
@@ -582,6 +637,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updated) {
         return res.status(500).json({ error: "Nepodarilo sa aktualizovať mandát." });
       }
+
+      // Create audit log
+      await storage.createAuditLog({
+        actionType: stav === 'active' ? "MANDATE_ACCEPTED" : "MANDATE_REJECTED",
+        details: `${user.name} ${stav === 'active' ? 'prijal' : 'odmietol'} mandát`,
+        userId: user.id,
+        companyId: mandate.companyId,
+      });
 
       console.log(`[API] User ${user.name} ${stav === 'active' ? 'accepted' : 'rejected'} mandate ${id}`);
       res.status(200).json({ 
