@@ -83,7 +83,7 @@ export default function CompanyList() {
       title: 'Profil spoločnosti',
       description: 'Základné a kontaktné údaje firmy',
       details: 'Zobrazenie firemných údajov z OR SR a správa kontaktných a fakturačných údajov',
-      path: '/company-profile',
+      path: '/companies/profile',
       available: true,
     },
     {
