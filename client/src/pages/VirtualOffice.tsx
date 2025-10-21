@@ -35,14 +35,14 @@ const getStatusDisplay = (status: string | null): { text: string; className: str
 export default function VirtualOffice() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
-  const [match, params] = useRoute("/virtual-office/:id");
-  const officeId = match ? params?.id : null;
+  const [matchList] = useRoute("/virtual-office/list");
+  const [matchDetail, params] = useRoute("/virtual-office/:id");
   
-  // Derive currentView directly from URL - no state needed
-  const queryString = location.includes('?') ? location.split('?')[1] : '';
-  const urlParams = new URLSearchParams(queryString);
-  const viewParam = urlParams.get('view');
-  const currentView: ViewType = viewParam === 'list' ? 'list' : 'create';
+  // "list" is not a valid office ID - it's the list view route
+  const officeId = (matchDetail && params?.id !== 'list') ? params?.id : null;
+  
+  // Derive currentView directly from URL route
+  const currentView: ViewType = matchList ? 'list' : 'create';
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [officeName, setOfficeName] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
@@ -156,7 +156,7 @@ export default function VirtualOffice() {
 
 
   const handleShowMyOffices = () => {
-    setLocation('/virtual-office?view=list');
+    setLocation('/virtual-office/list');
   };
 
   const handleShowCreateView = () => {

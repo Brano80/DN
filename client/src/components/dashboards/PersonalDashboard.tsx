@@ -73,7 +73,7 @@ export default function PersonalDashboard() {
 
         <Card 
           className="cursor-pointer transition-all hover-elevate active-elevate-2"
-          onClick={() => setLocation('/virtual-office?view=list')}
+          onClick={() => setLocation('/virtual-office/list')}
           data-testid="card-virtual-offices"
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

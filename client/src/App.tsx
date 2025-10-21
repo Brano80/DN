@@ -100,6 +100,11 @@ function Router() {
           <VerifyDocument />
         </PrivateRoute>
       </Route>
+      <Route path="/virtual-office/list">
+        <PrivateRoute>
+          <VirtualOffice />
+        </PrivateRoute>
+      </Route>
       <Route path="/virtual-office/:id">
         <PrivateRoute>
           <VirtualOffice />
