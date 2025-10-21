@@ -59,6 +59,60 @@ export class MemStorage implements IStorage {
 
   seedExampleData() {
     console.log('[SEED] Seeding example data for Škoda Octavia...');
+    
+    // Create mock user
+    const mockUserId = "mock123";
+    const mockUser: User = {
+      id: mockUserId,
+      username: "jan.novacek@example.sk",
+      password: "mock-password-hash"
+    };
+    this.users.set(mockUserId, mockUser);
+    
+    // Create DIGITAL NOTARY s.r.o. company
+    const companyId = "company-digital-notary";
+    const company: Company = {
+      id: companyId,
+      ico: "36723246",
+      dic: "SK2022323246",
+      icDph: null,
+      nazov: "DIGITAL NOTARY s.r.o.",
+      sidloUlica: "Digitalna",
+      sidloCislo: "1",
+      sidloMesto: "Bratislava",
+      sidloPsc: "81102",
+      registracnySud: "Okresný súd Bratislava I",
+      cisloVlozky: "123456/B",
+      datumZapisu: "2020-01-15",
+      pravnaForma: "Spoločnosť s ručením obmedzeným",
+      stat: "SK",
+      stav: "active",
+      lastVerifiedAt: new Date(),
+      createdAt: new Date("2020-01-15"),
+      updatedAt: new Date()
+    };
+    this.companies.set(companyId, company);
+    
+    // Create mandate for mock user
+    const mandateId = "mandate-jan-novacek";
+    const mandate: UserCompanyMandate = {
+      id: mandateId,
+      userId: mockUserId,
+      companyId: companyId,
+      rola: "Konateľ",
+      rozsahOpravneni: "samostatne",
+      platnyOd: "2020-01-15",
+      platnyDo: null,
+      zdrojOverenia: "OR SR Mock",
+      stav: "active",
+      isVerifiedByKep: false,
+      createdAt: new Date("2020-01-15"),
+      updatedAt: new Date()
+    };
+    this.userMandates.set(mandateId, mandate);
+    
+    console.log('[SEED] Created company and mandate for mock user');
+    
     // Create example contract for Škoda Octavia
     const contractId = "example-skoda-octavia";
     const exampleContract: Contract = {
