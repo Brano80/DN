@@ -1,0 +1,62 @@
+Rozumiem. Vytvárame teda menu pre sekciu "Správa firmy", ktorá bude dostupná, keď je používateľ v kontexte firmy.
+
+Toto je kritická časť, pretože definuje, čo všetko bude môcť štatutár (alebo iný oprávnený používateľ) s firemným profilom robiť.
+
+Tu je návrh základných funkcií pre túto sekciu, ktoré logicky nadväzujú na to, čo sme doteraz vybudovali:
+
+Základné funkcie v sekcii "Správa firmy"
+Mandáty a práva (Správa používateľov)
+
+Čo to je: Kľúčová funkcia, ktorú ste spomenuli. Je to centrum pre správu prístupu k firemnému profilu.
+
+Funkcie:
+
+Prehľad: Zobrazí zoznam všetkých používateľov, ktorí majú oprávnenie (mandát) konať v mene firmy v rámci aplikácie.
+
+Pridanie používateľa: Možnosť pozvať ďalšie osoby (napr. druhého konateľa, prokuristu, ekonómku).
+
+Definovanie rolí a práv: Možnosť nastaviť, čo presne môže ktorý používateľ robiť (napr. "Plný prístup", "Iba podpisovať dokumenty", "Správa fakturácie").
+
+Odobratie prístupu: Možnosť okamžite zrušiť prístup používateľovi.
+
+Profil spoločnosti (Firemné údaje)
+
+Čo to je: Prehľad základných informácií o firme.
+
+Funkcie:
+
+Základné údaje: Zobrazenie údajov načítaných z OR SR (IČO, názov, sídlo). Tieto sú zvyčajne "read-only".
+
+Kontaktné a fakturačné údaje: Možnosť upraviť/doplniť údaje, ktoré nie sú v OR SR – napr. kontaktný e-mail firmy, telefónne číslo, adresa na zasielanie faktúr (ak je iná ako sídlo).
+
+Prehľad aktivít (Audit Log)
+
+Čo to je: Kompletná história všetkých akcií, ktoré boli vykonané v mene firmy. Kľúčové pre zodpovednosť a bezpečnosť.
+
+Funkcie:
+
+Záznamy: Zoznam akcií typu: "Ján Novák (Konateľ) podpísal dokument 'Zmluva o dielo 123' dňa 20.10.2025."
+
+Filtrovanie: Možnosť filtrovať aktivity podľa používateľa, typu akcie (napr. "podpis", "vytvorenie") alebo dátumu.
+
+Fakturácia a služby
+
+Čo to je: Správa platieb, predplatného a faktúr za používanie aplikácie.
+
+Funkcie:
+
+Prehľad faktúr: Možnosť stiahnuť si daňové doklady.
+
+Spôsob platby: Správa firemnej platobnej karty alebo iného spôsobu platby.
+
+Aktuálny balík/služba: Prehľad o tom, čo má firma predplatené.
+
+Zabezpečenie
+
+Čo to je: Nastavenia týkajúce sa bezpečnosti firemného účtu.
+
+Funkcie:
+
+Vynútenie 2FA: Možnosť nastaviť, že všetci používatelia konajúci v mene firmy musia mať aktívne dvojfaktorové overenie.
+
+Schvaľovacie procesy: (Pokročilejšie) Nastavenie, že napr. dokument nad 10 000 € musia podpísať dvaja konatelia.
