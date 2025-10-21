@@ -1,12 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, FileText, Shield, Briefcase, Clock } from "lucide-react";
+import { FileText, Shield, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { QUERY_KEYS } from "@/lib/queryKeys";
 import type { Contract, VirtualOffice } from "@shared/schema";
-import { useRef } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -34,7 +33,6 @@ export default function PersonalDashboard() {
   const [, setLocation] = useLocation();
   const { data: currentUser } = useCurrentUser();
   const { toast } = useToast();
-  const pendingTasksRef = useRef<HTMLDivElement>(null);
 
   // Fetch current user data including mandates
   const { data: userData, isLoading: isLoadingUser } = useQuery<CurrentUserResponse>({
@@ -60,14 +58,6 @@ export default function PersonalDashboard() {
   const contractsCount = contracts?.length || 0;
   const virtualOfficesCount = virtualOffices?.length || 0;
   const documentsCount = 0;
-  const pendingTasksCount = pendingMandates.length;
-
-  // Scroll to pending tasks section
-  const scrollToPendingTasks = () => {
-    if (pendingTasksRef.current) {
-      pendingTasksRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   // Accept mandate mutation
   const acceptMandateMutation = useMutation({
@@ -122,7 +112,7 @@ export default function PersonalDashboard() {
       </div>
 
       {/* Quick Stats - Clickable Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card 
           className="cursor-pointer transition-all hover-elevate active-elevate-2"
           onClick={() => setLocation('/my-contracts')}
@@ -165,21 +155,6 @@ export default function PersonalDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{virtualOfficesCount}</div>
             <p className="text-xs text-muted-foreground">Aktívne kancelárie</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className={pendingTasksCount > 0 ? "cursor-pointer transition-all hover-elevate active-elevate-2" : ""}
-          onClick={pendingTasksCount > 0 ? scrollToPendingTasks : undefined}
-          data-testid="card-pending-tasks"
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Čakajúce úkony</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingTasksCount}</div>
-            <p className="text-xs text-muted-foreground">Na podpis/schválenie</p>
           </CardContent>
         </Card>
       </div>
@@ -235,73 +210,75 @@ export default function PersonalDashboard() {
       </Card>
 
       {/* Pending Mandate Invitations */}
-      {pendingMandates.length > 0 && (
-        <Card ref={pendingTasksRef}>
-          <CardHeader>
-            <CardTitle>Čakajúce úkony</CardTitle>
-            <CardDescription>Pozvánky na spoluprácu so spoločnosťami</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingUser ? (
-              <div className="text-sm text-muted-foreground text-center py-4">
-                Načítavam úkony...
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {pendingMandates.map((mandate) => (
-                  <div
-                    key={mandate.mandateId}
-                    className="flex flex-col gap-4 p-4 border rounded-lg"
-                    data-testid={`mandate-invitation-${mandate.mandateId}`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div className="flex-1">
-                        <p className="font-medium text-lg" data-testid="text-company-name">
-                          {mandate.companyName}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1" data-testid="text-role">
-                          Ponúknutá rola: <span className="font-medium">{mandate.role}</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          IČO: {mandate.ico}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <Alert>
-                      <AlertDescription>
-                        Boli ste pozvaní na spoluprácu s touto spoločnosťou. Prijatím pozvánky získate prístup k firemným funkciám a budete môcť konať v mene spoločnosti v rozsahu vašich oprávnení.
-                      </AlertDescription>
-                    </Alert>
-
-                    <div className="flex gap-2">
-                      <Button
-                        size="default"
-                        onClick={() => acceptMandateMutation.mutate(mandate.mandateId)}
-                        disabled={acceptMandateMutation.isPending || rejectMandateMutation.isPending}
-                        data-testid={`button-accept-${mandate.mandateId}`}
-                      >
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Prijať
-                      </Button>
-                      <Button
-                        size="default"
-                        variant="outline"
-                        onClick={() => rejectMandateMutation.mutate(mandate.mandateId)}
-                        disabled={acceptMandateMutation.isPending || rejectMandateMutation.isPending}
-                        data-testid={`button-reject-${mandate.mandateId}`}
-                      >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Odmietnuť
-                      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Čakajúce úkony ({pendingMandates.length})</CardTitle>
+          <CardDescription>Pozvánky na spoluprácu so spoločnosťami</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingUser ? (
+            <div className="text-sm text-muted-foreground text-center py-4">
+              Načítavam úkony...
+            </div>
+          ) : pendingMandates.length === 0 ? (
+            <div className="text-sm text-muted-foreground text-center py-8">
+              Nemáte žiadne čakajúce úkony
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingMandates.map((mandate) => (
+                <div
+                  key={mandate.mandateId}
+                  className="flex flex-col gap-4 p-4 border rounded-lg"
+                  data-testid={`mandate-invitation-${mandate.mandateId}`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-medium text-lg" data-testid="text-company-name">
+                        {mandate.companyName}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1" data-testid="text-role">
+                        Ponúknutá rola: <span className="font-medium">{mandate.role}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        IČO: {mandate.ico}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                  
+                  <Alert>
+                    <AlertDescription>
+                      Boli ste pozvaní na spoluprácu s touto spoločnosťou. Prijatím pozvánky získate prístup k firemným funkciám a budete môcť konať v mene spoločnosti v rozsahu vašich oprávnení.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="default"
+                      onClick={() => acceptMandateMutation.mutate(mandate.mandateId)}
+                      disabled={acceptMandateMutation.isPending || rejectMandateMutation.isPending}
+                      data-testid={`button-accept-${mandate.mandateId}`}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Prijať
+                    </Button>
+                    <Button
+                      size="default"
+                      variant="outline"
+                      onClick={() => rejectMandateMutation.mutate(mandate.mandateId)}
+                      disabled={acceptMandateMutation.isPending || rejectMandateMutation.isPending}
+                      data-testid={`button-reject-${mandate.mandateId}`}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Odmietnuť
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Recent Activity */}
       <Card>
