@@ -16,9 +16,13 @@ export default function PersonalDashboard() {
         </p>
       </div>
 
-      {/* Quick Stats */}
+      {/* Quick Stats - Clickable Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover-elevate active-elevate-2"
+          onClick={() => setLocation('/my-contracts')}
+          data-testid="card-my-contracts"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Moje zmluvy</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -29,7 +33,11 @@ export default function PersonalDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover-elevate active-elevate-2"
+          onClick={() => setLocation('/my-documents')}
+          data-testid="card-my-documents"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">E-dokumenty</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
@@ -40,7 +48,11 @@ export default function PersonalDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover-elevate active-elevate-2"
+          onClick={() => setLocation('/virtual-office')}
+          data-testid="card-virtual-offices"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Virtuálne kancelárie</CardTitle>
             <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -51,7 +63,7 @@ export default function PersonalDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-pending-tasks">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Čakajúce úkony</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
