@@ -2,10 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { User, FileText, Shield, Briefcase, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { QUERY_KEYS } from "@/lib/queryKeys";
 import type { Contract, VirtualOffice } from "@shared/schema";
+import { useRef } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 interface Mandate {
   mandateId: string;
@@ -28,6 +33,8 @@ interface CurrentUserResponse {
 export default function PersonalDashboard() {
   const [, setLocation] = useLocation();
   const { data: currentUser } = useCurrentUser();
+  const { toast } = useToast();
+  const pendingTasksRef = useRef<HTMLDivElement>(null);
 
   // Fetch current user data including mandates
   const { data: userData, isLoading: isLoadingUser } = useQuery<CurrentUserResponse>({
@@ -54,6 +61,61 @@ export default function PersonalDashboard() {
   const virtualOfficesCount = virtualOffices?.length || 0;
   const documentsCount = 0;
   const pendingTasksCount = pendingMandates.length;
+
+  // Scroll to pending tasks section
+  const scrollToPendingTasks = () => {
+    if (pendingTasksRef.current) {
+      pendingTasksRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Accept mandate mutation
+  const acceptMandateMutation = useMutation({
+    mutationFn: async (mandateId: string) => {
+      return await apiRequest(`/api/mandates/${mandateId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ stav: 'active' })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
+      toast({
+        title: "Mandát prijatý",
+        description: "Úspešne ste prijali pozvánku na spoluprácu.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa prijať mandát.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Reject mandate mutation
+  const rejectMandateMutation = useMutation({
+    mutationFn: async (mandateId: string) => {
+      return await apiRequest(`/api/mandates/${mandateId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ stav: 'rejected' })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
+      toast({
+        title: "Mandát odmietnutý",
+        description: "Pozvánka bola odmietnutá.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa odmietnuť mandát.",
+        variant: "destructive",
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="personal-dashboard">
@@ -112,7 +174,11 @@ export default function PersonalDashboard() {
           </CardContent>
         </Card>
 
-        <Card data-testid="card-pending-tasks">
+        <Card 
+          className={pendingTasksCount > 0 ? "cursor-pointer transition-all hover-elevate active-elevate-2" : ""}
+          onClick={pendingTasksCount > 0 ? scrollToPendingTasks : undefined}
+          data-testid="card-pending-tasks"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Čakajúce úkony</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -176,7 +242,7 @@ export default function PersonalDashboard() {
 
       {/* Pending Mandate Invitations */}
       {pendingMandates.length > 0 && (
-        <Card>
+        <Card ref={pendingTasksRef}>
           <CardHeader>
             <CardTitle>Čakajúce úkony</CardTitle>
             <CardDescription>Pozvánky na spoluprácu so spoločnosťami</CardDescription>
@@ -191,34 +257,47 @@ export default function PersonalDashboard() {
                 {pendingMandates.map((mandate) => (
                   <div
                     key={mandate.mandateId}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg"
+                    className="flex flex-col gap-4 p-4 border rounded-lg"
                     data-testid={`mandate-invitation-${mandate.mandateId}`}
                   >
-                    <div className="flex-1">
-                      <p className="font-medium" data-testid="text-company-name">
-                        Pozvánka: {mandate.companyName}
-                      </p>
-                      <p className="text-sm text-muted-foreground" data-testid="text-role">
-                        Ponúknutá rola: {mandate.role}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        IČO: {mandate.ico}
-                      </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex-1">
+                        <p className="font-medium text-lg" data-testid="text-company-name">
+                          {mandate.companyName}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1" data-testid="text-role">
+                          Ponúknutá rola: <span className="font-medium">{mandate.role}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          IČO: {mandate.ico}
+                        </p>
+                      </div>
                     </div>
+                    
+                    <Alert>
+                      <AlertDescription>
+                        Boli ste pozvaní na spoluprácu s touto spoločnosťou. Prijatím pozvánky získate prístup k firemným funkciám a budete môcť konať v mene spoločnosti v rozsahu vašich oprávnení.
+                      </AlertDescription>
+                    </Alert>
+
                     <div className="flex gap-2">
                       <Button
-                        size="sm"
-                        disabled
+                        size="default"
+                        onClick={() => acceptMandateMutation.mutate(mandate.mandateId)}
+                        disabled={acceptMandateMutation.isPending || rejectMandateMutation.isPending}
                         data-testid={`button-accept-${mandate.mandateId}`}
                       >
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
                         Prijať
                       </Button>
                       <Button
-                        size="sm"
+                        size="default"
                         variant="outline"
-                        disabled
+                        onClick={() => rejectMandateMutation.mutate(mandate.mandateId)}
+                        disabled={acceptMandateMutation.isPending || rejectMandateMutation.isPending}
                         data-testid={`button-reject-${mandate.mandateId}`}
                       >
+                        <XCircle className="mr-2 h-4 w-4" />
                         Odmietnuť
                       </Button>
                     </div>
