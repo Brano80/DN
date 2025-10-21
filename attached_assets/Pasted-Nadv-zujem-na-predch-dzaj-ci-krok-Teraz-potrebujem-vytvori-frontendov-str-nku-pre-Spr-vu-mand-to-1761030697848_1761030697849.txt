@@ -1,0 +1,29 @@
+Nadväzujem na predchádzajúci krok. Teraz potrebujem vytvoriť frontendovú stránku pre "Správu mandátov", ktorá bude používať nový endpoint.
+
+**Cieľ:** Vytvoriť stránku `client/src/pages/companies/ManageMandatesPage.tsx`.
+
+**Detaily implementácie:**
+
+1.  **Vytvoriť súbor:** Vytvor `client/src/pages/companies/ManageMandatesPage.tsx`.
+2.  **Pridať routu:** Uprav hlavný router aplikácie (napr. `App.tsx`) a pridaj novú routu: `<Route path="/companies/mandates" component={ManageMandatesPage} />`.
+3.  **Obsah `ManageMandatesPage.tsx`:**
+    * Použi `useQuery(['/api/current-user'])` na získanie `activeContext` a `mandates` (pre názov firmy).
+    * Zisti `activeContext` (ICO firmy). Ak nie je (je 'personal' alebo `null`), zobraz chybovú hlášku "Nie je vybraný firemný kontext" a tlačidlo "Späť".
+    * Na základe `activeContext` (napr. `activeIco`) zavolaj **nový dotaz** pomocou `useQuery`:
+        * `useQuery({ queryKey: ['/api/companies', activeIco, '/mandates'], enabled: !!activeIco && activeIco !== 'personal' })`
+    * Zobraz `isLoading` a `isError` stavy pre tento nový dotaz.
+    * **Ak sa dáta úspešne načítajú:**
+        * Zobraz tlačidlo "Späť" (`<Button variant="ghost">`) s ikonou `ArrowLeft`, ktoré vedie naspäť na `/companies`.
+        * Zobraz nadpis: `<h1>Mandáty a práva</h1>`.
+        * Nájdi v dátach z `current-user` názov firmy (`companyName`) a zobraz ho ako podnadpis: `<p>Správa prístupu pre firmu: [companyName]</p>`.
+        * Vpravo hore zobraz tlačidlo `<Button>` "Pozvať používateľa" (zatiaľ nemusí nič robiť).
+        * Zobraz komponent `<Table>` (z `shadcn/ui`) s načítaným zoznamom mandátov.
+        * **Stĺpce tabuľky:** Meno (`mandate.user.name`), Email (`mandate.user.email`), Rola (`mandate.role`), Status (`mandate.status`).
+
+**Dôležité inštrukcie pre AI:**
+
+* Použi komponenty z `shadcn/ui` (`Table`, `Button`, `Card` atď.).
+* Ošetri všetky stavy (loading, error, no company context).
+* **Poskytni mi kompletný kód pre oba upravené/nové súbory:**
+    1.  `client/src/pages/companies/ManageMandatesPage.tsx`
+    2.  Súbor, kde si pridal routu (napr. `client/src/App.tsx`).

@@ -14,6 +14,7 @@ import MyDocuments from "@/pages/MyDocuments";
 import MyContracts from "@/pages/MyContracts";
 import CompanyList from "@/pages/CompanyList";
 import AddCompanyForm from "@/pages/AddCompanyForm";
+import ManageMandatesPage from "@/pages/companies/ManageMandatesPage";
 import CreateDocument from "@/pages/CreateDocument";
 import CreateVehicleContract from "@/pages/CreateVehicleContract";
 import CreateRentalContract from "@/pages/CreateRentalContract";
@@ -57,6 +58,11 @@ function Router() {
       <Route path="/companies/add">
         <PrivateRoute>
           <AddCompanyForm />
+        </PrivateRoute>
+      </Route>
+      <Route path="/company-mandates">
+        <PrivateRoute>
+          <ManageMandatesPage />
         </PrivateRoute>
       </Route>
       <Route path="/create-document">
