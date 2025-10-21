@@ -69,8 +69,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/auth/logout", (req: Request, res: Response) => {
+  app.get("/auth/logout", async (req: Request, res: Response) => {
     const userEmail = (req.user as User)?.email || "unknown";
+    
+    // Reset all data to seed state for testing purposes
+    await storage.resetToSeedData();
+    
     req.logout((err) => {
       if (err) {
         console.error("[AUTH] Logout error:", err);

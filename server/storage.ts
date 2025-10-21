@@ -48,6 +48,9 @@ export interface IStorage {
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogsByCompany(companyId: string, limit?: number): Promise<Array<AuditLog & { user: User }>>;
   getAuditLogsByUser(userId: string, limit?: number): Promise<Array<AuditLog>>;
+  
+  // Reset all data to seed state (for testing purposes)
+  resetToSeedData(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -492,6 +495,23 @@ export class MemStorage implements IStorage {
       .filter((log) => log.userId === userId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit);
+  }
+
+  async resetToSeedData(): Promise<void> {
+    console.log('[RESET] Clearing all data and re-seeding...');
+    
+    // Clear all data
+    this.contracts.clear();
+    this.virtualOffices.clear();
+    this.companies.clear();
+    this.userMandates.clear();
+    this.auditLogs.clear();
+    this.users.clear();
+    
+    // Re-seed the example data
+    this.seedExampleData();
+    
+    console.log('[RESET] Data reset complete');
   }
 }
 
