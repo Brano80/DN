@@ -38,15 +38,23 @@ export default function VirtualOffice() {
   const [match, params] = useRoute("/virtual-office/:id");
   const officeId = match ? params?.id : null;
   
-  const [currentView, setCurrentView] = useState<ViewType>('create');
+  // Initialize view from URL query parameter
+  const getInitialView = (): ViewType => {
+    const queryString = location.includes('?') ? location.split('?')[1] : '';
+    const urlParams = new URLSearchParams(queryString);
+    const viewParam = urlParams.get('view');
+    return viewParam === 'list' ? 'list' : 'create';
+  };
   
-  // Update view based on URL query parameter
+  const [currentView, setCurrentView] = useState<ViewType>(getInitialView);
+  
+  // Update view when URL changes
   useEffect(() => {
     const queryString = location.includes('?') ? location.split('?')[1] : '';
-    const params = new URLSearchParams(queryString);
-    const view = params.get('view');
+    const urlParams = new URLSearchParams(queryString);
+    const viewParam = urlParams.get('view');
     
-    if (view === 'list') {
+    if (viewParam === 'list') {
       setCurrentView('list');
     } else if (!officeId) {
       setCurrentView('create');
