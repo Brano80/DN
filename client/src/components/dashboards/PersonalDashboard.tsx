@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Shield, Briefcase } from "lucide-react";
+import { FileText, Shield, Briefcase, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -112,7 +112,7 @@ export default function PersonalDashboard() {
       </div>
 
       {/* Quick Stats - Clickable Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card 
           className="cursor-pointer transition-all hover-elevate active-elevate-2"
           onClick={() => setLocation('/my-contracts')}
@@ -155,6 +155,24 @@ export default function PersonalDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{virtualOfficesCount}</div>
             <p className="text-xs text-muted-foreground">Aktívne kancelárie</p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="cursor-pointer transition-all hover-elevate active-elevate-2"
+          onClick={() => {
+            const element = document.getElementById('pending-mandates-section');
+            element?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          data-testid="card-pending-mandates"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Čakajúce úkony</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingMandates.length}</div>
+            <p className="text-xs text-muted-foreground">Pozvánky na spoluprácu</p>
           </CardContent>
         </Card>
       </div>
@@ -210,7 +228,7 @@ export default function PersonalDashboard() {
       </Card>
 
       {/* Pending Mandate Invitations */}
-      <Card>
+      <Card id="pending-mandates-section">
         <CardHeader>
           <CardTitle>Čakajúce úkony ({pendingMandates.length})</CardTitle>
           <CardDescription>Pozvánky na spoluprácu so spoločnosťami</CardDescription>
