@@ -110,8 +110,8 @@ export default function CompanyList() {
       title: 'Zabezpečenie',
       description: 'Nastavenia bezpečnosti firemného účtu',
       details: 'Vynútenie 2FA, schvaľovacie procesy a ďalšie bezpečnostné nastavenia',
-      path: '/company-security',
-      available: false,
+      path: '/companies/security',
+      available: true,
     },
   ];
 
