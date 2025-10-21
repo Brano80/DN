@@ -1,0 +1,33 @@
+Potrebujem implementovať funkčnosť pre tlačidlo "Pozvať používateľa" na stránke `client/src/pages/companies/ManageMandatesPage.tsx`.
+
+**Cieľ:** Po kliknutí na tlačidlo "Pozvať používateľa" sa zobrazí dialógové okno (modal) s formulárom na zadanie e-mailu a roly.
+
+**Detaily implementácie (upraviť `ManageMandatesPage.tsx`):**
+
+1.  **Importovať komponenty:** Importuj `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogTrigger`, `Input`, `Label` a `Select` (s `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`) z `@/components/ui/...`.
+2.  **Použiť `useState`:** Vytvor `useState` pre otvorenie/zatvorenie dialógu a pre uchovanie hodnôt formulára (email, rola, rozsahOpravneni).
+3.  **Obaľiť tlačidlo:** Obaľ existujúce tlačidlo "Pozvať používateľa" komponentom `<DialogTrigger asChild>...</DialogTrigger>`.
+4.  **Vytvoriť `DialogContent`:**
+    * Pridaj komponent `<DialogContent>` hneď za `<DialogTrigger>`.
+    * V `<DialogHeader>` nastav `DialogTitle` na "Pozvať nového používateľa" a `DialogDescription` na "Zadajte e-mail a rolu pre udelenie mandátu."
+    * V tele dialógu vytvor formulár (nemusí byť `<form>`, stačí `div` s `grid`om) s poľami:
+        * **E-mail:** `<Label htmlFor="email">E-mail</Label>` a `<Input id="email" type="email" ... />`
+        * **Rola:** `<Label htmlFor="rola">Rola</Label>` a `<Select ...>` (napr. s možnosťami "Konateľ", "Prokurista", "Zamestnanec", "Ekonómka").
+        * **Rozsah oprávnení:** `<Label htmlFor="rozsah">Rozsah oprávnení</Label>` a `<Select ...>` (s možnosťami "Samostatne", "Spoločne s iným", "Obmedzené").
+    * V `<DialogFooter>` pridaj tlačidlo (napr. `<Button type="submit">Odoslať pozvánku</Button>`).
+5.  **Vytvoriť mutáciu:**
+    * Vytvor `useMutation` (z `react-query`), ktoré bude volať zatiaľ **neexistujúci** endpoint `POST /api/companies/:ico/mandates`.
+    * `mutationFn` bude prijímať dáta z formulára (email, rola, rozsahOpravneni) a `activeContext` (ICO firmy).
+    * **`onSuccess`:** Po úspešnom odoslaní pozvánky by sa malo:
+        1.  Invalidovať cache pre dotaz `queryKey: ['/api/companies', activeContext, 'mandates']` (aby sa tabuľka aktualizovala).
+        2.  Zatvoriť dialógové okno.
+        3.  Zobraziť "toast" notifikáciu o úspechu (pomocou `useToast`).
+    * **`onError`:** Zobraziť "toast" notifikáciu o chybe.
+6.  **Prepojiť tlačidlo:** Prepoj tlačidlo "Odoslať pozvánku" vo footeri dialógu s vytvorenou mutáciou (`mutation.mutate(...)`).
+
+**Dôležité inštrukcie pre AI:**
+
+* Uprav existujúci súbor `client/src/pages/companies/ManageMandatesPage.tsx`.
+* Použi `shadcn/ui` komponenty pre dialóg a formulár.
+* Implementuj `useMutation` pre odoslanie dát.
+* **Poskytni mi kompletný kód upraveného súboru `client/src/pages/companies/ManageMandatesPage.tsx`.**

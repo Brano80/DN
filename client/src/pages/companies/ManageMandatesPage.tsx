@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, UserPlus, AlertCircle, Users } from "lucide-react";
+import { ArrowLeft, UserPlus, AlertCircle, Users, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 interface CurrentUserResponse {
   user: {
@@ -50,8 +70,22 @@ interface Mandate {
   user: MandateUser;
 }
 
+interface InviteFormData {
+  email: string;
+  rola: string;
+  rozsahOpravneni: string;
+}
+
 export default function ManageMandatesPage() {
   const [, setLocation] = useLocation();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState<InviteFormData>({
+    email: "",
+    rola: "",
+    rozsahOpravneni: "",
+  });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Get current user and active context
   const { data: userData, isLoading: isLoadingUser } = useQuery<CurrentUserResponse>({
@@ -73,6 +107,72 @@ export default function ManageMandatesPage() {
     enabled: !!activeContext && activeContext !== 'personal',
     retry: false,
   });
+
+  // Mutation for inviting user
+  const inviteMutation = useMutation({
+    mutationFn: async (data: InviteFormData) => {
+      if (!activeContext) throw new Error("Nie je vybraný firemný kontext");
+      
+      return await apiRequest(`/api/companies/${activeContext}/mandates`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      // Invalidate cache to refresh the table
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/companies', activeContext, 'mandates'] 
+      });
+      
+      // Close dialog
+      setIsDialogOpen(false);
+      
+      // Reset form
+      setFormData({
+        email: "",
+        rola: "",
+        rozsahOpravneni: "",
+      });
+      
+      // Show success message
+      setSuccessMessage("Pozvánka bola úspešne odoslaná");
+      setErrorMessage(null);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000);
+    },
+    onError: (error: any) => {
+      // Show error message
+      const message = error?.message || "Nepodarilo sa odoslať pozvánku. Skúste to znova.";
+      setErrorMessage(message);
+      setSuccessMessage(null);
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => setErrorMessage(null), 5000);
+    },
+  });
+
+  const handleSubmit = () => {
+    // Basic validation
+    if (!formData.email || !formData.rola || !formData.rozsahOpravneni) {
+      setErrorMessage("Prosím vyplňte všetky polia");
+      setTimeout(() => setErrorMessage(null), 5000);
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setErrorMessage("Prosím zadajte platnú e-mailovú adresu");
+      setTimeout(() => setErrorMessage(null), 5000);
+      return;
+    }
+
+    inviteMutation.mutate(formData);
+  };
 
   // Loading state
   if (isLoadingUser || isLoadingMandates) {
@@ -186,6 +286,25 @@ export default function ManageMandatesPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <Alert className="border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800">
+          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+          <AlertDescription className="text-green-800 dark:text-green-200">
+            {successMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {errorMessage && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
@@ -206,16 +325,94 @@ export default function ManageMandatesPage() {
             </div>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            // TODO: Implement invite user functionality
-            console.log('Invite user clicked');
-          }}
-          data-testid="button-invite-user"
-        >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Pozvať používateľa
-        </Button>
+        
+        {/* Invite User Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-invite-user">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Pozvať používateľa
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Pozvať nového používateľa</DialogTitle>
+              <DialogDescription>
+                Zadajte e-mail a rolu pre udelenie mandátu.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              {/* Email Field */}
+              <div className="grid gap-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="uzivatel@priklad.sk"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  data-testid="input-invite-email"
+                />
+              </div>
+
+              {/* Rola Field */}
+              <div className="grid gap-2">
+                <Label htmlFor="rola">Rola</Label>
+                <Select
+                  value={formData.rola}
+                  onValueChange={(value) => setFormData({ ...formData, rola: value })}
+                >
+                  <SelectTrigger id="rola" data-testid="select-invite-role">
+                    <SelectValue placeholder="Vyberte rolu" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Konateľ">Konateľ</SelectItem>
+                    <SelectItem value="Prokurista">Prokurista</SelectItem>
+                    <SelectItem value="Zamestnanec">Zamestnanec</SelectItem>
+                    <SelectItem value="Ekonómka">Ekonómka</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Rozsah oprávnení Field */}
+              <div className="grid gap-2">
+                <Label htmlFor="rozsah">Rozsah oprávnení</Label>
+                <Select
+                  value={formData.rozsahOpravneni}
+                  onValueChange={(value) => setFormData({ ...formData, rozsahOpravneni: value })}
+                >
+                  <SelectTrigger id="rozsah" data-testid="select-invite-scope">
+                    <SelectValue placeholder="Vyberte rozsah oprávnení" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="samostatne">Samostatne</SelectItem>
+                    <SelectItem value="spolocne_s_inym">Spoločne s iným</SelectItem>
+                    <SelectItem value="obmedzene">Obmedzené</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={inviteMutation.isPending}
+                data-testid="button-cancel-invite"
+              >
+                Zrušiť
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={inviteMutation.isPending}
+                data-testid="button-submit-invite"
+              >
+                {inviteMutation.isPending ? "Odosiela sa..." : "Odoslať pozvánku"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Mandates Table */}
@@ -266,7 +463,7 @@ export default function ManageMandatesPage() {
                     <TableCell className="text-sm text-muted-foreground">
                       {mandate.rozsahOpravneni === 'samostatne' && 'Samostatne'}
                       {mandate.rozsahOpravneni === 'spolocne_s_inym' && 'Spoločne s iným'}
-                      {mandate.rozsahOpravneni === 'obmedzene' && 'Obmedzene'}
+                      {mandate.rozsahOpravneni === 'obmedzene' && 'Obmedzené'}
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(mandate.stav)}>
