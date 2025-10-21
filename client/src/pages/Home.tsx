@@ -48,7 +48,7 @@ export default function Home() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-4xl space-y-8">
           <header className="text-center">
-            <h1 className="text-4xl font-bold">DN v51</h1>
+            <h1 className="text-4xl font-bold">Digital Notary</h1>
             <p className="text-muted-foreground mt-2">Digitálna Notárska Služba</p>
           </header>
           <main>

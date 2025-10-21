@@ -69,7 +69,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold">DN v51</h1>
+              <h1 className="text-xl font-semibold">Digital Notary</h1>
             </div>
             <ThemeToggle />
           </div>
@@ -108,7 +108,7 @@ export default function Navbar() {
               onClick={() => setLocation('/')}
               data-testid="link-home"
             >
-              DN v51
+              Digital Notary
             </h1>
           </div>
 

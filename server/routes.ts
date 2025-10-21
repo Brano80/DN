@@ -441,7 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[API] Attempted to invite non-existent user: ${email}`);
         return res.status(404).json({ 
           error: "Používateľ nenájdený",
-          message: "Používateľ s týmto e-mailom zatiaľ nie je v systéme DN v51. Používateľ sa musí najprv zaregistrovať."
+          message: "Používateľ s týmto e-mailom zatiaľ nie je v systéme Digital Notary. Používateľ sa musí najprv zaregistrovať."
         });
       }
 
