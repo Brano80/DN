@@ -1,0 +1,77 @@
+Ahoj Replit AI,
+
+Potrebujem implementovať funkciu "Prehľad aktivít" (Audit Log). Začneme vytvorením databázového modelu a endpointu na čítanie logov.
+
+**Časť A: Úprava Databázovej Schémy (napr. `prisma.schema`)**
+
+Pridaj do svojej schémy nový model `AuditLog`:
+
+```prisma
+model AuditLog {
+  id          String   @id @default(uuid())
+  timestamp   DateTime @default(now())
+  
+  actionType  AuditActionType // Typ akcie (napr. POZVANIE_POUZIVATELA)
+  details     String          // Textový popis, napr. "Používateľ Ján Nováček pozval petra.vesela@example.sk"
+  
+  // Kto akciu vykonal
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Ktorej firmy sa to týka (môže byť null, ak je to osobná akcia)
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id])
+  
+  // Indexy pre rýchle vyhľadávanie
+  @@index([userId])
+  @@index([companyId])
+}
+
+// Enum pre typy akcií
+enum AuditActionType {
+  // Mandáty
+  MANDATE_CREATED     // Používateľ bol pozvaný
+  MANDATE_ACCEPTED    // Používateľ prijal mandát
+  MANDATE_REJECTED    // Používateľ odmietol mandát
+  MANDATE_REVOKED     // Mandát bol odobratý
+  
+  // Používateľ
+  USER_LOGIN
+  USER_LOGOUT
+  
+  // Firma
+  COMPANY_CONNECTED   // Firma bola pripojená
+}
+Prosím, vygeneruj a spusti migráciu pre túto novú tabuľku.
+
+Časť B: Endpoint na Čítanie Logov (napr. server/routes/companyRoutes.ts)
+
+Vytvor nový endpoint GET /api/companies/:ico/audit-log:
+
+Definuj routu: GET /api/companies/:ico/audit-log
+
+Zabezpečenie (Middleware): Uisti sa, že je ruta chránená (isAuthenticated).
+
+Logika handlera:
+
+Získaj ico z req.params a userId z req.session.
+
+Bezpečnostná kontrola: Over, či má prihlásený používateľ (userId) aktívny mandát pre firmu s daným ico (rovnaká logika ako v /api/companies/:ico/profile).
+
+Ak kontrola prejde, nájdi companyId podľa ico.
+
+Načítaj logy:
+
+JavaScript
+
+const logs = await prisma.auditLog.findMany({
+  where: { companyId: company.id },
+  include: {
+    user: { select: { name: true } } // Chceme vedieť meno používateľa
+  },
+  orderBy: { timestamp: 'desc' }, // Najnovšie ako prvé
+  take: 50 // Limit na posledných 50 záznamov
+});
+Odpoveď: Vráť status 200 OK a pole logs.
+
+Dôležité: Daj mi vedieť, keď bude schéma migrovaná a endpoint bude pripravený. Ukáž mi kód nového endpointu.
