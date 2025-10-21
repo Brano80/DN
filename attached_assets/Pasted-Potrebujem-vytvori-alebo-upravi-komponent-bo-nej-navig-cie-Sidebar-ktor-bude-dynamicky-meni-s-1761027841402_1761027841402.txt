@@ -1,0 +1,26 @@
+Potrebujem vytvoriť alebo upraviť komponent bočnej navigácie (Sidebar), ktorý bude dynamicky meniť svoje menu na základe aktívneho používateľského kontextu (fyzická osoba vs. firemný profil).
+
+**Cieľ:** Vytvoriť nový súbor `client/src/components/Sidebar.tsx` (ak už existuje, tak ho upraviť). Tento Sidebar by mal byť umiestnený napríklad pod Navbarom a vedľa hlavného obsahu.
+
+**Detaily implementácie:**
+
+1.  **Načítanie dát o používateľovi:** V komponente `Sidebar.tsx` použijeme `useQuery` hook pre `/api/current-user`, rovnako ako v Navbare, aby sme získali `activeContext`.
+2.  **Definícia navigačných položiek:**
+    * Vytvor dve sady navigačných položiek:
+        * **`personalNavItems`:** Pre fyzickú osobu (napr. "Dashboard", "Moje dokumenty", "Môj profil", "Moje objednávky").
+        * **`companyNavItems`:** Pre firemný kontext (napr. "Firemný Dashboard", "Dokumenty firmy", "Mandáty firmy", "Služby firmy", "Správa používateľov").
+    * Každá položka by mala obsahovať `label` (text), `icon` (komponent z `lucide-react`) a `path` (URL).
+3.  **Dynamické zobrazenie menu:**
+    * Na základe hodnoty `activeContext` zobraz príslušnú sadu navigačných položiek.
+    * Každá navigačná položka by mala byť klikateľná a presmerovať na daný `path` pomocou `useLocation` z `wouter`.
+    * Aktuálne aktívna položka (na základe `location.pathname`) by mala byť vizuálne zvýraznená.
+4.  **Štýlovanie:**
+    * Použi `shadcn/ui` komponenty (alebo jednoduché Tailwind CSS triedy) na vytvorenie vzhľadu bočnej navigácie. Mala by byť fixná (napr. `fixed` pozícia), aby bola vždy viditeľná.
+    * Zahrň loading a error stavy.
+
+**Dôležité inštrukcie pre AI:**
+
+* Predpokladaj, že `Sidebar` bude renderovaný v hlavnom `Layout` komponente vedľa hlavného obsahu. Ak AI navrhne nejaký `Layout` komponent, prijmem to.
+* Použi `useQuery` na získanie `activeContext`.
+* Zabezpeč vizuálne zvýraznenie aktuálne aktívnej položky v navigácii.
+* **Poskytni mi kompletný kód nového súboru `client/src/components/Sidebar.tsx` (a prípadne aj úpravu `client/src/App.tsx` alebo `client/src/main.tsx`, ak je potrebná nová štruktúra pre layout s Sidebarom).**
