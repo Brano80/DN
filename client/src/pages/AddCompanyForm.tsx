@@ -161,7 +161,7 @@ export default function AddCompanyForm() {
                 <h3 className="font-medium mb-2">Testovacie IČO:</h3>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li><strong>36723246</strong> - DIGITAL NOTARY s.r.o. (Bratislava)</li>
-                  <li><strong>12345678</strong> - EXAMPLE CORP s.r.o. (Košice)</li>
+                  <li><strong>12345678</strong> - ARIAN s.r.o. (Košice)</li>
                 </ul>
               </div>
             </div>

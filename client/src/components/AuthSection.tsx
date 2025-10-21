@@ -70,8 +70,8 @@ export default function AuthSection() {
           >
             <User className="w-4 h-4 mr-2" />
             <div className="text-left flex-1">
-              <div className="font-medium">Petra Veselá</div>
-              <div className="text-xs text-muted-foreground">EXAMPLE CORP s.r.o.</div>
+              <div className="font-medium">Petra Ambroz</div>
+              <div className="text-xs text-muted-foreground">ARIAN s.r.o.</div>
             </div>
           </Button>
         </div>

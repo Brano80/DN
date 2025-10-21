@@ -53,10 +53,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/auth/mock-login-petra", (req: Request, res: Response) => {
     const mockUser: User = {
       id: "mock456",
-      name: "Petra Veselá",
-      email: "petra.vesela@example.sk",
+      name: "Petra Ambroz",
+      email: "petra.ambroz@example.sk",
       givenName: "Petra",
-      familyName: "Veselá",
+      familyName: "Ambroz",
     };
 
     req.login(mockUser, (err) => {
@@ -302,13 +302,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Mock data for EXAMPLE CORP s.r.o.
+      // Mock data for ARIAN s.r.o.
       if (ico === "12345678") {
         return res.json({
           ico: "12345678",
           dic: "SK2012345678",
           icDph: "SK2012345678",
-          nazov: "EXAMPLE CORP s.r.o.",
+          nazov: "ARIAN s.r.o.",
           sidloUlica: "Príkladová",
           sidloCislo: "10",
           sidloMesto: "Košice",
@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           statutari: [
             {
               meno: "Petra",
-              priezvisko: "Veselá",
+              priezvisko: "Ambroz",
               rola: "Konateľ",
               rozsahOpravneni: "samostatne",
               platnostOd: "2018-05-20"

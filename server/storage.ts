@@ -82,11 +82,11 @@ export class MemStorage implements IStorage {
     };
     this.users.set(mockUserId, mockUser);
     
-    // Create mock user 2 - Petra Veselá (can be invited to a company)
+    // Create mock user 2 - Petra Ambroz (can be invited to a company)
     const mockUser2Id = "mock456";
     const mockUser2: User = {
       id: mockUser2Id,
-      username: "petra.vesela@example.sk",
+      username: "petra.ambroz@example.sk",
       password: "mock-password-hash-2"
     };
     this.users.set(mockUser2Id, mockUser2);
@@ -137,14 +137,14 @@ export class MemStorage implements IStorage {
     
     console.log('[SEED] Created company and mandate for mock user');
     
-    // Create second company - EXAMPLE CORP s.r.o. (for Petra Veselá)
-    const company2Id = "company-example-corp";
+    // Create second company - ARIAN s.r.o. (for Petra Ambroz)
+    const company2Id = "company-arian";
     const company2: Company = {
       id: company2Id,
       ico: "12345678",
       dic: "SK2012345678",
       icDph: null,
-      nazov: "EXAMPLE CORP s.r.o.",
+      nazov: "ARIAN s.r.o.",
       sidloUlica: "Testovacia",
       sidloCislo: "10",
       sidloMesto: "Košice",
@@ -161,8 +161,8 @@ export class MemStorage implements IStorage {
     };
     this.companies.set(company2Id, company2);
     
-    // Create active mandate for Petra Veselá as Konateľ of EXAMPLE CORP
-    const mandate2Id = "mandate-petra-vesela";
+    // Create active mandate for Petra Ambroz as Konateľ of ARIAN
+    const mandate2Id = "mandate-petra-ambroz";
     const mandate2: UserCompanyMandate = {
       id: mandate2Id,
       userId: mockUser2Id,
@@ -179,7 +179,7 @@ export class MemStorage implements IStorage {
     };
     this.userMandates.set(mandate2Id, mandate2);
     
-    console.log('[SEED] Created EXAMPLE CORP with Petra Veselá as Konateľ');
+    console.log('[SEED] Created ARIAN s.r.o. with Petra Ambroz as Konateľ');
     
     // Create example contract for Škoda Octavia
     const contractId = "example-skoda-octavia";
@@ -231,12 +231,12 @@ export class MemStorage implements IStorage {
     };
     this.virtualOffices.set(officeId, exampleOffice);
     
-    // Create sample audit logs for EXAMPLE CORP
+    // Create sample audit logs for ARIAN
     const auditLog1: AuditLog = {
       id: "audit-log-1",
       timestamp: new Date("2021-05-10T10:00:00Z"),
       actionType: "COMPANY_CONNECTED",
-      details: "Petra Veselá pripojila firmu EXAMPLE CORP s.r.o.",
+      details: "Petra Ambroz pripojila firmu ARIAN s.r.o.",
       userId: mockUser2Id,
       companyId: company2Id,
     };
@@ -246,7 +246,7 @@ export class MemStorage implements IStorage {
       id: "audit-log-2",
       timestamp: new Date("2021-06-15T14:30:00Z"),
       actionType: "MANDATE_CREATED",
-      details: "Petra Veselá pozval používateľa test@example.com ako Prokurist",
+      details: "Petra Ambroz pozval používateľa test@example.com ako Prokurist",
       userId: mockUser2Id,
       companyId: company2Id,
     };
