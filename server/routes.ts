@@ -436,6 +436,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get company audit logs (new endpoint with take: 50)
+  app.get("/api/companies/:ico/audit-log", async (req, res) => {
+    try {
+      // Middleware: Check authentication
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const { ico } = req.params;
+
+      console.log(`[API] User ${user.name} requesting audit logs for company ${ico}`);
+
+      // Security check: Verify user has an active mandate for this company
+      const userMandates = await storage.getUserMandates(user.id);
+      const userActiveMandate = userMandates.find(
+        (m) => m.company.ico === ico && m.stav === 'active'
+      );
+
+      if (!userActiveMandate) {
+        console.log(`[API] User ${user.name} attempted to access audit logs without active mandate for ${ico}`);
+        return res.status(403).json({ 
+          error: "Prístup zamietnutý",
+          message: "Nemáte oprávnenie zobraziť audit log tejto firmy."
+        });
+      }
+
+      // Find company by ICO to get companyId
+      const company = await storage.getCompanyByIco(ico);
+      if (!company) {
+        return res.status(404).json({ 
+          error: "Firma nenájdená",
+          message: "Firma s týmto IČO neexistuje."
+        });
+      }
+
+      // Fetch audit logs (take: 50, orderBy: timestamp desc, include user.name)
+      const logs = await storage.getAuditLogsByCompany(company.id, 50);
+
+      console.log(`[API] User ${user.name} retrieved ${logs.length} audit logs for company ${company.nazov}`);
+      res.status(200).json(logs);
+    } catch (error) {
+      console.error("[API] Error fetching audit logs:", error);
+      res.status(500).json({ error: "Nepodarilo sa načítať audit log." });
+    }
+  });
+
   // Get company mandates - returns all users who have mandate for a specific company
   app.get("/api/companies/:ico/mandates", async (req, res) => {
     try {
