@@ -323,6 +323,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get company mandates - returns all users who have mandate for a specific company
+  app.get("/api/companies/:ico/mandates", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const { ico } = req.params;
+
+      // Security check: Verify user has an active mandate for this company
+      const userMandates = await storage.getUserMandates(user.id);
+      const userHasMandate = userMandates.some(
+        (m) => m.company.ico === ico && m.stav === 'active'
+      );
+
+      if (!userHasMandate) {
+        console.log(`[API] User ${user.name} attempted to access mandates for company ${ico} without authorization`);
+        return res.status(403).json({ 
+          error: "Prístup zamietnutý",
+          message: "Nemáte oprávnenie zobraziť mandáty tejto firmy."
+        });
+      }
+
+      // Fetch all mandates for the company
+      const companyMandates = await storage.getCompanyMandatesByIco(ico);
+
+      console.log(`[API] User ${user.name} fetched ${companyMandates.length} mandates for company ${ico}`);
+      res.json(companyMandates);
+    } catch (error) {
+      console.error("[API] Error fetching company mandates:", error);
+      res.status(500).json({ error: "Nepodarilo sa načítať mandáty." });
+    }
+  });
+
   // Company management endpoint - Connect/Add company with verification
   app.post("/api/companies", async (req, res) => {
     try {

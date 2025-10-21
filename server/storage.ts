@@ -38,6 +38,7 @@ export interface IStorage {
   updateCompany(id: string, updates: Partial<Company>): Promise<Company | undefined>;
   
   getUserMandates(userId: string): Promise<Array<UserCompanyMandate & { company: Company }>>;
+  getCompanyMandatesByIco(ico: string): Promise<Array<UserCompanyMandate & { user: User }>>;
   createUserMandate(mandate: InsertUserCompanyMandate): Promise<UserCompanyMandate>;
 }
 
@@ -254,6 +255,26 @@ export class MemStorage implements IStorage {
       const company = this.companies.get(mandate.companyId);
       if (!company) throw new Error(`Company ${mandate.companyId} not found`);
       return { ...mandate, company };
+    });
+  }
+
+  async getCompanyMandatesByIco(ico: string): Promise<Array<UserCompanyMandate & { user: User }>> {
+    // First find the company by ICO
+    const company = Array.from(this.companies.values()).find(c => c.ico === ico);
+    if (!company) {
+      return [];
+    }
+    
+    // Find all mandates for this company
+    const mandates = Array.from(this.userMandates.values()).filter(
+      (mandate) => mandate.companyId === company.id
+    );
+    
+    // Enrich with user data
+    return mandates.map((mandate) => {
+      const user = this.users.get(mandate.userId);
+      if (!user) throw new Error(`User ${mandate.userId} not found`);
+      return { ...mandate, user };
     });
   }
 
