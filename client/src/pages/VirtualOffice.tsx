@@ -33,12 +33,17 @@ const getStatusDisplay = (status: string | null): { text: string; className: str
 };
 
 export default function VirtualOffice() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [match, params] = useRoute("/virtual-office/:id");
   const officeId = match ? params?.id : null;
   
-  const [currentView, setCurrentView] = useState<ViewType>('create');
+  // Check for view query parameter
+  const urlParams = new URLSearchParams(location.split('?')[1]);
+  const viewParam = urlParams.get('view') as ViewType | null;
+  const initialView = viewParam === 'list' ? 'list' : 'create';
+  
+  const [currentView, setCurrentView] = useState<ViewType>(initialView);
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [officeName, setOfficeName] = useState('');
   const [invitedEmail, setInvitedEmail] = useState('');
