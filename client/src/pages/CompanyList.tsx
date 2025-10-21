@@ -92,8 +92,8 @@ export default function CompanyList() {
       title: 'Prehľad aktivít',
       description: 'História všetkých akcií a audit log',
       details: 'Kompletný prehľad všetkých akcií vykonaných v mene firmy s možnosťou filtrovania',
-      path: '/company-activity',
-      available: false,
+      path: '/companies/activity',
+      available: true,
     },
     {
       id: 'billing',
