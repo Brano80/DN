@@ -840,6 +840,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update company security settings
+  app.patch("/api/companies/:ico/security-settings", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = req.user as User;
+      const { ico } = req.params;
+      const { enforceTwoFactorAuth } = req.body;
+
+      console.log(`[API] User ${user.name} attempting to update security settings for company ${ico}`);
+
+      // Validate input
+      if (typeof enforceTwoFactorAuth !== 'boolean') {
+        return res.status(400).json({ 
+          error: "Chybajúce údaje",
+          message: "Hodnota enforceTwoFactorAuth musí byť boolean."
+        });
+      }
+
+      // Find company by ICO
+      const company = await storage.getCompanyByIco(ico);
+      if (!company) {
+        return res.status(404).json({ 
+          error: "Firma nenájdená",
+          message: "Firma s týmto IČO neexistuje."
+        });
+      }
+
+      // Security check: Verify user has an active mandate for this company
+      const userMandates = await storage.getUserMandates(user.id);
+      const userActiveMandate = userMandates.find(
+        (m) => m.company.ico === ico && m.stav === 'active'
+      );
+
+      if (!userActiveMandate) {
+        console.log(`[API] User ${user.name} attempted to update security settings without authorization for company ${ico}`);
+        return res.status(403).json({ 
+          error: "Prístup zamietnutý",
+          message: "Nemáte oprávnenie meniť nastavenia tejto firmy."
+        });
+      }
+
+      // Additional check: Only "Konateľ" or "Prokurista" roles can update security settings
+      const authorizedRoles = ['Konateľ', 'Prokurista'];
+      if (!authorizedRoles.includes(userActiveMandate.rola)) {
+        console.log(`[API] User ${user.name} with role ${userActiveMandate.rola} attempted to update security settings`);
+        return res.status(403).json({ 
+          error: "Nedostatočné oprávnenia",
+          message: "Len konatelia a prokuristi môžu meniť bezpečnostné nastavenia."
+        });
+      }
+
+      // Update security settings
+      const updatedCompany = await storage.updateCompanySecuritySettings(company.id, enforceTwoFactorAuth);
+
+      if (!updatedCompany) {
+        return res.status(500).json({ 
+          error: "Chyba pri aktualizácii",
+          message: "Nepodarilo sa aktualizovať nastavenia."
+        });
+      }
+
+      // Create audit log
+      await storage.createAuditLog({
+        actionType: "SECURITY_SETTINGS_UPDATED",
+        details: `${user.name} ${enforceTwoFactorAuth ? 'zapol' : 'vypol'} vynútenie 2FA pre firmu.`,
+        userId: user.id,
+        companyId: company.id,
+      });
+
+      console.log(`[API] Security settings updated for company ${company.nazov} by ${user.name}`);
+      res.status(200).json({ 
+        success: true, 
+        message: "Nastavenia boli úspešne aktualizované.",
+        company: updatedCompany
+      });
+    } catch (error) {
+      console.error("[API] Error updating security settings:", error);
+      res.status(500).json({ error: "Nepodarilo sa aktualizovať nastavenia. Skúste to znova." });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
