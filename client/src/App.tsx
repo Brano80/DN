@@ -21,6 +21,7 @@ import AuditLogPage from "@/pages/companies/AuditLogPage";
 import CreateDocument from "@/pages/CreateDocument";
 import CreateVehicleContract from "@/pages/CreateVehicleContract";
 import CreateRentalContract from "@/pages/CreateRentalContract";
+import CreatePropertyContract from "@/pages/CreatePropertyContract";
 import CreateUploadDocument from "@/pages/CreateUploadDocument";
 import CreatePowerOfAttorney from "@/pages/CreatePowerOfAttorney";
 import CreateEmploymentContract from "@/pages/CreateEmploymentContract";
@@ -96,6 +97,11 @@ function Router() {
       <Route path="/create-rental-contract">
         <PrivateRoute>
           <CreateRentalContract />
+        </PrivateRoute>
+      </Route>
+      <Route path="/create-property-contract">
+        <PrivateRoute>
+          <CreatePropertyContract />
         </PrivateRoute>
       </Route>
       <Route path="/create-upload-document">
