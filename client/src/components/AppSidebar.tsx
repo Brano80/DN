@@ -72,11 +72,6 @@ const personalNavItems: NavItem[] = [
     icon: Briefcase,
     path: "/virtual-office",
   },
-  {
-    label: "Môj profil",
-    icon: User,
-    path: "/my-profile",
-  },
 ];
 
 // Navigation items for company profile
