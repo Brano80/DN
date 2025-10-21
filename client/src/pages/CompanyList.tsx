@@ -74,7 +74,7 @@ export default function CompanyList() {
       title: 'Mandáty a práva',
       description: 'Správa používateľov a ich oprávnení',
       details: 'Pridávajte používateľov, definujte ich role a spravujte prístupové práva k firemnému profilu',
-      path: '/company-mandates',
+      path: '/companies/mandates',
       available: true,
     },
     {

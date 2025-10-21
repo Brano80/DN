@@ -60,7 +60,7 @@ function Router() {
           <AddCompanyForm />
         </PrivateRoute>
       </Route>
-      <Route path="/company-mandates">
+      <Route path="/companies/mandates">
         <PrivateRoute>
           <ManageMandatesPage />
         </PrivateRoute>
