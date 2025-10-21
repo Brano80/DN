@@ -124,7 +124,7 @@ export class MemStorage implements IStorage {
     
     console.log('[SEED] Created company and mandate for mock user');
     
-    // Create second company - EXAMPLE CORP s.r.o.
+    // Create second company - EXAMPLE CORP s.r.o. (for Petra Veselá)
     const company2Id = "company-example-corp";
     const company2: Company = {
       id: company2Id,
@@ -148,25 +148,25 @@ export class MemStorage implements IStorage {
     };
     this.companies.set(company2Id, company2);
     
-    // Create pending mandate invitation for Jan Novacek
-    const pendingMandateId = "mandate-pending-jan";
-    const pendingMandate: UserCompanyMandate = {
-      id: pendingMandateId,
-      userId: mockUserId,
+    // Create active mandate for Petra Veselá as Konateľ of EXAMPLE CORP
+    const mandate2Id = "mandate-petra-vesela";
+    const mandate2: UserCompanyMandate = {
+      id: mandate2Id,
+      userId: mockUser2Id,
       companyId: company2Id,
-      rola: "Prokurista",
-      rozsahOpravneni: "spolocne_s_inym",
-      platnyOd: new Date().toISOString().split('T')[0],
+      rola: "Konateľ",
+      rozsahOpravneni: "samostatne",
+      platnyOd: "2021-05-10",
       platnyDo: null,
-      zdrojOverenia: "Pozvánka od konateľa",
-      stav: "pending_confirmation",
+      zdrojOverenia: "OR SR Mock",
+      stav: "active",
       isVerifiedByKep: false,
-      createdAt: new Date(),
+      createdAt: new Date("2021-05-10"),
       updatedAt: new Date()
     };
-    this.userMandates.set(pendingMandateId, pendingMandate);
+    this.userMandates.set(mandate2Id, mandate2);
     
-    console.log('[SEED] Created pending mandate invitation for Jan Novacek');
+    console.log('[SEED] Created EXAMPLE CORP with Petra Veselá as Konateľ');
     
     // Create example contract for Škoda Octavia
     const contractId = "example-skoda-octavia";

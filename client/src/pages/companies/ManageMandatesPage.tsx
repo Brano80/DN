@@ -80,7 +80,7 @@ export default function ManageMandatesPage() {
   const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<InviteFormData>({
-    email: "",
+    email: "jan.novacek@example.sk", // Pre-filled for demo
     rola: "",
     rozsahOpravneni: "",
   });
@@ -127,12 +127,17 @@ export default function ManageMandatesPage() {
         queryKey: ['/api/companies', activeContext, 'mandates'] 
       });
       
+      // Invalidate current-user cache so pending invitations show up in personal dashboard
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/current-user'] 
+      });
+      
       // Close dialog
       setIsDialogOpen(false);
       
-      // Reset form
+      // Reset form (keep email pre-filled for convenience)
       setFormData({
-        email: "",
+        email: "jan.novacek@example.sk",
         rola: "",
         rozsahOpravneni: "",
       });

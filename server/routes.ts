@@ -50,6 +50,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  app.get("/auth/mock-login-petra", (req: Request, res: Response) => {
+    const mockUser: User = {
+      id: "mock456",
+      name: "Petra Veselá",
+      email: "petra.vesela@example.sk",
+      givenName: "Petra",
+      familyName: "Veselá",
+    };
+
+    req.login(mockUser, (err) => {
+      if (err) {
+        console.error("[AUTH] Mock login error:", err);
+        return res.status(500).json({ error: "Login failed" });
+      }
+      console.log("[AUTH] Mock user logged in:", mockUser.email);
+      res.redirect("/select-profile");
+    });
+  });
+
   app.get("/auth/logout", (req: Request, res: Response) => {
     const userEmail = (req.user as User)?.email || "unknown";
     req.logout((err) => {
