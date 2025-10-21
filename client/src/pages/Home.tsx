@@ -79,7 +79,6 @@ export default function Home() {
               onVerifyDocument={() => setLocation('/verify-document')}
               onMyContracts={() => setLocation('/my-contracts')}
               onMyDocuments={() => setLocation('/my-documents')}
-              onMyCompanies={!isCompanyContext ? () => setLocation('/companies') : undefined}
               onVirtualOffice={() => setLocation('/virtual-office')}
               onBack={handleBack}
               onLogoff={handleLogoff}

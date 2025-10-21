@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Shield, FileCheck, FolderOpen, Building2, Building, LogOut, ArrowLeft } from "lucide-react";
+import { FileText, Shield, FileCheck, FolderOpen, Building, LogOut, ArrowLeft } from "lucide-react";
 
 interface MainMenuProps {
   userName: string;
@@ -9,7 +9,6 @@ interface MainMenuProps {
   onVerifyDocument: () => void;
   onMyContracts: () => void;
   onMyDocuments: () => void;
-  onMyCompanies?: () => void;
   onVirtualOffice: () => void;
   onBack: () => void;
   onLogoff: () => void;
@@ -22,7 +21,6 @@ export default function MainMenu({
   onVerifyDocument,
   onMyContracts,
   onMyDocuments,
-  onMyCompanies,
   onVirtualOffice,
   onBack,
   onLogoff,
@@ -77,20 +75,9 @@ export default function MainMenu({
           <FolderOpen className="w-5 h-5" />
           <span>Moje e-dokumenty</span>
         </Button>
-        {!isCompanyContext && onMyCompanies && (
-          <Button
-            variant="secondary"
-            className="justify-start gap-3 h-auto py-4"
-            onClick={onMyCompanies}
-            data-testid="button-my-companies"
-          >
-            <Building2 className="w-5 h-5" />
-            <span>Moje firmy</span>
-          </Button>
-        )}
         <Button
           variant="secondary"
-          className={`justify-start gap-3 h-auto py-4 ${!isCompanyContext ? 'sm:col-span-2' : ''}`}
+          className="justify-start gap-3 h-auto py-4 sm:col-span-2"
           onClick={onVirtualOffice}
           data-testid="button-virtual-office"
         >
