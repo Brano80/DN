@@ -87,11 +87,6 @@ const companyNavItems: NavItem[] = [
     path: "/",
   },
   {
-    label: "Firemný dashboard",
-    icon: LayoutDashboard,
-    path: "/company-dashboard",
-  },
-  {
     label: "Dokumenty firmy",
     icon: FileText,
     path: "/my-contracts",

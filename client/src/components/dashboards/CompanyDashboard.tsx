@@ -19,7 +19,7 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
           <Building2 className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Firemný dashboard pre: {companyName}
+              {companyName}
             </h1>
             <p className="text-muted-foreground">IČO: {ico}</p>
           </div>
