@@ -703,6 +703,140 @@ export default function VirtualOffice() {
                               </div>
                             );
                           }
+                        })() : contract.type === 'property' ? (() => {
+                          try {
+                            const content = JSON.parse(contract.content);
+                            return (
+                              <>
+                                <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily nehnuteľnosti</h4>
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Adresa:</strong> {content.property?.address}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Typ:</strong> {content.property?.type}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Výmera:</strong> {content.property?.floorArea} m²
+                                    </p>
+                                  </div>
+                                  {content.property?.cadastralArea && (
+                                    <div>
+                                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        <strong>Katastrálne územie:</strong> {content.property.cadastralArea}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {content.property?.landRegistryNumber && (
+                                    <div>
+                                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        <strong>LV číslo:</strong> {content.property.landRegistryNumber}
+                                      </p>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Kúpna cena:</strong> {content.price} €
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          } catch (e) {
+                            return (
+                              <div className="text-center py-8">
+                                <p className="text-red-700 dark:text-red-300">Chyba pri načítaní detailov zmluvy</p>
+                              </div>
+                            );
+                          }
+                        })() : contract.type === 'employment' ? (() => {
+                          try {
+                            const content = JSON.parse(contract.content);
+                            return (
+                              <>
+                                <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily zamestnania</h4>
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Zamestnanec:</strong> {content.employee?.name}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Pozícia:</strong> {content.employment?.position}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Miesto výkonu práce:</strong> {content.employment?.workLocation}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Mzda:</strong> {content.employment?.salary} €
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Pracovný čas:</strong> {content.employment?.workHours}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Nástup:</strong> {content.employment?.startDate}
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          } catch (e) {
+                            return (
+                              <div className="text-center py-8">
+                                <p className="text-red-700 dark:text-red-300">Chyba pri načítaní detailov zmluvy</p>
+                              </div>
+                            );
+                          }
+                        })() : contract.type === 'custom' ? (() => {
+                          try {
+                            const content = JSON.parse(contract.content);
+                            return (
+                              <>
+                                <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Detaily dokumentu</h4>
+                                <div className="space-y-2">
+                                  <div>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                      <strong>Názov:</strong> {contract.title}
+                                    </p>
+                                  </div>
+                                  {content.description && (
+                                    <div>
+                                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        <strong>Popis:</strong> {content.description}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {content.documentType && (
+                                    <div>
+                                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        <strong>Typ dokumentu:</strong> {content.documentType}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            );
+                          } catch (e) {
+                            return (
+                              <div className="text-center py-8">
+                                <p className="text-red-700 dark:text-red-300">Chyba pri načítaní detailov zmluvy</p>
+                              </div>
+                            );
+                          }
                         })() : null}
 
                         <button
