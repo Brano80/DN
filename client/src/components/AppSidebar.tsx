@@ -102,11 +102,6 @@ const companyNavItems: NavItem[] = [
     path: "/virtual-office",
   },
   {
-    label: "Mandáty a práva",
-    icon: ShieldCheck,
-    path: "/company-mandates",
-  },
-  {
     label: "Správa firmy",
     icon: Building2,
     path: "/companies",
