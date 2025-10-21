@@ -16,6 +16,7 @@ import CompanyList from "@/pages/CompanyList";
 import AddCompanyForm from "@/pages/AddCompanyForm";
 import ManageMandatesPage from "@/pages/companies/ManageMandatesPage";
 import CompanyProfilePage from "@/pages/companies/CompanyProfilePage";
+import CompanySecurityPage from "@/pages/companies/CompanySecurityPage";
 import AuditLogPage from "@/pages/companies/AuditLogPage";
 import CreateDocument from "@/pages/CreateDocument";
 import CreateVehicleContract from "@/pages/CreateVehicleContract";
@@ -70,6 +71,11 @@ function Router() {
       <Route path="/companies/profile">
         <PrivateRoute>
           <CompanyProfilePage />
+        </PrivateRoute>
+      </Route>
+      <Route path="/companies/security">
+        <PrivateRoute>
+          <CompanySecurityPage />
         </PrivateRoute>
       </Route>
       <Route path="/companies/activity">
