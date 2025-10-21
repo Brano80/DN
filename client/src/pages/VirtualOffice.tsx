@@ -42,12 +42,13 @@ export default function VirtualOffice() {
   
   // Update view based on URL query parameter
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.split('?')[1]);
-    const viewParam = urlParams.get('view') as ViewType | null;
-    if (viewParam === 'list') {
+    const queryString = location.includes('?') ? location.split('?')[1] : '';
+    const params = new URLSearchParams(queryString);
+    const view = params.get('view');
+    
+    if (view === 'list') {
       setCurrentView('list');
     } else if (!officeId) {
-      // Only reset to 'create' if we're not viewing a specific office
       setCurrentView('create');
     }
   }, [location, officeId]);
