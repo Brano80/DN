@@ -1,9 +1,9 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import PrivateRoute from "@/components/PrivateRoute";
 import Navbar from "@/components/Navbar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -135,12 +135,18 @@ interface CurrentUserResponse {
 }
 
 function AppContent() {
+  const [location] = useLocation();
   const { data } = useQuery<CurrentUserResponse>({
     queryKey: ['/api/current-user'],
     retry: false,
   });
 
   const isAuthenticated = !!data?.user;
+  const hasActiveContext = !!data?.activeContext;
+  
+  // Pages where sidebar should NOT be shown (profile selection pages)
+  const noSidebarPages = ['/select-profile', '/select-company'];
+  const shouldShowSidebar = isAuthenticated && hasActiveContext && !noSidebarPages.includes(location);
 
   // Sidebar width customization
   const sidebarStyle = {
@@ -158,7 +164,17 @@ function AppContent() {
     );
   }
 
-  // Authenticated users get sidebar layout
+  if (!shouldShowSidebar) {
+    // Authenticated but no context selected or on profile selection page
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <Router />
+      </div>
+    );
+  }
+
+  // Authenticated users with active context get sidebar layout
   return (
     <SidebarProvider style={sidebarStyle}>
       <div className="flex h-screen w-full">

@@ -88,13 +88,13 @@ export default function PersonalDashboard() {
           <Button
             variant="outline"
             className="justify-start h-auto py-4"
-            onClick={() => setLocation('/my-contracts')}
-            data-testid="button-my-contracts"
+            onClick={() => setLocation('/verify-document')}
+            data-testid="button-verify-document"
           >
-            <FileText className="mr-2 h-5 w-5" />
+            <Shield className="mr-2 h-5 w-5" />
             <div className="text-left">
-              <div className="font-medium">Moje zmluvy</div>
-              <div className="text-xs text-muted-foreground">Zobraziť všetky zmluvy</div>
+              <div className="font-medium">Overiť dokument</div>
+              <div className="text-xs text-muted-foreground">Kontrola pravosti dokumentu</div>
             </div>
           </Button>
 
