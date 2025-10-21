@@ -49,7 +49,7 @@ export default function Home() {
         <div className="w-full max-w-4xl space-y-8">
           <header className="text-center">
             <h1 className="text-4xl font-bold">Digital Notary</h1>
-            <p className="text-muted-foreground mt-2">Digitálna Notárska Služba</p>
+            <p className="text-muted-foreground mt-2">Digital Identity & Signature Manager</p>
           </header>
           <main>
             <AuthSection />
