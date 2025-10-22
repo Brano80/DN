@@ -137,23 +137,23 @@ export class MemStorage implements IStorage {
     
     console.log('[SEED] Created 3 mock users');
     
-    // Create eGarant s.r.o. company (for Ján Nováček)
+    // Create eGarant s.r.o. company (for Ján Nováček) - Czech company
     const companyId = "company-egarant";
     const company: Company = {
       id: companyId,
       ico: "54321098",
-      dic: "SK2054321098",
+      dic: "CZ54321098",
       icDph: null,
       nazov: "eGarant s.r.o.",
-      sidloUlica: "Hlavná",
+      sidloUlica: "Hlavní",
       sidloCislo: "25",
-      sidloMesto: "Bratislava",
-      sidloPsc: "81102",
-      registracnySud: "Okresný súd Bratislava I",
-      cisloVlozky: "654321/B",
+      sidloMesto: "Praha",
+      sidloPsc: "11000",
+      registracnySud: "Městský soud v Praze",
+      cisloVlozky: "C 654321",
       datumZapisu: "2020-01-15",
-      pravnaForma: "Spoločnosť s ručením obmedzeným",
-      stat: "SK",
+      pravnaForma: "Společnost s ručením omezeným",
+      stat: "CZ",
       stav: "active",
       lastVerifiedAt: new Date(),
       enforceTwoFactorAuth: false,
@@ -168,11 +168,11 @@ export class MemStorage implements IStorage {
       id: mandateId,
       userId: mockUserId,
       companyId: companyId,
-      rola: "Konateľ",
-      rozsahOpravneni: "samostatne",
+      rola: "Jednatel",
+      rozsahOpravneni: "samostatně",
       platnyOd: "2020-01-15",
       platnyDo: null,
-      zdrojOverenia: "OR SR Mock",
+      zdrojOverenia: "Czech Business Registry Mock",
       stav: "active",
       isVerifiedByKep: false,
       createdAt: new Date("2020-01-15"),
