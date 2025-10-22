@@ -20,6 +20,10 @@ export default function AuthSection() {
     window.location.href = "/auth/mock-login-petra";
   };
 
+  const handleAndresLogin = () => {
+    window.location.href = "/auth/mock-login-andres";
+  };
+
   const handleResetData = async () => {
     if (!confirm("Naozaj chcete vymazať všetky dáta a obnoviť základný stav? Táto akcia je nevratná.")) {
       return;
@@ -89,26 +93,48 @@ export default function AuthSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              onClick={handleJanLogin}
+              variant="outline"
+              className="w-full"
+              size="lg"
+              data-testid="button-mock-login-jan"
+            >
+              <User className="w-4 h-4 mr-2" />
+              <div className="text-left">
+                <div className="font-medium">Ján Nováček</div>
+                <div className="text-xs text-muted-foreground">eGarant s.r.o. (SK)</div>
+              </div>
+            </Button>
+            <Button
+              onClick={handlePetraLogin}
+              variant="outline"
+              className="w-full"
+              size="lg"
+              data-testid="button-mock-login-petra"
+            >
+              <User className="w-4 h-4 mr-2" />
+              <div className="text-left">
+                <div className="font-medium">Petra Ambroz</div>
+                <div className="text-xs text-muted-foreground">ARIAN s.r.o. (SK)</div>
+              </div>
+            </Button>
+          </div>
+          
           <Button
-            onClick={handleJanLogin}
+            onClick={handleAndresLogin}
             variant="outline"
             className="w-full"
             size="lg"
-            data-testid="button-mock-login-jan"
+            data-testid="button-mock-login-andres"
           >
             <User className="w-4 h-4 mr-2" />
-            <div className="font-medium">Ján Nováček</div>
-          </Button>
-          <Button
-            onClick={handlePetraLogin}
-            variant="outline"
-            className="w-full"
-            size="lg"
-            data-testid="button-mock-login-petra"
-          >
-            <User className="w-4 h-4 mr-2" />
-            <div className="font-medium">Petra Ambroz</div>
+            <div className="text-left">
+              <div className="font-medium">Andres Elgueta</div>
+              <div className="text-xs text-muted-foreground">Tekmain SpA (CL)</div>
+            </div>
           </Button>
         </div>
 
