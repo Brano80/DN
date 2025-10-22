@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -14,7 +15,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { VirtualOffice, VirtualOfficeParticipant, VirtualOfficeDocument } from "@shared/schema";
-import { MOCK_USER_EMAILS } from "@/lib/constants";
+import { MOCK_INVITATION_OPTIONS } from "@/lib/constants";
 import { DigitalSigningDialog } from "@/components/DigitalSigningDialog";
 
 interface VirtualOfficeEnriched extends VirtualOffice {
@@ -64,7 +65,9 @@ export default function VirtualOfficeDetailPage() {
   const { data: currentUser } = useCurrentUser();
   const { toast } = useToast();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [selectedInvitationOption, setSelectedInvitationOption] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
+  const [invitationContext, setInvitationContext] = useState('');
   const [requiredRole, setRequiredRole] = useState('');
   const [requiredCompanyIco, setRequiredCompanyIco] = useState('');
   
@@ -80,7 +83,7 @@ export default function VirtualOfficeDetailPage() {
 
   // Invite participant mutation
   const inviteParticipantMutation = useMutation({
-    mutationFn: async (data: { email: string; requiredRole?: string; requiredCompanyIco?: string }) => {
+    mutationFn: async (data: { email: string; invitationContext: string; requiredRole?: string; requiredCompanyIco?: string }) => {
       const response = await apiRequest("POST", `/api/virtual-offices/${id}/participants`, data);
       return response.json();
     },
@@ -88,7 +91,9 @@ export default function VirtualOfficeDetailPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${id}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
       setShowInviteDialog(false);
+      setSelectedInvitationOption('');
       setInviteEmail('');
+      setInvitationContext('');
       setRequiredRole('');
       setRequiredCompanyIco('');
       toast({
@@ -105,11 +110,31 @@ export default function VirtualOfficeDetailPage() {
     },
   });
 
+  const handleInvitationOptionSelect = (optionId: string) => {
+    const option = MOCK_INVITATION_OPTIONS.find(opt => opt.id === optionId);
+    if (option) {
+      setSelectedInvitationOption(optionId);
+      setInviteEmail(option.email);
+      setInvitationContext(option.invitationContext);
+      setRequiredRole(option.requiredRole);
+      setRequiredCompanyIco(option.requiredCompanyIco);
+    }
+  };
+
   const handleInviteParticipant = () => {
     if (!inviteEmail.trim()) {
       toast({
         title: "Chyba",
-        description: "Zadajte e-mailovú adresu účastníka.",
+        description: "Vyberte účastníka.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!invitationContext) {
+      toast({
+        title: "Chyba",
+        description: "Kontext pozvánky nie je nastavený.",
         variant: "destructive",
       });
       return;
@@ -117,6 +142,7 @@ export default function VirtualOfficeDetailPage() {
 
     inviteParticipantMutation.mutate({
       email: inviteEmail,
+      invitationContext: invitationContext,
       requiredRole: requiredRole || undefined,
       requiredCompanyIco: requiredCompanyIco || undefined,
     });
@@ -342,21 +368,25 @@ export default function VirtualOfficeDetailPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="invite-email">E-mailová adresa *</Label>
-              <Input
-                id="invite-email"
-                type="email"
-                placeholder="jan.novak@example.sk"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                list="mock-emails-list"
-                data-testid="input-invite-email"
-              />
-              <datalist id="mock-emails-list">
-                {MOCK_USER_EMAILS.map((email) => (
-                  <option key={email} value={email} />
-                ))}
-              </datalist>
+              <Label htmlFor="invite-participant">Účastník *</Label>
+              <Select
+                value={selectedInvitationOption}
+                onValueChange={handleInvitationOptionSelect}
+              >
+                <SelectTrigger data-testid="select-participant">
+                  <SelectValue placeholder="Vyberte účastníka" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MOCK_INVITATION_OPTIONS.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Vyberte, či chcete pozvať fyzickú osobu alebo firmu
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="required-role">Požadovaná rola (voliteľné)</Label>
