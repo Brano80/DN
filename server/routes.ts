@@ -780,6 +780,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get attestation data for a virtual office document
+  app.get("/api/virtual-office-documents/:id/attestation", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = (req.user as User).id;
+      const documentId = req.params.id;
+      
+      // Get document
+      const document = await storage.getVirtualOfficeDocument(documentId);
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      
+      // Check if user is participant of the virtual office
+      const isParticipant = await storage.isUserParticipant(userId, document.virtualOfficeId);
+      if (!isParticipant) {
+        return res.status(403).json({ error: "Not a participant of this virtual office" });
+      }
+      
+      // Get contract details for document title
+      const contract = await storage.getContract(document.contractId);
+      const documentTitle = contract?.title || "Neznámy dokument";
+      
+      // Get all signatures for this document
+      const signatures = await storage.getVirtualOfficeSignatures(documentId);
+      
+      // Build attestation entries
+      const attestationEntries = await Promise.all(
+        signatures
+          .filter(sig => sig.status === 'SIGNED')
+          .map(async (signature) => {
+            // Get participant to find userId
+            const participant = await storage.getVirtualOfficeParticipant(signature.participantId);
+            if (!participant) {
+              return null;
+            }
+            
+            // Get user details
+            const user = await storage.getUser(participant.userId);
+            if (!user) {
+              return null;
+            }
+            
+            const userName = user.name;
+            const signedAt = signature.signedAt;
+            
+            // Check if this is a company signature (has mandate)
+            if (signature.userCompanyMandateId) {
+              // Get mandate details
+              const mandate = await storage.getUserMandate(signature.userCompanyMandateId);
+              if (!mandate) {
+                // Mandate not found - treat as personal
+                return {
+                  userName,
+                  signedAt,
+                  type: 'personal' as const
+                };
+              }
+              
+              // Get company details
+              const company = await storage.getCompany(mandate.companyId);
+              if (!company) {
+                // Company not found - treat as personal
+                return {
+                  userName,
+                  signedAt,
+                  type: 'personal' as const
+                };
+              }
+              
+              // Return company signature entry
+              return {
+                userName,
+                signedAt,
+                type: 'company' as const,
+                companyName: company.nazov,
+                companyIco: company.ico,
+                role: mandate.rola,
+                mandateVerificationSource: company.zdrojOverenia || 'OR SR Mock'
+              };
+            } else {
+              // Personal signature
+              return {
+                userName,
+                signedAt,
+                type: 'personal' as const
+              };
+            }
+          })
+      );
+      
+      // Filter out null entries (in case of missing data)
+      const validEntries = attestationEntries.filter(entry => entry !== null);
+      
+      // Find the latest signature timestamp
+      const completedAt = validEntries.length > 0
+        ? validEntries.reduce((latest, entry) => {
+            return entry.signedAt && (!latest || entry.signedAt > latest) ? entry.signedAt : latest;
+          }, null as Date | null)
+        : null;
+      
+      res.json({
+        documentTitle,
+        completedAt,
+        attestationEntries: validEntries
+      });
+    } catch (error) {
+      console.error("Attestation data error:", error);
+      res.status(500).json({ error: "Failed to fetch attestation data" });
+    }
+  });
+
   // Contract routes
   app.post("/api/contracts", async (req, res) => {
     try {

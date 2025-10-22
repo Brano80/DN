@@ -1,0 +1,41 @@
+Ahoj Replit AI,
+
+Potrebujeme vytvoriť endpoint, ktorý zozbiera informácie o všetkých podpisoch a použitých mandátoch pre konkrétny dokument vo Virtuálnej Kancelárii (VK) a vygeneruje dáta pre našu "Doložku o overení mandátov".
+
+**Cieľ:** Vytvoriť `GET /api/virtual-office-documents/:id/attestation`
+
+**Detaily implementácie (`server/routes.ts` a `server/storage.ts`):**
+
+1.  **Definuj routu:** `GET /api/virtual-office-documents/:id/attestation`
+2.  **Zabezpečenie:** Over, či je používateľ prihlásený (`isAuthenticated`) a či je **účastníkom** VK, do ktorej daný dokument (`:id`) patrí. (Budeš musieť načítať dokument, z neho `virtualOfficeId` a potom overiť účastníctvo). Ak nie, vráť 403 Forbidden.
+3.  **Logika handlera:**
+    * Získaj `:id` (document ID) z `req.params`.
+    * Načítaj všetky podpisy (`VirtualOfficeSignature`) pre tento dokument pomocou `storage.getVirtualOfficeSignatures(documentId)`.
+    * **Pre každý podpis:**
+        * Načítaj detail účastníka (`storage.getVirtualOfficeParticipant(signature.participantId)`), aby si získal `userId`.
+        * Načítaj detail používateľa (`storage.getUser(userId)`), aby si získal `userName`.
+        * **Kľúčová časť:** Skontroluj, či podpis obsahuje `userCompanyMandateId` (uložené v Kroku 24).
+            * **Ak ÁNO (firemný podpis):** Načítaj detail tohto mandátu (`storage.getUserMandate(signature.userCompanyMandateId)`) a z neho aj detail firmy (`storage.getCompany(mandate.companyId)`). Získaj `rola`, `companyName`, `companyIco`, `zdrojOverenia`.
+            * **Ak NIE (osobný podpis):** Používateľ podpisoval ako fyzická osoba.
+    * **Zostav štruktúru:** Vytvor pole objektov (napr. `attestationEntries`), kde každý objekt reprezentuje jeden podpis a obsahuje:
+        * `userName`
+        * `signedAt`
+        * `type`: `'personal'` alebo `'company'`
+        * `companyName` (ak type='company')
+        * `companyIco` (ak type='company')
+        * `role` (ak type='company')
+        * `mandateVerificationSource` (ak type='company', napr. 'OR SR Mock')
+    * **Načítaj detail dokumentu:** (`storage.getVirtualOfficeDocument(documentId)`) a z neho názov súboru (`contract.title`).
+    * **Odpoveď:** Vráť status `200 OK` a JSON objekt obsahujúci napr.:
+        ```json
+        {
+          "documentTitle": "Názov Súboru.pdf",
+          "completedAt": "timestamp posledného podpisu", 
+          "attestationEntries": [ ... pole objektov popísané vyššie ... ]
+        }
+        ```
+
+**Dôležité inštrukcie pre AI:**
+* Zabezpeč správne načítanie všetkých prepojených dát (podpis -> účastník -> používateľ -> mandát -> firma).
+* Ošetri prípad, keď mandát alebo firma nebudú nájdené (aj keď by nemali).
+* Ukáž mi kód nového endpointu v `routes.ts` a prípadné nové funkcie v `storage.ts`.
