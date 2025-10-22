@@ -5,6 +5,12 @@ import {
   type InsertContract,
   type VirtualOffice,
   type InsertVirtualOffice,
+  type VirtualOfficeParticipant,
+  type InsertVirtualOfficeParticipant,
+  type VirtualOfficeDocument,
+  type InsertVirtualOfficeDocument,
+  type VirtualOfficeSignature,
+  type InsertVirtualOfficeSignature,
   type Company,
   type InsertCompany,
   type UserCompanyMandate,
@@ -20,6 +26,7 @@ import { randomUUID } from "crypto";
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
   getContract(id: string): Promise<Contract | undefined>;
@@ -28,11 +35,26 @@ export interface IStorage {
   updateContract(id: string, updates: Partial<Contract>): Promise<Contract | undefined>;
   deleteContract(id: string): Promise<boolean>;
   
+  // Virtual Office methods (updated for new structure)
   getVirtualOffice(id: string): Promise<VirtualOffice | undefined>;
-  getVirtualOfficesByOwner(ownerEmail: string): Promise<VirtualOffice[]>;
+  getVirtualOfficesByUser(userId: string): Promise<VirtualOffice[]>;
   createVirtualOffice(office: InsertVirtualOffice): Promise<VirtualOffice>;
   updateVirtualOffice(id: string, updates: Partial<VirtualOffice>): Promise<VirtualOffice | undefined>;
   deleteVirtualOffice(id: string): Promise<boolean>;
+  
+  // Virtual Office Participants
+  createVirtualOfficeParticipant(participant: InsertVirtualOfficeParticipant): Promise<VirtualOfficeParticipant>;
+  getVirtualOfficeParticipants(virtualOfficeId: string): Promise<Array<VirtualOfficeParticipant & { user: User }>>;
+  updateVirtualOfficeParticipant(id: string, updates: Partial<VirtualOfficeParticipant>): Promise<VirtualOfficeParticipant | undefined>;
+  isUserParticipant(userId: string, virtualOfficeId: string): Promise<boolean>;
+  
+  // Virtual Office Documents
+  createVirtualOfficeDocument(document: InsertVirtualOfficeDocument): Promise<VirtualOfficeDocument>;
+  getVirtualOfficeDocuments(virtualOfficeId: string): Promise<Array<VirtualOfficeDocument & { contract: Contract }>>;
+  
+  // Virtual Office Signatures
+  createVirtualOfficeSignature(signature: InsertVirtualOfficeSignature): Promise<VirtualOfficeSignature>;
+  getVirtualOfficeSignatures(virtualOfficeDocumentId: string): Promise<VirtualOfficeSignature[]>;
   
   getCompany(id: string): Promise<Company | undefined>;
   getCompanyByIco(ico: string): Promise<Company | undefined>;
@@ -58,6 +80,9 @@ export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private contracts: Map<string, Contract>;
   private virtualOffices: Map<string, VirtualOffice>;
+  private virtualOfficeParticipants: Map<string, VirtualOfficeParticipant>;
+  private virtualOfficeDocuments: Map<string, VirtualOfficeDocument>;
+  private virtualOfficeSignatures: Map<string, VirtualOfficeSignature>;
   private companies: Map<string, Company>;
   private userMandates: Map<string, UserCompanyMandate>;
   private auditLogs: Map<string, AuditLog>;
@@ -66,6 +91,9 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.contracts = new Map();
     this.virtualOffices = new Map();
+    this.virtualOfficeParticipants = new Map();
+    this.virtualOfficeDocuments = new Map();
+    this.virtualOfficeSignatures = new Map();
     this.companies = new Map();
     this.userMandates = new Map();
     this.auditLogs = new Map();
@@ -326,13 +354,26 @@ export class MemStorage implements IStorage {
     return this.contracts.delete(id);
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email
+    );
+  }
+
+  // Virtual Office methods (updated for new structure)
   async getVirtualOffice(id: string): Promise<VirtualOffice | undefined> {
     return this.virtualOffices.get(id);
   }
 
-  async getVirtualOfficesByOwner(ownerEmail: string): Promise<VirtualOffice[]> {
+  async getVirtualOfficesByUser(userId: string): Promise<VirtualOffice[]> {
+    // Find all participants for this user
+    const participantOfficeIds = Array.from(this.virtualOfficeParticipants.values())
+      .filter(p => p.userId === userId)
+      .map(p => p.virtualOfficeId);
+    
+    // Return unique virtual offices
     return Array.from(this.virtualOffices.values()).filter(
-      (office) => office.ownerEmail === ownerEmail,
+      (office) => participantOfficeIds.includes(office.id)
     );
   }
 
@@ -341,7 +382,6 @@ export class MemStorage implements IStorage {
     const office: VirtualOffice = { 
       ...insertOffice,
       status: insertOffice.status ?? 'active',
-      contractId: insertOffice.contractId ?? null,
       processType: insertOffice.processType ?? null,
       id,
       createdAt: new Date()
@@ -362,6 +402,96 @@ export class MemStorage implements IStorage {
 
   async deleteVirtualOffice(id: string): Promise<boolean> {
     return this.virtualOffices.delete(id);
+  }
+
+  // Virtual Office Participants
+  async createVirtualOfficeParticipant(insertParticipant: InsertVirtualOfficeParticipant): Promise<VirtualOfficeParticipant> {
+    const id = randomUUID();
+    const participant: VirtualOfficeParticipant = {
+      ...insertParticipant,
+      status: insertParticipant.status ?? 'INVITED',
+      userCompanyMandateId: insertParticipant.userCompanyMandateId ?? null,
+      requiredRole: insertParticipant.requiredRole ?? null,
+      requiredCompanyIco: insertParticipant.requiredCompanyIco ?? null,
+      respondedAt: insertParticipant.respondedAt ?? null,
+      id,
+      invitedAt: new Date()
+    };
+    this.virtualOfficeParticipants.set(id, participant);
+    return participant;
+  }
+
+  async getVirtualOfficeParticipants(virtualOfficeId: string): Promise<Array<VirtualOfficeParticipant & { user: User }>> {
+    const participants = Array.from(this.virtualOfficeParticipants.values()).filter(
+      (p) => p.virtualOfficeId === virtualOfficeId
+    );
+    
+    return participants.map((participant) => {
+      const user = this.users.get(participant.userId);
+      if (!user) throw new Error(`User ${participant.userId} not found`);
+      return { ...participant, user };
+    });
+  }
+
+  async updateVirtualOfficeParticipant(id: string, updates: Partial<VirtualOfficeParticipant>): Promise<VirtualOfficeParticipant | undefined> {
+    const participant = this.virtualOfficeParticipants.get(id);
+    if (!participant) return undefined;
+    
+    const { id: _id, invitedAt: _invitedAt, ...safeUpdates } = updates;
+    const updated = { ...participant, ...safeUpdates };
+    this.virtualOfficeParticipants.set(id, updated);
+    return updated;
+  }
+
+  async isUserParticipant(userId: string, virtualOfficeId: string): Promise<boolean> {
+    return Array.from(this.virtualOfficeParticipants.values()).some(
+      (p) => p.userId === userId && p.virtualOfficeId === virtualOfficeId
+    );
+  }
+
+  // Virtual Office Documents
+  async createVirtualOfficeDocument(insertDocument: InsertVirtualOfficeDocument): Promise<VirtualOfficeDocument> {
+    const id = randomUUID();
+    const document: VirtualOfficeDocument = {
+      ...insertDocument,
+      status: insertDocument.status ?? 'pending',
+      id,
+      uploadedAt: new Date()
+    };
+    this.virtualOfficeDocuments.set(id, document);
+    return document;
+  }
+
+  async getVirtualOfficeDocuments(virtualOfficeId: string): Promise<Array<VirtualOfficeDocument & { contract: Contract }>> {
+    const documents = Array.from(this.virtualOfficeDocuments.values()).filter(
+      (d) => d.virtualOfficeId === virtualOfficeId
+    );
+    
+    return documents.map((document) => {
+      const contract = this.contracts.get(document.contractId);
+      if (!contract) throw new Error(`Contract ${document.contractId} not found`);
+      return { ...document, contract };
+    });
+  }
+
+  // Virtual Office Signatures
+  async createVirtualOfficeSignature(insertSignature: InsertVirtualOfficeSignature): Promise<VirtualOfficeSignature> {
+    const id = randomUUID();
+    const signature: VirtualOfficeSignature = {
+      ...insertSignature,
+      status: insertSignature.status ?? 'PENDING',
+      signedAt: insertSignature.signedAt ?? null,
+      signatureData: insertSignature.signatureData ?? null,
+      id
+    };
+    this.virtualOfficeSignatures.set(id, signature);
+    return signature;
+  }
+
+  async getVirtualOfficeSignatures(virtualOfficeDocumentId: string): Promise<VirtualOfficeSignature[]> {
+    return Array.from(this.virtualOfficeSignatures.values()).filter(
+      (s) => s.virtualOfficeDocumentId === virtualOfficeDocumentId
+    );
   }
 
   async getCompany(id: string): Promise<Company | undefined> {
@@ -520,6 +650,9 @@ export class MemStorage implements IStorage {
     // Clear all data
     this.contracts.clear();
     this.virtualOffices.clear();
+    this.virtualOfficeParticipants.clear();
+    this.virtualOfficeDocuments.clear();
+    this.virtualOfficeSignatures.clear();
     this.companies.clear();
     this.userMandates.clear();
     this.auditLogs.clear();
