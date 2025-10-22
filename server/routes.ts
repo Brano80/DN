@@ -289,41 +289,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "User is not a participant" });
       }
       
-      // Filter documents to only show those where user has a signature entry
-      const userDocuments = await Promise.all(
+      // Enrich documents with all signatures and signer details
+      const enrichedDocuments = await Promise.all(
         allDocuments.map(async (doc) => {
           const signatures = await storage.getVirtualOfficeSignatures(doc.id);
-          const userSignature = signatures.find(s => s.participantId === userParticipant.id);
           
-          if (!userSignature) {
-            return null; // User doesn't have a signature entry for this document
-          }
-          
-          return doc;
-        })
-      );
-      
-      const filteredDocuments = userDocuments.filter(doc => doc !== null);
-      
-      // Enrich documents with signer names
-      const enrichedDocuments = await Promise.all(
-        filteredDocuments.map(async (doc) => {
-          const signatures = await storage.getVirtualOfficeSignatures(doc!.id);
-          const signedSignatures = signatures.filter(s => s.status === 'SIGNED');
-          
-          const signerNames = await Promise.all(
-            signedSignatures.map(async (signature) => {
+          // Enrich each signature with participant and user details
+          const enrichedSignatures = await Promise.all(
+            signatures.map(async (signature) => {
               const participant = await storage.getVirtualOfficeParticipant(signature.participantId);
               if (!participant) return null;
               
               const user = await storage.getUser(participant.userId);
-              return user ? user.name : null;
+              if (!user) return null;
+              
+              return {
+                id: signature.id,
+                participantId: signature.participantId,
+                userId: user.id,
+                userName: user.name,
+                status: signature.status,
+                signedAt: signature.signedAt,
+                isCurrentUser: user.id === userId
+              };
             })
           );
           
+          const validSignatures = enrichedSignatures.filter(s => s !== null);
+          
           return {
             ...doc,
-            signerNames: signerNames.filter(name => name !== null) as string[]
+            signatures: validSignatures
           };
         })
       );
