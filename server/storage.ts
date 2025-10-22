@@ -124,7 +124,18 @@ export class MemStorage implements IStorage {
     };
     this.users.set(mockUser2Id, mockUser2);
     
-    console.log('[SEED] Created 2 mock users');
+    // Create mock user 3 - Andres Elgueta (Chilean company owner)
+    const mockUser3Id = "mock789";
+    const mockUser3: User = {
+      id: mockUser3Id,
+      username: "andres.elgueta@tekmain.cl",
+      password: "mock-password-hash-3",
+      name: "Andres Elgueta",
+      email: "andres.elgueta@tekmain.cl"
+    };
+    this.users.set(mockUser3Id, mockUser3);
+    
+    console.log('[SEED] Created 3 mock users');
     
     // Create eGarant s.r.o. company (for Ján Nováček)
     const companyId = "company-egarant";
@@ -215,6 +226,51 @@ export class MemStorage implements IStorage {
     this.userMandates.set(mandate2Id, mandate2);
     
     console.log('[SEED] Created ARIAN s.r.o. with Petra Ambroz as Konateľ');
+    
+    // Create third company - Tekmain SpA (Chilean company for Andres Elgueta)
+    const company3Id = "company-tekmain";
+    const company3: Company = {
+      id: company3Id,
+      ico: "CL76543210",
+      dic: "CL-76543210-K",
+      icDph: null,
+      nazov: "Tekmain SpA",
+      sidloUlica: "Avenida Providencia",
+      sidloCislo: "1234",
+      sidloMesto: "Santiago",
+      sidloPsc: "7500000",
+      registracnySud: "Registro de Empresas y Sociedades de Chile",
+      cisloVlozky: "CL/2022/45678",
+      datumZapisu: "2022-03-20",
+      pravnaForma: "Sociedad por Acciones",
+      stat: "CL",
+      stav: "active",
+      lastVerifiedAt: new Date(),
+      enforceTwoFactorAuth: false,
+      createdAt: new Date("2022-03-20"),
+      updatedAt: new Date()
+    };
+    this.companies.set(company3Id, company3);
+    
+    // Create active mandate for Andres Elgueta as Gerente General of Tekmain
+    const mandate3Id = "mandate-andres-elgueta";
+    const mandate3: UserCompanyMandate = {
+      id: mandate3Id,
+      userId: mockUser3Id,
+      companyId: company3Id,
+      rola: "Gerente General",
+      rozsahOpravneni: "samostatne",
+      platnyOd: "2022-03-20",
+      platnyDo: null,
+      zdrojOverenia: "Chilean Business Registry Mock",
+      stav: "active",
+      isVerifiedByKep: false,
+      createdAt: new Date("2022-03-20"),
+      updatedAt: new Date()
+    };
+    this.userMandates.set(mandate3Id, mandate3);
+    
+    console.log('[SEED] Created Tekmain SpA with Andres Elgueta as Gerente General');
     
     // Create example contract for Škoda Octavia
     const contractId = "example-skoda-octavia";

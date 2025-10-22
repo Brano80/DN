@@ -69,6 +69,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  app.get("/auth/mock-login-andres", (req: Request, res: Response) => {
+    const mockUser: User = {
+      id: "mock789",
+      name: "Andres Elgueta",
+      email: "andres.elgueta@tekmain.cl",
+      givenName: "Andres",
+      familyName: "Elgueta",
+    };
+
+    req.login(mockUser, (err) => {
+      if (err) {
+        console.error("[AUTH] Mock login error:", err);
+        return res.status(500).json({ error: "Login failed" });
+      }
+      console.log("[AUTH] Mock user logged in:", mockUser.email);
+      res.redirect("/select-profile");
+    });
+  });
+
   app.get("/auth/logout", async (req: Request, res: Response) => {
     const userEmail = (req.user as User)?.email || "unknown";
     
