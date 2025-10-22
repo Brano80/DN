@@ -10,15 +10,38 @@ import { FileText } from "lucide-react";
 import { QUERY_KEYS } from "@/lib/queryKeys";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
+interface CurrentUserResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  mandates: Array<{
+    ico: string;
+    companyName: string;
+    role: string;
+  }>;
+  activeContext?: string | null;
+}
+
 export default function MyContracts() {
   const [, setLocation] = useLocation();
   const [selectedContract, setSelectedContract] = useState<string | null>(null);
   const { data: currentUser } = useCurrentUser();
 
+  const { data: currentUserResponse } = useQuery<CurrentUserResponse>({
+    queryKey: ['/api/current-user'],
+    retry: false,
+  });
+
   const { data: contracts, isLoading } = useQuery<Contract[]>({
     queryKey: QUERY_KEYS.contracts(currentUser?.email || ''),
     enabled: !!currentUser?.email,
   });
+
+  // Determine if user is in company context
+  const isCompanyContext = currentUserResponse?.activeContext && currentUserResponse.activeContext !== 'personal';
+  const pageTitle = isCompanyContext ? "Firemné zmluvy" : "Moje zmluvy";
 
   const handleShowContract = (contractId: string) => {
     setSelectedContract(contractId);
@@ -46,7 +69,7 @@ export default function MyContracts() {
         <Card className="p-8">
           <BackButton onClick={() => setLocation('/')} />
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">Moje zmluvy</h2>
+            <h2 className="text-2xl font-semibold">{pageTitle}</h2>
             <Button
               variant="outline"
               onClick={() => setLocation('/create-document')}

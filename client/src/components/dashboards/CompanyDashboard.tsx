@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { QUERY_KEYS } from "@/lib/queryKeys";
-import type { VirtualOffice } from "@shared/schema";
+import type { VirtualOffice, Contract } from "@shared/schema";
 
 interface CompanyDashboardProps {
   companyName: string;
@@ -16,13 +16,20 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
   const [, setLocation] = useLocation();
   const { data: currentUser } = useCurrentUser();
 
+  // Fetch contracts for the current user
+  const { data: contracts } = useQuery<Contract[]>({
+    queryKey: QUERY_KEYS.contracts(currentUser?.email || ''),
+    enabled: !!currentUser?.email,
+  });
+
   // Fetch virtual offices for the current user
   const { data: virtualOffices } = useQuery<VirtualOffice[]>({
     queryKey: QUERY_KEYS.virtualOffices(currentUser?.email || ''),
     enabled: !!currentUser?.email,
   });
 
-  // Calculate count
+  // Calculate counts
+  const contractsCount = contracts?.length || 0;
   const virtualOfficesCount = virtualOffices?.length || 0;
 
   return (
@@ -51,7 +58,7 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{contractsCount}</div>
             <p className="text-xs text-muted-foreground">Celkový počet zmlúv</p>
           </CardContent>
         </Card>
