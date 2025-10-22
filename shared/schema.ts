@@ -119,6 +119,7 @@ export const virtualOfficeSignatures = pgTable("virtual_office_signatures", {
   status: signatureStatusEnum("status").notNull().default("PENDING"),
   signedAt: timestamp("signed_at"),
   signatureData: text("signature_data"),
+  userCompanyMandateId: varchar("user_company_mandate_id").references(() => userCompanyMandates.id),
 });
 
 export const insertVirtualOfficeSignatureSchema = createInsertSchema(virtualOfficeSignatures).omit({

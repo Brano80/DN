@@ -1,0 +1,42 @@
+Ahoj Replit AI,
+
+Potrebujeme upraviť proces (simulácie) podpisovania dokumentu vo Virtuálnej Kancelárii (VK), aby reflektoval mandát, v mene ktorého používateľ koná, a aby sa táto informácia zaznamenala pre budúce použitie.
+
+**Cieľ:** Upraviť komponent `DigitalSigningDialog.tsx` a miesto, kde sa volá (pravdepodobne `VirtualOfficeDetailPage.tsx`).
+
+**Časť A: Úprava `DigitalSigningDialog.tsx` (`client/src/components/DigitalSigningDialog.tsx`)**
+
+1.  **Pridať Nové Props:** Komponent musí prijímať nové `props`:
+    * `signingContext`: Objekt obsahujúci informácie o aktuálnom mandáte. Napr.: `{ type: 'personal' | 'company', userName: string, companyName?: string, role?: string, mandateId?: string }`.
+2.  **Zobraziť Kontext:** V tele dialógu (napr. pod nadpisom alebo nad tlačidlom "Podpísať") zobraz informáciu z `signingContext`:
+    * Ak `signingContext.type === 'personal'`: "Podpisujete ako: **{signingContext.userName} (Fyzická osoba)**"
+    * Ak `signingContext.type === 'company'`: "Podpisujete v mene: **{signingContext.companyName}** ako **{signingContext.role}**"
+3.  **Vrátiť Kontext v `onComplete`:** Uprav `onComplete` prop tak, aby nevracal len `void`, ale aby vracal informácie o použitom kontexte: `onComplete: (contextUsed: { mandateId?: string, userId: string }) => void;`.
+    * Keď používateľ klikne na "Podpísať", zavolaj `onComplete` s príslušnými dátami (`mandateId` z `signingContext` a `userId` aktuálneho používateľa).
+
+**Časť B: Úprava Miesta Volania (`client/src/pages/VirtualOfficeDetailPage.tsx`)**
+
+1.  **Načítať Kontext:** V `VirtualOfficeDetailPage.tsx` už načítavaš `currentUser` a `office`. Potrebuješ načítať aj dáta z `useQuery(['/api/current-user'])`, aby si získal `activeContext` a pole `mandates`.
+2.  **Pripraviť `signingContext`:** Pred zobrazením `DigitalSigningDialog` vytvor objekt `signingContext` na základe `activeContext` a `mandates` (rovnaká logika ako v `Navbar`). Získaj `userName`, `companyName`, `role`, `mandateId`.
+3.  **Poskytnúť `signingContext`:** Podaj tento objekt ako `prop` do `<DigitalSigningDialog signingContext={signingContext} ... />`.
+4.  **Spracovať `onComplete`:** Uprav `onComplete` handler pre `DigitalSigningDialog`:
+    * Funkcia teraz prijíma argument `contextUsed` (s `mandateId` a `userId`).
+    * **Zavolaj Backend na Zaznamenanie Podpisu:** Zavolaj existujúci endpoint `POST /api/virtual-office-documents/:id/sign`. **Dôležité:** Do tela požiadavky (`body`) teraz pridaj aj `mandateId: contextUsed.mandateId` (ak existuje). Backend endpoint (`routes.ts`) bude treba mierne upraviť, aby toto `mandateId` prijal a **uložil** do záznamu `VirtualOfficeSignature` (pridaj tam stĺpec `userCompanyMandateId`).
+    * **Log do Konzoly (Overenie):** Stále ponechaj `console.log` na overenie:
+        ```javascript
+        console.log(`Dokument ${selectedDocument?.id} podpísaný používateľom ${contextUsed.userId} ${contextUsed.mandateId ? `s mandátom ID: ${contextUsed.mandateId}` : 'ako fyzická osoba'}`);
+        ```
+    * Zvyšok logiky (zobrazenie toastu, invalidácia query) zostáva.
+
+**Časť C: Úprava Backendu (`server/routes.ts`, `server/storage.ts`, `shared/schema.ts`)**
+
+1.  **Schéma:** Do tabuľky `virtualOfficeSignatures` v `shared/schema.ts` pridaj nový stĺpec: `userCompanyMandateId: varchar("user_company_mandate_id").references(() => userCompanyMandates.id),`. Spusti migráciu.
+2.  **Storage:** Uprav funkcie `createVirtualOfficeSignature` a `updateVirtualOfficeSignature` v `storage.ts`, aby prijímali a ukladali aj `userCompanyMandateId`.
+3.  **Endpoint:** Uprav endpoint `POST /api/virtual-office-documents/:id/sign` v `routes.ts`, aby:
+    * Prijímal `mandateId` z `req.body`.
+    * Pri volaní `storage.createVirtualOfficeSignature` alebo `updateVirtualOfficeSignature` odovzdal aj toto `mandateId`.
+
+**Dôležité inštrukcie pre AI:**
+* Zabezpeč správne odovzdávanie a spracovanie `signingContext` a `mandateId`.
+* Nezabudni na úpravu DB schémy, storage funkcií a backend endpointu.
+* Ukáž mi upravený kód pre `DigitalSigningDialog.tsx`, `VirtualOfficeDetailPage.tsx` (časť s volaním dialógu a onComplete), `shared/schema.ts` (len zmenenú tabuľku), `server/storage.ts` (len zmenené funkcie) a `server/routes.ts` (len zmenený endpoint).
