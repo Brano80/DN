@@ -1,11 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, FileText, Shield, Briefcase, Clock } from "lucide-react";
+import { Building2, FileText, Shield, Briefcase, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { QUERY_KEYS } from "@/lib/queryKeys";
 import type { VirtualOffice, VirtualOfficeParticipant, Contract } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VirtualOfficeEnriched extends VirtualOffice {
   participants: Array<VirtualOfficeParticipant & {
@@ -18,6 +22,25 @@ interface VirtualOfficeEnriched extends VirtualOffice {
   documents: any[];
 }
 
+interface Mandate {
+  mandateId: string;
+  ico: string;
+  companyName: string;
+  role: string;
+  status: string;
+  invitationContext?: string;
+}
+
+interface CurrentUserResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  mandates: Mandate[];
+  activeContext: string | null;
+}
+
 interface CompanyDashboardProps {
   companyName: string;
   ico: string;
@@ -26,6 +49,12 @@ interface CompanyDashboardProps {
 export default function CompanyDashboard({ companyName, ico }: CompanyDashboardProps) {
   const [, setLocation] = useLocation();
   const { data: currentUser } = useCurrentUser();
+  const { toast } = useToast();
+
+  // Fetch current user data including mandates
+  const { data: userData } = useQuery<CurrentUserResponse>({
+    queryKey: ['/api/current-user'],
+  });
 
   // Fetch contracts for the current user
   const { data: contracts } = useQuery<Contract[]>({
@@ -39,6 +68,12 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
     enabled: !!currentUser,
   });
 
+  // Filter pending mandate invitations for this company context
+  const pendingMandates = userData?.mandates?.filter(m => 
+    m.status === 'pending_confirmation' && 
+    m.invitationContext === ico
+  ) || [];
+
   // Filter pending VK invitations for this company context
   const pendingVKInvitations = virtualOffices?.filter(vk => 
     vk.participants.some(p => p.userId === currentUser?.id && p.status === 'INVITED')
@@ -47,7 +82,49 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
   // Calculate counts
   const contractsCount = contracts?.length || 0;
   const virtualOfficesCount = virtualOffices?.length || 0;
-  const pendingTasksCount = pendingVKInvitations.length;
+  const pendingTasksCount = pendingMandates.length + pendingVKInvitations.length;
+
+  // Accept mandate mutation
+  const acceptMandateMutation = useMutation({
+    mutationFn: async (mandateId: string) => {
+      return await apiRequest('PATCH', `/api/mandates/${mandateId}`, { stav: 'active' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
+      toast({
+        title: "Mandát prijatý",
+        description: "Úspešne ste prijali pozvánku na spoluprácu.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa prijať mandát.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Reject mandate mutation
+  const rejectMandateMutation = useMutation({
+    mutationFn: async (mandateId: string) => {
+      return await apiRequest('PATCH', `/api/mandates/${mandateId}`, { stav: 'rejected' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
+      toast({
+        title: "Mandát odmietnutý",
+        description: "Pozvánka bola odmietnutá.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa odmietnuť mandát.",
+        variant: "destructive",
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="company-dashboard">
@@ -113,7 +190,7 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingTasksCount}</div>
-            <p className="text-xs text-muted-foreground">Pozvánky do VK</p>
+            <p className="text-xs text-muted-foreground">Mandáty a VK pozvánky</p>
           </CardContent>
         </Card>
       </div>
@@ -193,6 +270,54 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
           </Button>
         </CardContent>
       </Card>
+
+      {/* Pending Tasks */}
+      {pendingMandates.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Čakajúce úkony</CardTitle>
+            <CardDescription>Pozvánky na firemné mandáty</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {pendingMandates.map((mandate) => (
+              <Alert key={mandate.mandateId} className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertDescription className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-800 dark:text-blue-200">
+                      <strong>Pozvánka do firmy:</strong> {mandate.companyName}
+                    </p>
+                    <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
+                      Rola: {mandate.role}
+                    </p>
+                  </div>
+                  <div className="flex space-x-2 ml-4">
+                    <Button
+                      size="sm"
+                      onClick={() => acceptMandateMutation.mutate(mandate.mandateId)}
+                      disabled={acceptMandateMutation.isPending}
+                      data-testid={`button-accept-mandate-${mandate.mandateId}`}
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-1" />
+                      Prijať
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => rejectMandateMutation.mutate(mandate.mandateId)}
+                      disabled={rejectMandateMutation.isPending}
+                      data-testid={`button-reject-mandate-${mandate.mandateId}`}
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Odmietnuť
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Company Info */}
       <Card>

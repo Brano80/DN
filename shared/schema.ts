@@ -212,6 +212,7 @@ export const userCompanyMandates = pgTable("user_company_mandates", {
   zdrojOverenia: varchar("zdroj_overenia", { length: 255 }).notNull().default("OR SR Mock"),
   stav: mandateStatusEnum("stav").notNull().default("pending_confirmation"),
   isVerifiedByKep: boolean("is_verified_by_kep").notNull().default(false),
+  invitationContext: varchar("invitation_context", { length: 50 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

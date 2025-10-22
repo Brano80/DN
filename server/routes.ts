@@ -144,7 +144,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ico: mandate.company.ico,
         companyName: mandate.company.nazov,
         role: mandate.rola,
-        status: mandate.stav
+        status: mandate.stav,
+        invitationContext: mandate.invitationContext
       }));
       
       res.json({

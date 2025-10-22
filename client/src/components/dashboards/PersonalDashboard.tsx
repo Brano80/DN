@@ -29,6 +29,7 @@ interface Mandate {
   companyName: string;
   role: string;
   status: string;
+  invitationContext?: string;
 }
 
 const getStatusDisplay = (status: string): { text: string; className: string } => {
@@ -76,8 +77,11 @@ export default function PersonalDashboard() {
     enabled: !!currentUser,
   });
 
-  // Filter pending mandate invitations
-  const pendingMandates = userData?.mandates?.filter(m => m.status === 'pending_confirmation') || [];
+  // Filter pending mandate invitations - only for personal context
+  const pendingMandates = userData?.mandates?.filter(m => 
+    m.status === 'pending_confirmation' && 
+    m.invitationContext === 'personal'
+  ) || [];
   
   // Filter pending VK invitations
   const pendingVKInvitations = virtualOffices?.filter(vk => 
