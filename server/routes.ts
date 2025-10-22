@@ -364,17 +364,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const userParticipant = participants.find(p => p.userId === userId);
           
           if (userParticipant) {
-            // INVITED participants should see VK in all contexts (for pending invitations visibility)
-            if (userParticipant.status === 'INVITED') {
-              return office;
-            }
-            
             const participantContext = userParticipant.invitationContext;
             
+            console.log(`[VK FILTER] Office: ${office.name}, User: ${userId}, Status: ${userParticipant.status}, InvitationContext: ${participantContext}, ActiveContext: ${activeContext}, ActiveCompanyIco: ${activeCompanyIco}`);
+            
             // If invitationContext is set, match it with activeContext
+            // This applies to ALL statuses (INVITED, ACCEPTED, REJECTED)
             if (participantContext !== null) {
               // Personal context match
               if (participantContext === 'personal' && activeContext === 'personal') {
+                console.log(`[VK FILTER] ✓ Personal match for office: ${office.name}`);
                 return office;
               }
               
@@ -384,10 +383,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (activeContext !== 'personal') {
                 // Direct mandate ID match
                 if (participantContext === activeContext) {
+                  console.log(`[VK FILTER] ✓ Direct mandate ID match for office: ${office.name}`);
                   return office;
                 }
                 // ICO match - invitationContext can be an ICO (e.g., "CL76543210")
                 if (activeCompanyIco && participantContext === activeCompanyIco) {
+                  console.log(`[VK FILTER] ✓ ICO match for office: ${office.name}`);
                   return office;
                 }
               }
@@ -396,9 +397,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Only show in company context if ownerCompanyId matches
               // Personal context does NOT show legacy offices (to prevent company offices leaking)
               if (activeContext !== 'personal' && office.ownerCompanyId === activeCompanyIco) {
+                console.log(`[VK FILTER] ✓ Legacy null context match for office: ${office.name}`);
                 return office;
               }
             }
+            
+            console.log(`[VK FILTER] ✗ No match for office: ${office.name}`);
           }
           
           return null;
