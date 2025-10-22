@@ -27,5 +27,6 @@ export function useCurrentUser() {
   return {
     ...query,
     data: query.data?.user,
+    activeContext: query.data?.activeContext,
   };
 }

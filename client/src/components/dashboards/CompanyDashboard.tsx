@@ -48,7 +48,7 @@ interface CompanyDashboardProps {
 
 export default function CompanyDashboard({ companyName, ico }: CompanyDashboardProps) {
   const [, setLocation] = useLocation();
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser, activeContext } = useCurrentUser();
   const { toast } = useToast();
 
   // Fetch current user data including mandates
@@ -64,7 +64,7 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
 
   // Fetch virtual offices for the current company (filtered by backend based on activeContext)
   const { data: virtualOffices } = useQuery<VirtualOfficeEnriched[]>({
-    queryKey: ['/api/virtual-offices'],
+    queryKey: ['/api/virtual-offices', activeContext],
     enabled: !!currentUser,
   });
 

@@ -57,7 +57,7 @@ interface CurrentUserResponse {
 
 export default function PersonalDashboard() {
   const [, setLocation] = useLocation();
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser, activeContext } = useCurrentUser();
   const { toast } = useToast();
 
   // Fetch current user data including mandates
@@ -73,7 +73,7 @@ export default function PersonalDashboard() {
 
   // Fetch virtual offices for the current user (filtered by backend based on activeContext)
   const { data: virtualOffices } = useQuery<VirtualOfficeEnriched[]>({
-    queryKey: ['/api/virtual-offices'],
+    queryKey: ['/api/virtual-offices', activeContext],
     enabled: !!currentUser,
   });
 
@@ -162,6 +162,7 @@ export default function PersonalDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
       toast({
         title: "Pozvánka prijatá",
         description: "Úspešne ste sa pripojili do virtuálnej kancelárie.",
@@ -205,6 +206,7 @@ export default function PersonalDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
       toast({
         title: "Pozvánka odmietnutá",
         description: "Pozvánka do virtuálnej kancelárie bola odmietnutá.",
