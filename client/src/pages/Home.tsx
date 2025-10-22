@@ -14,9 +14,11 @@ interface User {
 }
 
 interface Mandate {
+  mandateId: string;
   ico: string;
   companyName: string;
   role: string;
+  status: string;
 }
 
 interface CurrentUserResponse {
@@ -67,8 +69,8 @@ export default function Home() {
     return <PersonalDashboard />;
   }
 
-  // Company context - find the active company
-  const activeCompany = mandates.find(mandate => mandate.ico === activeContext);
+  // Company context - find the active company by mandate ID
+  const activeCompany = mandates.find(mandate => mandate.mandateId === activeContext);
 
   if (!activeCompany) {
     // Error state - company context set but company not found
@@ -77,7 +79,7 @@ export default function Home() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Aktívny firemný kontext sa nenašiel. IČO: {activeContext}
+            Aktívny firemný kontext sa nenašiel. Mandát ID: {activeContext}
           </AlertDescription>
         </Alert>
       </div>
