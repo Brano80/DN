@@ -80,6 +80,13 @@ export default function PersonalDashboard() {
     };
   }) || [];
 
+  // Filter active VK tasks - VK where user is ACCEPTED participant and VK is not completed/canceled
+  const activeVKTasks = virtualOffices?.filter(vk => {
+    const isParticipant = vk.participants.some(p => p.userId === currentUser?.id && p.status === 'ACCEPTED');
+    const isNotFinished = vk.status !== 'completed' && vk.status !== 'canceled';
+    return isParticipant && isNotFinished;
+  }) || [];
+
   // Calculate counts
   const contractsCount = contracts?.length || 0;
   const virtualOfficesCount = virtualOffices?.length || 0;
@@ -264,8 +271,8 @@ export default function PersonalDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingMandates.length + pendingVKInvitations.length}</div>
-            <p className="text-xs text-muted-foreground">Pozvánky na spoluprácu</p>
+            <div className="text-2xl font-bold">{pendingMandates.length + pendingVKInvitations.length + activeVKTasks.length}</div>
+            <p className="text-xs text-muted-foreground">Úkony vyžadujúce pozornosť</p>
           </CardContent>
         </Card>
       </div>
@@ -320,12 +327,12 @@ export default function PersonalDashboard() {
         </CardContent>
       </Card>
 
-      {/* Pending Invitations - Detail View */}
-      {(pendingMandates.length > 0 || pendingVKInvitations.length > 0) && (
+      {/* Pending Invitations and Active Tasks - Detail View */}
+      {(pendingMandates.length > 0 || pendingVKInvitations.length > 0 || activeVKTasks.length > 0) && (
         <Card id="pending-mandates-section">
           <CardHeader>
-            <CardTitle>Pozvánky na spoluprácu</CardTitle>
-            <CardDescription>Skontrolujte a potvrďte pozvánky od spoločností a do virtuálnych kancelárií</CardDescription>
+            <CardTitle>Čakajúce úkony</CardTitle>
+            <CardDescription>Skontrolujte pozvánky na spoluprácu a virtuálne kancelárie vyžadujúce vašu pozornosť</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -443,7 +450,57 @@ export default function PersonalDashboard() {
                   </div>
                 </div>
               ))}
+
+              {/* Active VK Tasks */}
+              {activeVKTasks.map((vk) => (
+                <div
+                  key={vk.id}
+                  className="flex flex-col gap-4 p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/20"
+                  data-testid={`vk-task-${vk.id}`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-muted-foreground" />
+                        <p className="font-medium text-lg" data-testid="text-vk-name">
+                          {vk.name}
+                        </p>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Status: <span className="font-medium capitalize">{vk.status}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {vk.documents.length} {vk.documents.length === 1 ? 'dokument' : vk.documents.length < 5 ? 'dokumenty' : 'dokumentov'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Alert className="bg-background">
+                    <AlertDescription>
+                      Táto virtuálna kancelária obsahuje dokumenty, ktoré môžu vyžadovať váš podpis alebo pozornosť.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="default"
+                      onClick={() => setLocation(`/virtual-office/${vk.id}`)}
+                      data-testid={`button-open-vk-${vk.id}`}
+                    >
+                      <Briefcase className="mr-2 h-4 w-4" />
+                      Otvoriť VK
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* Empty state */}
+            {pendingMandates.length === 0 && pendingVKInvitations.length === 0 && activeVKTasks.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                Aktuálne nemáte žiadne čakajúce pozvánky ani úlohy vo virtuálnych kanceláriách.
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

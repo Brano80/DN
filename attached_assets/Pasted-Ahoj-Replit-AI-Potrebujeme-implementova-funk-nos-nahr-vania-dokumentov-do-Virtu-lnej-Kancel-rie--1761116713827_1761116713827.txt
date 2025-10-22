@@ -1,0 +1,40 @@
+Ahoj Replit AI,
+
+Potrebujeme implementovať funkčnosť nahrávania dokumentov do Virtuálnej Kancelárie (VK) na stránke `VirtualOfficeDetailPage.tsx`.
+
+**Časť A: Backend (`server/routes.ts` a `server/storage.ts`)**
+
+1.  **Nainštalovať `multer`:** Ak ešte nie je v projekte, pridaj knižnicu `multer` pre spracovanie file uploads v Expresse (`npm install multer @types/multer`).
+2.  **Konfigurácia `multer`:** Niekde na začiatku `routes.ts` (alebo v samostatnom súbore) nastav `multer` tak, aby ukladal súbory napríklad do priečinka `uploads/` a zachoval pôvodný názov súboru.
+3.  **Vytvoriť Endpoint:** Vytvor nový endpoint `POST /api/virtual-offices/:id/documents`:
+    * Získaj `:id` (VK ID) z `req.params`.
+    * Použi `multer` middleware na spracovanie uploadu jedného súboru (napr. `upload.single('documentFile')`). Súbor bude dostupný v `req.file`.
+    * **Zabezpečenie:** Over, či je používateľ prihlásený (`isAuthenticated`) a či je **účastníkom** danej VK (`:id`). Ak nie, vráť 403 Forbidden. (Môžeme zvážiť aj kontrolu roly, ale zatiaľ stačí účastník).
+    * Ak upload prebehne úspešne (`req.file` existuje):
+        * Vytvor nový záznam v databáze `virtualOfficeDocuments` pomocou `storage.createVirtualOfficeDocument`. Ulož `virtualOfficeId`, `fileName` (z `req.file.originalname`) a `filePath` (z `req.file.path`). Zatiaľ môžeme pridať aj `documentType` (napr. z prípony súboru) a `userId` (kto nahral).
+        * **Pridaj Audit Log:** Zaznamenaj túto akciu (`storage.createAuditLog`) s typom `DOCUMENT_UPLOADED` (pridaj do enum), detailom napr. "Používateľ [Meno] nahral dokument [Názov súboru]" a prepojením na `userId` a `companyId` (ak je používateľ vo firemnom kontexte).
+        * Vráť `201 Created` a novo vytvorený objekt dokumentu.
+    * Ak upload zlyhá, vráť príslušnú chybu.
+4.  **Pridať `storage` funkciu:** V `storage.ts` pridaj novú funkciu `createVirtualOfficeDocument` (a rozhranie v `IStorage`), ktorá vytvorí záznam v `virtualOfficeDocuments`.
+5.  **Aktualizovať Schému/Enum:** Nezabudni pridať `DOCUMENT_UPLOADED` do `AuditActionType` enum v `shared/schema.ts` a spustiť migráciu.
+
+**Časť B: Frontend (`client/src/pages/VirtualOfficeDetailPage.tsx`)**
+
+1.  **Nájdi Tlačidlo:** Nájdi tlačidlo "Nahrať dokument".
+2.  **Vytvor `useRef`:** Vytvor `useRef` pre skrytý file input: `const fileInputRef = useRef<HTMLInputElement>(null);`.
+3.  **Pridaj Skrytý Input:** Niekde do JSX pridaj `<input type="file" ref={fileInputRef} onChange={handleFileSelect} style={{ display: 'none' }} />`.
+4.  **Prepoj Tlačidlo:** Nastav `onClick` na tlačidle "Nahrať dokument" tak, aby programovo kliklo na skrytý input: `fileInputRef.current?.click();`.
+5.  **Vytvor `handleFileSelect` funkciu:** Táto funkcia sa spustí, keď používateľ vyberie súbor.
+    * Získa vybraný súbor z `event.target.files`.
+    * Ak súbor existuje, vytvor `FormData` a pridaj doň súbor pod kľúčom `'documentFile'`.
+    * Spusti mutáciu na odoslanie `FormData`.
+6.  **Vytvor Mutáciu:**
+    * Vytvor `useMutation`, ktoré bude volať `POST /api/virtual-offices/:id/documents`.
+    * Ako dáta bude posielať `FormData`. **Dôležité:** Pri použití `apiRequest` (alebo `fetch`) s `FormData` **nenastavuj** hlavičku `Content-Type`, prehliadač to urobí automaticky správne.
+    * **`onSuccess`:** Zobraz "toast" notifikáciu "Dokument úspešne nahraný" a **invaliduj dotaz** `queryKey: [`/api/virtual-offices/${id}`]`, aby sa zoznam dokumentov na stránke aktualizoval.
+    * **`onError`:** Zobraz chybovú notifikáciu.
+
+**Dôležité inštrukcie pre AI:**
+* Nezabudni na backendovú migráciu pre AuditActionType.
+* Zabezpeč správne spracovanie `FormData` na backende aj frontende.
+* Ukáž mi upravený kód pre backend (nový endpoint v `routes.ts`, nová funkcia v `storage.ts`), upravenú schému (`shared/schema.ts`) a upravený frontend komponent (`VirtualOfficeDetailPage.tsx`).

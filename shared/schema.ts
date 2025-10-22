@@ -160,7 +160,9 @@ export const auditActionTypeEnum = pgEnum("audit_action_type", [
   "USER_LOGOUT",
   // Firma
   "COMPANY_CONNECTED",
-  "SECURITY_SETTINGS_UPDATED"
+  "SECURITY_SETTINGS_UPDATED",
+  // Virtuálna kancelária
+  "DOCUMENT_UPLOADED"
 ]);
 
 // Companies table

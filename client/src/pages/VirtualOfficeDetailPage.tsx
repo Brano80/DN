@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,9 @@ export default function VirtualOfficeDetailPage() {
   // Signing dialog state
   const [showSignDialog, setShowSignDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<VirtualOfficeDocument & { contract: { id: string; title: string; type: string } } | null>(null);
+  
+  // File upload ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch virtual office detail
   const { data: office, isLoading, isError } = useQuery<VirtualOfficeEnriched>({
@@ -120,6 +123,51 @@ export default function VirtualOfficeDetailPage() {
       requiredRole: requiredRole || undefined,
       requiredCompanyIco: requiredCompanyIco || undefined,
     });
+  };
+
+  // Upload document mutation
+  const uploadDocumentMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch(`/api/virtual-offices/${id}/documents`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload document');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${id}`] });
+      toast({
+        title: "Dokument nahraný",
+        description: "Dokument bol úspešne nahraný do virtuálnej kancelárie.",
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa nahrať dokument.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('documentFile', file);
+    
+    uploadDocumentMutation.mutate(formData);
   };
 
   if (isLoading) {
@@ -265,12 +313,24 @@ export default function VirtualOfficeDetailPage() {
             <Button
               size="sm"
               variant="outline"
-              disabled
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadDocumentMutation.isPending}
               data-testid="button-upload-document"
             >
-              <Upload className="mr-2 h-4 w-4" />
+              {uploadDocumentMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
               Nahrať dokument
             </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+              data-testid="input-file-upload"
+            />
           </div>
         </CardHeader>
         <CardContent>

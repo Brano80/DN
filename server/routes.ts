@@ -1,9 +1,18 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
+import multer from "multer";
 import { storage } from "./storage";
 import { insertVirtualOfficeSchema, insertContractSchema } from "@shared/schema";
 import type { User } from "./auth";
+
+// Multer configuration for file uploads
+const upload = multer({
+  dest: "uploads/",
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+});
 
 declare module "express-session" {
   interface SessionData {
@@ -471,6 +480,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update participant error:", error);
       res.status(400).json({ error: "Invalid request data" });
+    }
+  });
+
+  // Document upload endpoint for Virtual Offices
+  app.post("/api/virtual-offices/:id/documents", upload.single("documentFile"), async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = (req.user as User).id;
+      const userName = (req.user as User).name;
+      const officeId = req.params.id;
+      
+      // Check if user is participant of the office
+      const isParticipant = await storage.isUserParticipant(userId, officeId);
+      if (!isParticipant) {
+        return res.status(403).json({ error: "Not a participant of this virtual office" });
+      }
+      
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      
+      const { originalname, path: filePath } = req.file;
+      
+      // Create a contract entry for the uploaded file
+      const contract = await storage.createContract({
+        title: originalname,
+        type: "upload",
+        content: `Uploaded file: ${originalname} at ${filePath}`,
+        ownerEmail: (req.user as User).email,
+        status: "pending"
+      });
+      
+      // Create virtual office document entry
+      const document = await storage.createVirtualOfficeDocument({
+        virtualOfficeId: officeId,
+        contractId: contract.id,
+        uploadedById: userId,
+        status: "pending"
+      });
+      
+      // Get active context to determine company ID for audit log
+      let companyId: string | null = null;
+      if (req.session.activeContext && req.session.activeContext !== 'personal') {
+        const userMandates = await storage.getUserMandates(userId);
+        const activeMandate = userMandates.find(m => m.id === req.session.activeContext);
+        if (activeMandate) {
+          companyId = activeMandate.companyId;
+        }
+      }
+      
+      // Create audit log entry
+      await storage.createAuditLog({
+        actionType: "DOCUMENT_UPLOADED",
+        details: `Používateľ ${userName} nahral dokument ${originalname} do virtuálnej kancelárie`,
+        userId,
+        companyId
+      });
+      
+      console.log(`[VK] Document ${originalname} uploaded to virtual office ${officeId} by user ${userName}`);
+      
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Document upload error:", error);
+      res.status(400).json({ error: "Failed to upload document" });
     }
   });
 
