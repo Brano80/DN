@@ -32,6 +32,7 @@ interface VirtualOfficeEnriched extends VirtualOffice {
       title: string;
       type: string;
     };
+    signerNames?: string[];
   }>;
 }
 
@@ -395,6 +396,7 @@ export default function VirtualOfficeDetailPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Názov dokumentu</TableHead>
+                  <TableHead>Meno podpisujúceho</TableHead>
                   <TableHead>Typ</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Nahraný</TableHead>
@@ -408,6 +410,11 @@ export default function VirtualOfficeDetailPage() {
                   return (
                     <TableRow key={doc.id} data-testid={`row-document-${doc.id}`}>
                       <TableCell className="font-medium">{doc.contract.title}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {doc.signerNames && doc.signerNames.length > 0
+                          ? doc.signerNames.join(', ')
+                          : '-'}
+                      </TableCell>
                       <TableCell className="text-muted-foreground capitalize">
                         {doc.contract.type}
                       </TableCell>

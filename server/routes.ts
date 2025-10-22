@@ -283,10 +283,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const participants = await storage.getVirtualOfficeParticipants(office.id);
       const documents = await storage.getVirtualOfficeDocuments(office.id);
       
+      // Enrich documents with signer names
+      const enrichedDocuments = await Promise.all(
+        documents.map(async (doc) => {
+          const signatures = await storage.getVirtualOfficeSignatures(doc.id);
+          const signedSignatures = signatures.filter(s => s.status === 'SIGNED');
+          
+          const signerNames = await Promise.all(
+            signedSignatures.map(async (signature) => {
+              const participant = await storage.getVirtualOfficeParticipant(signature.participantId);
+              if (!participant) return null;
+              
+              const user = await storage.getUser(participant.userId);
+              return user ? user.name : null;
+            })
+          );
+          
+          return {
+            ...doc,
+            signerNames: signerNames.filter(name => name !== null) as string[]
+          };
+        })
+      );
+      
       res.json({
         ...office,
         participants,
-        documents
+        documents: enrichedDocuments
       });
     } catch (error) {
       console.error("Get virtual office error:", error);

@@ -497,6 +497,7 @@ export class MemStorage implements IStorage {
       status: insertSignature.status ?? 'PENDING',
       signedAt: insertSignature.signedAt ?? null,
       signatureData: insertSignature.signatureData ?? null,
+      userCompanyMandateId: insertSignature.userCompanyMandateId ?? null,
       id
     };
     this.virtualOfficeSignatures.set(id, signature);
