@@ -43,6 +43,7 @@ interface CurrentUserResponse {
     email: string;
   };
   mandates: Array<{
+    mandateId: string;
     ico: string;
     companyName: string;
     role: string;
@@ -97,9 +98,9 @@ export default function ManageMandatesPage() {
   const activeContext = userData?.activeContext;
   const isCompanyContext = activeContext && activeContext !== 'personal';
   
-  // Find active company name
+  // Find active company by mandate ID
   const activeCompany = isCompanyContext
-    ? userData?.mandates.find(m => m.ico === activeContext)
+    ? userData?.mandates.find(m => m.mandateId === activeContext)
     : null;
 
   // Fetch mandates for the company

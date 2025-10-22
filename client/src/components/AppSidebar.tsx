@@ -33,6 +33,7 @@ interface User {
 }
 
 interface Mandate {
+  mandateId: string;
   ico: string;
   companyName: string;
   role: string;
@@ -130,9 +131,9 @@ export function AppSidebar() {
   const activeContext = data.activeContext;
   const isCompanyContext = activeContext && activeContext !== 'personal';
   
-  // Find active company if in company context
+  // Find active company by mandate ID
   const activeCompany = isCompanyContext
-    ? data.mandates.find(m => m.ico === activeContext)
+    ? data.mandates.find(m => m.mandateId === activeContext)
     : null;
 
   // Select appropriate nav items based on context

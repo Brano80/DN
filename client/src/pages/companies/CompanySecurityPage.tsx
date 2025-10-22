@@ -15,6 +15,7 @@ interface CurrentUserResponse {
     email: string;
   };
   mandates: Array<{
+    mandateId: string;
     ico: string;
     companyName: string;
     role: string;
@@ -41,12 +42,13 @@ export default function CompanySecurityPage() {
 
   const activeContext = userData?.activeContext;
   const isCompanyContext = activeContext && activeContext !== 'personal';
-  const activeIco = isCompanyContext ? activeContext : null;
 
-  // Find active company from mandates
+  // Find active company by mandate ID
   const activeCompany = isCompanyContext
-    ? userData?.mandates.find(m => m.ico === activeContext)
+    ? userData?.mandates.find(m => m.mandateId === activeContext)
     : null;
+  
+  const activeIco = activeCompany?.ico || null;
 
   // Fetch company profile to get current enforceTwoFactorAuth setting
   const { data: company, isLoading, isError, refetch } = useQuery<Company>({

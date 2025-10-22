@@ -23,6 +23,7 @@ interface CurrentUserResponse {
     email: string;
   };
   mandates: Array<{
+    mandateId: string;
     ico: string;
     companyName: string;
     role: string;
@@ -49,9 +50,9 @@ export default function CompanyList() {
   const activeContext = data?.activeContext;
   const isCompanyContext = activeContext && activeContext !== 'personal';
 
-  // Find active company
+  // Find active company by mandate ID
   const activeCompany = isCompanyContext
-    ? data?.mandates.find(m => m.ico === activeContext)
+    ? data?.mandates.find(m => m.mandateId === activeContext)
     : null;
 
   if (!isCompanyContext || !activeCompany) {
