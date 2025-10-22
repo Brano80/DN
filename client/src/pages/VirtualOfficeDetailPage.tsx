@@ -404,6 +404,7 @@ export default function VirtualOfficeDetailPage() {
         open={showSignDialog}
         onOpenChange={setShowSignDialog}
         contractName={selectedDocument?.contract.title || ''}
+        documentId={selectedDocument?.id}
         onComplete={() => {
           toast({
             title: "Dokument podpísaný",

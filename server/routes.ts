@@ -464,6 +464,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userCompanyMandateId: matchingMandate.id
           });
           
+          if (!updated) {
+            return res.status(500).json({ error: "Failed to update participant" });
+          }
+          
+          // Create signature entries for all documents in this VK
+          const documents = await storage.getVirtualOfficeDocuments(req.params.officeId);
+          for (const doc of documents) {
+            const existingSignatures = await storage.getVirtualOfficeSignatures(doc.id);
+            const hasSignature = existingSignatures.some(s => s.participantId === updated.id);
+            
+            if (!hasSignature) {
+              await storage.createVirtualOfficeSignature({
+                virtualOfficeDocumentId: doc.id,
+                participantId: updated.id,
+                status: 'PENDING'
+              });
+              console.log(`[VK] Created signature entry for participant ${updated.id} on document ${doc.id}`);
+            }
+          }
+          
           console.log(`[VK] Participant ${req.params.participantId} accepted with mandate ${matchingMandate.id}`);
           return res.json(updated);
         }
@@ -474,6 +494,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status,
         respondedAt: new Date()
       });
+      
+      if (!updated) {
+        return res.status(500).json({ error: "Failed to update participant" });
+      }
+      
+      // If accepted, create signature entries for all documents in this VK
+      if (status === 'ACCEPTED') {
+        const documents = await storage.getVirtualOfficeDocuments(req.params.officeId);
+        for (const doc of documents) {
+          const existingSignatures = await storage.getVirtualOfficeSignatures(doc.id);
+          const hasSignature = existingSignatures.some(s => s.participantId === updated.id);
+          
+          if (!hasSignature) {
+            await storage.createVirtualOfficeSignature({
+              virtualOfficeDocumentId: doc.id,
+              participantId: updated.id,
+              status: 'PENDING'
+            });
+            console.log(`[VK] Created signature entry for participant ${updated.id} on document ${doc.id}`);
+          }
+        }
+      }
       
       console.log(`[VK] Participant ${req.params.participantId} updated to status ${status}`);
       res.json(updated);
@@ -579,6 +621,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Document upload error:", error);
       res.status(400).json({ error: "Failed to upload document" });
+    }
+  });
+
+  // Sign virtual office document endpoint
+  app.post("/api/virtual-office-documents/:id/sign", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = (req.user as User).id;
+      const userName = (req.user as User).name;
+      const documentId = req.params.id;
+      
+      console.log(`[SIGN] User ${userName} signing document ${documentId}`);
+      
+      // Get document
+      const document = await storage.getVirtualOfficeDocument(documentId);
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      
+      // Check if user is participant of the virtual office
+      const isParticipant = await storage.isUserParticipant(userId, document.virtualOfficeId);
+      if (!isParticipant) {
+        return res.status(403).json({ error: "Not a participant of this virtual office" });
+      }
+      
+      // Find participant record for this user in this VK
+      const participants = await storage.getVirtualOfficeParticipants(document.virtualOfficeId);
+      const participant = participants.find(p => p.userId === userId && p.status === 'ACCEPTED');
+      
+      if (!participant) {
+        return res.status(403).json({ error: "User must be an accepted participant to sign documents" });
+      }
+      
+      // Check if signature already exists for this participant+document
+      const existingSignatures = await storage.getVirtualOfficeSignatures(documentId);
+      const existingSignature = existingSignatures.find(s => s.participantId === participant.id);
+      
+      if (existingSignature && existingSignature.status === 'SIGNED') {
+        return res.status(400).json({ error: "Document already signed by this participant" });
+      }
+      
+      // Create or update signature
+      let signature;
+      if (existingSignature) {
+        signature = await storage.updateVirtualOfficeSignature(existingSignature.id, {
+          status: 'SIGNED',
+          signedAt: new Date(),
+          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() })
+        });
+      } else {
+        signature = await storage.createVirtualOfficeSignature({
+          virtualOfficeDocumentId: documentId,
+          participantId: participant.id,
+          status: 'SIGNED',
+          signedAt: new Date(),
+          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() })
+        });
+      }
+      
+      console.log(`[SIGN] Signature created/updated for participant ${participant.id} on document ${documentId}`);
+      
+      // Check if all ACCEPTED participants have signed
+      const allSignatures = await storage.getVirtualOfficeSignatures(documentId);
+      const acceptedParticipants = participants.filter(p => p.status === 'ACCEPTED');
+      
+      const allSigned = acceptedParticipants.every(ap => 
+        allSignatures.some(sig => sig.participantId === ap.id && sig.status === 'SIGNED')
+      );
+      
+      console.log(`[SIGN] All accepted participants signed: ${allSigned} (${allSignatures.filter(s => s.status === 'SIGNED').length}/${acceptedParticipants.length})`);
+      
+      // If all signed, update document status to completed
+      if (allSigned) {
+        await storage.updateVirtualOfficeDocument(documentId, { status: 'completed' });
+        console.log(`[SIGN] Document ${documentId} marked as completed (all participants signed)`);
+      }
+      
+      // Create audit log
+      let companyId: string | null = null;
+      if (req.session.activeContext && req.session.activeContext !== 'personal') {
+        const userMandates = await storage.getUserMandates(userId);
+        const activeMandate = userMandates.find(m => m.id === req.session.activeContext);
+        if (activeMandate) {
+          companyId = activeMandate.companyId;
+        }
+      }
+      
+      await storage.createAuditLog({
+        actionType: "DOCUMENT_SIGNED",
+        details: `Používateľ ${userName} podpísal dokument v virtuálnej kancelárii`,
+        userId,
+        companyId
+      });
+      
+      res.json({ signature, documentCompleted: allSigned });
+    } catch (error) {
+      console.error("Document signing error:", error);
+      res.status(400).json({ error: "Failed to sign document" });
     }
   });
 

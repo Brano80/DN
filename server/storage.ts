@@ -55,6 +55,14 @@ export interface IStorage {
   // Virtual Office Signatures
   createVirtualOfficeSignature(signature: InsertVirtualOfficeSignature): Promise<VirtualOfficeSignature>;
   getVirtualOfficeSignatures(virtualOfficeDocumentId: string): Promise<VirtualOfficeSignature[]>;
+  updateVirtualOfficeSignature(id: string, updates: Partial<VirtualOfficeSignature>): Promise<VirtualOfficeSignature | undefined>;
+  
+  // Virtual Office Document helpers
+  getVirtualOfficeDocument(id: string): Promise<VirtualOfficeDocument | undefined>;
+  updateVirtualOfficeDocument(id: string, updates: Partial<VirtualOfficeDocument>): Promise<VirtualOfficeDocument | undefined>;
+  
+  // Virtual Office Participant helpers
+  getVirtualOfficeParticipant(id: string): Promise<VirtualOfficeParticipant | undefined>;
   
   getCompany(id: string): Promise<Company | undefined>;
   getCompanyByIco(ico: string): Promise<Company | undefined>;
@@ -169,7 +177,7 @@ export class MemStorage implements IStorage {
       userId: mockUserId,
       companyId: companyId,
       rola: "Jednatel",
-      rozsahOpravneni: "samostatně",
+      rozsahOpravneni: "samostatne",
       platnyOd: "2020-01-15",
       platnyDo: null,
       zdrojOverenia: "Czech Business Registry Mock",
@@ -350,7 +358,7 @@ export class MemStorage implements IStorage {
     const signature1: VirtualOfficeSignature = {
       id: "signature-jan-skoda",
       virtualOfficeDocumentId: document1.id,
-      virtualOfficeParticipantId: participant1.id,
+      participantId: participant1.id,
       status: "SIGNED",
       signedAt: new Date("2024-12-22"),
       signatureData: null
@@ -585,6 +593,32 @@ export class MemStorage implements IStorage {
     return Array.from(this.virtualOfficeSignatures.values()).filter(
       (s) => s.virtualOfficeDocumentId === virtualOfficeDocumentId
     );
+  }
+
+  async updateVirtualOfficeSignature(id: string, updates: Partial<VirtualOfficeSignature>): Promise<VirtualOfficeSignature | undefined> {
+    const signature = this.virtualOfficeSignatures.get(id);
+    if (!signature) return undefined;
+    
+    const updated = { ...signature, ...updates };
+    this.virtualOfficeSignatures.set(id, updated);
+    return updated;
+  }
+
+  async getVirtualOfficeDocument(id: string): Promise<VirtualOfficeDocument | undefined> {
+    return this.virtualOfficeDocuments.get(id);
+  }
+
+  async updateVirtualOfficeDocument(id: string, updates: Partial<VirtualOfficeDocument>): Promise<VirtualOfficeDocument | undefined> {
+    const document = this.virtualOfficeDocuments.get(id);
+    if (!document) return undefined;
+    
+    const updated = { ...document, ...updates };
+    this.virtualOfficeDocuments.set(id, updated);
+    return updated;
+  }
+
+  async getVirtualOfficeParticipant(id: string): Promise<VirtualOfficeParticipant | undefined> {
+    return this.virtualOfficeParticipants.get(id);
   }
 
   async getCompany(id: string): Promise<Company | undefined> {
