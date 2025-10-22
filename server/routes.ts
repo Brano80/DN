@@ -346,9 +346,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Mock data for Empresa Global España S.L. (Spain)
+      if (ico === "A12345678") {
+        return res.json({
+          ico: "A12345678",
+          dic: "ESA12345678",
+          icDph: "ESA12345678",
+          nazov: "Empresa Global España S.L.",
+          sidloUlica: "Calle Mayor",
+          sidloCislo: "45",
+          sidloMesto: "Madrid",
+          sidloPsc: "28013",
+          registracnySud: "Registro Mercantil de Madrid",
+          cisloVlozky: "T-12345-M",
+          datumZapisu: "2019-03-10",
+          pravnaForma: "Sociedad de Responsabilidad Limitada",
+          stat: "ES",
+          statutari: [
+            {
+              meno: "Javier",
+              priezvisko: "García",
+              rola: "Administrador",
+              rozsahOpravneni: "samostatne",
+              platnostOd: "2019-03-10"
+            }
+          ]
+        });
+      }
+
+      // Mock data for Negócios Transfronteiriços Lda. (Portugal)
+      if (ico === "PT509876543") {
+        return res.json({
+          ico: "PT509876543",
+          dic: "PT509876543",
+          icDph: "PT509876543",
+          nazov: "Negócios Transfronteiriços Lda.",
+          sidloUlica: "Avenida da Liberdade",
+          sidloCislo: "123",
+          sidloMesto: "Lisboa",
+          sidloPsc: "1250-096",
+          registracnySud: "Conservatória do Registo Comercial de Lisboa",
+          cisloVlozky: "PT-LX-98765",
+          datumZapisu: "2021-07-15",
+          pravnaForma: "Sociedade por Quotas",
+          stat: "PT",
+          statutari: [
+            {
+              meno: "Miguel",
+              priezvisko: "Silva",
+              rola: "Sócio",
+              rozsahOpravneni: "spolocne_s_inym",
+              platnostOd: "2021-07-15"
+            },
+            {
+              meno: "Sofia",
+              priezvisko: "Costa",
+              rola: "Gerente",
+              rozsahOpravneni: "samostatne",
+              platnostOd: "2021-07-15"
+            }
+          ]
+        });
+      }
+
       // Company not found
       return res.status(404).json({ 
-        message: "Firma s týmto IČO nebola nájdená v Mock registri." 
+        message: "Firma s týmto IČO nebola nájdená v Mock registri firiem." 
       });
 
     } catch (error) {
