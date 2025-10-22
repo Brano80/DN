@@ -2,13 +2,31 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Shield, CheckCircle2, FileSignature, Smartphone } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Shield, CheckCircle2, FileSignature, Smartphone, Building2, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface DigitalSigningDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contractName: string;
   onComplete?: () => void;
+}
+
+interface CurrentUserResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  mandates: Array<{
+    id: string;
+    ico: string;
+    companyName: string;
+    rola: string;
+    stav: string;
+  }>;
+  activeContext: string | null;
 }
 
 export function DigitalSigningDialog({ 
@@ -19,6 +37,12 @@ export function DigitalSigningDialog({
 }: DigitalSigningDialogProps) {
   const [step, setStep] = useState<'intro' | 'auth' | 'signing' | 'complete'>('intro');
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Get current user and active context
+  const { data: currentUserData } = useQuery<CurrentUserResponse>({
+    queryKey: ['/api/current-user'],
+    retry: false,
+  });
 
   const handleClose = (shouldOpen: boolean) => {
     if (!shouldOpen) {
@@ -48,10 +72,76 @@ export function DigitalSigningDialog({
   };
 
   const handleComplete = () => {
+    // Get signing context information
+    const userId = currentUserData?.user.id;
+    const userName = currentUserData?.user.name;
+    const activeContext = currentUserData?.activeContext;
+    
+    let signingInfo = {
+      userId,
+      userName,
+      context: 'personal' as 'personal' | 'company',
+      mandateId: null as string | null,
+      companyName: null as string | null,
+      role: null as string | null,
+    };
+    
+    // Determine signing context
+    if (activeContext && activeContext !== 'personal') {
+      // User is signing on behalf of a company
+      const activeMandate = currentUserData?.mandates.find(m => m.ico === activeContext && m.stav === 'active');
+      if (activeMandate) {
+        signingInfo = {
+          ...signingInfo,
+          context: 'company',
+          mandateId: activeMandate.id,
+          companyName: activeMandate.companyName,
+          role: activeMandate.rola,
+        };
+      }
+    }
+    
+    // Log signing information to console
+    if (signingInfo.context === 'personal') {
+      console.log(`[SIGN] Dokument "${contractName}" podpísaný používateľom ${userName} (${userId}) ako FYZICKÁ OSOBA`);
+    } else {
+      console.log(`[SIGN] Dokument "${contractName}" podpísaný používateľom ${userName} (${userId}) s mandátom ${signingInfo.mandateId} (${signingInfo.role} @ ${signingInfo.companyName})`);
+    }
+    
     setStep('intro');
     onComplete?.();
     handleClose(false);
   };
+  
+  // Determine current signing context for display
+  const getSigningContext = () => {
+    if (!currentUserData) return null;
+    
+    const activeContext = currentUserData.activeContext;
+    const userName = currentUserData.user.name;
+    
+    if (!activeContext || activeContext === 'personal') {
+      return {
+        type: 'personal' as const,
+        label: `${userName} (Fyzická osoba)`,
+        icon: User,
+      };
+    }
+    
+    // Company context
+    const activeMandate = currentUserData.mandates.find(m => m.ico === activeContext && m.stav === 'active');
+    if (activeMandate) {
+      return {
+        type: 'company' as const,
+        label: `${activeMandate.companyName} ako ${activeMandate.rola}`,
+        icon: Building2,
+      };
+    }
+    
+    return null;
+  };
+  
+  const signingContext = getSigningContext();
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -170,6 +260,19 @@ export function DigitalSigningDialog({
                   {contractName}
                 </p>
               </div>
+
+              {/* Signing Context Display */}
+              {signingContext && (
+                <Alert className="bg-primary/10 border-primary/20">
+                  <signingContext.icon className="h-4 w-4 text-primary" />
+                  <AlertDescription>
+                    <span className="text-sm">
+                      <strong>Podpisujete {signingContext.type === 'personal' ? 'ako' : 'v mene'}:</strong>{' '}
+                      <span className="font-semibold">{signingContext.label}</span>
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <Card className="p-4 bg-muted/50">
                 <h4 className="font-medium mb-2">Potvrdenie obsahu</h4>

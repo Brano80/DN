@@ -1,0 +1,31 @@
+Ahoj Replit AI,
+
+Potrebujeme upraviť proces (simulácie) podpisovania dokumentu vo Virtuálnej Kancelárii (VK), aby reflektoval mandát, v mene ktorého používateľ koná.
+
+**Cieľ:** Upraviť komponent, ktorý zobrazuje dialóg/modal na simuláciu podpisu (pravdepodobne `DigitalSigningDialog.tsx` alebo podobný v `client/src/components/`).
+
+**Detaily implementácie:**
+
+1.  **Načítať Aktívny Mandát:**
+    * V komponente pre podpisový dialóg potrebujeme získať informácie o **aktuálne zvolenom kontexte** používateľa. Najjednoduchší spôsob je načítať dáta z `useQuery(['/api/current-user'])`.
+    * Z týchto dát získaj `activeContext` (čo bude buď 'personal' alebo IČO firmy) a pole `mandates`.
+    * Na základe `activeContext` nájdi **presný mandát**, ktorý používateľ práve používa (rovnaká logika ako v `Navbar.tsx`). Budeš potrebovať `mandateId`, `rola` a `companyName`.
+2.  **Zobraziť Kontext Podpisu:**
+    * V dialógovom okne pre podpis (napr. nad tlačidlom "Podpísať") jasne zobraz, v mene koho používateľ práve podpisuje. Napríklad:
+        * Ak je `activeContext === 'personal'`: "Podpisujete ako: **Ján Nováček (Fyzická osoba)**"
+        * Ak je firemný kontext: "Podpisujete v mene: **Firma X s.r.o.** ako **Konateľ**" (použi `companyName` a `rola` z nájdeného mandátu).
+3.  **Zaznamenať Mandát pri Podpise (Simulácia):**
+    * Keď používateľ klikne na tlačidlo "Podpísať" (alebo ekvivalent, ktorý volá `onComplete` v `DigitalSigningDialog.tsx`), musíme **simulovať**, že sme spolu s podpisom zaznamenali aj použitý mandát.
+    * Uprav funkciu, ktorá spracováva úspešný podpis (napr. `handleCompleteSigning` v `VirtualOfficePage.tsx` alebo `VirtualOfficeDetailPage.tsx`).
+    * V tejto funkcii, okrem toho, čo robí teraz (napr. `setSellerSigned(true)`), pridaj **dočasné uloženie** (napr. do `useState` v `VirtualOfficeDetailPage`) alebo **vypísanie do konzoly**, ktorý mandát bol použitý. Napr.:
+        ```javascript
+        console.log(`Dokument ${docId} podpísaný používateľom ${userId} s mandátom ${mandateId} (${rola} @ ${companyName})`);
+        ```
+    * **Poznámka:** Zatiaľ **nebudeme** túto informáciu ukladať do databázy (`VirtualOfficeSignature`). To urobíme v ďalšom kroku, keď budeme implementovať finálnu "Doložku o mandátoch". Teraz potrebujeme len vizuálne potvrdenie a log do konzoly.
+
+**Dôležité inštrukcie pre AI:**
+* Zameraj sa na úpravu existujúceho podpisového dialógu/komponentu.
+* Načítaj aktuálny kontext a mandát používateľa.
+* Zobraz tento kontext viditeľne v UI dialógu.
+* Pri úspešnom podpise (v `onComplete` callbacku) vypíš do konzoly informáciu o použitom mandáte.
+* Ukáž mi upravený kód pre podpisový dialóg (napr. `DigitalSigningDialog.tsx`) a upravený kód miesta, kde sa spracováva `onComplete` (napr. `VirtualOfficeDetailPage.tsx`).

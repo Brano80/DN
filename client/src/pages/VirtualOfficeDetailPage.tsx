@@ -8,13 +8,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Plus, Loader2, UserPlus, Upload, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Loader2, UserPlus, Upload, CheckCircle2, XCircle, Clock, FileSignature } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { VirtualOffice, VirtualOfficeParticipant, VirtualOfficeDocument } from "@shared/schema";
 import { MOCK_USER_EMAILS } from "@/lib/constants";
+import { DigitalSigningDialog } from "@/components/DigitalSigningDialog";
 
 interface VirtualOfficeEnriched extends VirtualOffice {
   participants: Array<VirtualOfficeParticipant & {
@@ -66,6 +67,10 @@ export default function VirtualOfficeDetailPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [requiredRole, setRequiredRole] = useState('');
   const [requiredCompanyIco, setRequiredCompanyIco] = useState('');
+  
+  // Signing dialog state
+  const [showSignDialog, setShowSignDialog] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<VirtualOfficeDocument & { contract: { id: string; title: string; type: string } } | null>(null);
 
   // Fetch virtual office detail
   const { data: office, isLoading, isError } = useQuery<VirtualOfficeEnriched>({
@@ -281,6 +286,7 @@ export default function VirtualOfficeDetailPage() {
                   <TableHead>Typ</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Nahraný</TableHead>
+                  <TableHead className="text-right">Akcie</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -300,6 +306,20 @@ export default function VirtualOfficeDetailPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(doc.uploadedAt).toLocaleDateString('sk-SK')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedDocument(doc);
+                            setShowSignDialog(true);
+                          }}
+                          data-testid={`button-sign-${doc.id}`}
+                        >
+                          <FileSignature className="mr-2 h-4 w-4" />
+                          Podpísať
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
@@ -377,6 +397,23 @@ export default function VirtualOfficeDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Digital Signing Dialog */}
+      <DigitalSigningDialog
+        open={showSignDialog}
+        onOpenChange={setShowSignDialog}
+        contractName={selectedDocument?.contract.title || ''}
+        onComplete={() => {
+          toast({
+            title: "Dokument podpísaný",
+            description: "Dokument bol úspešne digitálne podpísaný",
+          });
+          setShowSignDialog(false);
+          setSelectedDocument(null);
+          // Refresh data
+          queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${id}`] });
+        }}
+      />
     </div>
   );
 }
