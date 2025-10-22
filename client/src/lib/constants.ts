@@ -51,8 +51,8 @@ export const MOCK_INVITATION_OPTIONS = [
     id: 'andres-tekmain',
     label: 'Andres Elgueta - firma Tekmain SpA',
     email: 'andres.elgueta@tekmain.cl',
-    invitationContext: '98765432',
+    invitationContext: 'CL76543210',
     requiredRole: 'Gerente General',
-    requiredCompanyIco: '98765432',
+    requiredCompanyIco: 'CL76543210',
   },
 ];
