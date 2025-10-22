@@ -162,62 +162,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Virtual Office routes
   app.post("/api/virtual-offices", async (req, res) => {
     try {
-      const validated = insertVirtualOfficeSchema.parse(req.body);
-      const office = await storage.createVirtualOffice(validated);
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
       
-      // TODO: Send email to invited party
-      console.log(`Email would be sent to ${office.invitedEmail} about office ${office.name}`);
+      const userId = (req.user as User).id;
+      const { name, processType, invitations } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: "name is required" });
+      }
+      
+      // Create virtual office
+      const office = await storage.createVirtualOffice({
+        name,
+        processType: processType || null,
+        status: 'active'
+      });
+      
+      // Create creator as participant with ACCEPTED status
+      await storage.createVirtualOfficeParticipant({
+        virtualOfficeId: office.id,
+        userId,
+        status: 'ACCEPTED',
+        userCompanyMandateId: null,
+        requiredRole: null,
+        requiredCompanyIco: null,
+        respondedAt: new Date()
+      });
+      
+      // Process invitations if provided
+      if (invitations && Array.isArray(invitations)) {
+        for (const invitation of invitations) {
+          const { email, requiredRole, requiredCompanyIco } = invitation;
+          
+          // Find user by email
+          const invitedUser = await storage.getUserByEmail(email);
+          if (invitedUser) {
+            await storage.createVirtualOfficeParticipant({
+              virtualOfficeId: office.id,
+              userId: invitedUser.id,
+              status: 'INVITED',
+              userCompanyMandateId: null,
+              requiredRole: requiredRole || null,
+              requiredCompanyIco: requiredCompanyIco || null,
+              respondedAt: null
+            });
+            console.log(`Participant ${email} invited to office ${office.name}`);
+          } else {
+            console.warn(`User with email ${email} not found`);
+          }
+        }
+      }
       
       res.json(office);
     } catch (error) {
+      console.error("Create virtual office error:", error);
       res.status(400).json({ error: "Invalid request data" });
     }
   });
 
   app.get("/api/virtual-offices/:id", async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
       const office = await storage.getVirtualOffice(req.params.id);
       if (!office) {
         return res.status(404).json({ error: "Office not found" });
       }
-      res.json(office);
+      
+      // Check if user is participant
+      const userId = (req.user as User).id;
+      const isParticipant = await storage.isUserParticipant(userId, office.id);
+      if (!isParticipant) {
+        return res.status(403).json({ error: "Not a participant" });
+      }
+      
+      // Enrich with participants and documents
+      const participants = await storage.getVirtualOfficeParticipants(office.id);
+      const documents = await storage.getVirtualOfficeDocuments(office.id);
+      
+      res.json({
+        ...office,
+        participants,
+        documents
+      });
     } catch (error) {
+      console.error("Get virtual office error:", error);
       res.status(500).json({ error: "Failed to fetch office" });
     }
   });
 
   app.get("/api/virtual-offices", async (req, res) => {
     try {
-      const ownerEmail = req.query.ownerEmail as string;
-      if (!ownerEmail) {
-        return res.status(400).json({ error: "ownerEmail is required" });
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
       }
-      const offices = await storage.getVirtualOfficesByOwner(ownerEmail);
       
-      // Enrich offices with contract titles
+      const userId = (req.user as User).id;
+      const offices = await storage.getVirtualOfficesByUser(userId);
+      
+      // Enrich offices with participants and documents
       const enrichedOffices = await Promise.all(
         offices.map(async (office) => {
-          if (office.contractId) {
-            const contract = await storage.getContract(office.contractId);
-            if (contract) {
-              return {
-                ...office,
-                name: contract.title, // Use contract title as office name
-              };
-            }
-          }
-          return office;
+          const participants = await storage.getVirtualOfficeParticipants(office.id);
+          const documents = await storage.getVirtualOfficeDocuments(office.id);
+          
+          return {
+            ...office,
+            participants,
+            documents
+          };
         })
       );
       
       res.json(enrichedOffices);
     } catch (error) {
+      console.error("Get virtual offices error:", error);
       res.status(500).json({ error: "Failed to fetch offices" });
     }
   });
 
   app.patch("/api/virtual-offices/:id", async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = (req.user as User).id;
+      const isParticipant = await storage.isUserParticipant(userId, req.params.id);
+      if (!isParticipant) {
+        return res.status(403).json({ error: "Not a participant" });
+      }
+      
       // Validate request body - allow partial updates
       const updateSchema = insertVirtualOfficeSchema.partial();
       const validated = updateSchema.parse(req.body);
@@ -227,13 +306,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Office not found" });
       }
       
-      // If virtual office is marked as completed, update the contract status to completed
-      if (validated.status === 'completed' && updated.contractId) {
-        await storage.updateContract(updated.contractId, { status: 'completed' });
+      res.json(updated);
+    } catch (error) {
+      console.error("Update virtual office error:", error);
+      res.status(400).json({ error: "Invalid request data" });
+    }
+  });
+
+  // Participant management endpoints
+  app.post("/api/virtual-offices/:id/participants", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
       }
+      
+      const userId = (req.user as User).id;
+      const officeId = req.params.id;
+      
+      // Check if user is participant of the office
+      const isParticipant = await storage.isUserParticipant(userId, officeId);
+      if (!isParticipant) {
+        return res.status(403).json({ error: "Not a participant" });
+      }
+      
+      const { email, requiredRole, requiredCompanyIco } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "email is required" });
+      }
+      
+      // Find user by email
+      const invitedUser = await storage.getUserByEmail(email);
+      if (!invitedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Check if user is already a participant
+      const alreadyParticipant = await storage.isUserParticipant(invitedUser.id, officeId);
+      if (alreadyParticipant) {
+        return res.status(400).json({ error: "User is already a participant" });
+      }
+      
+      // Create participant invitation
+      const participant = await storage.createVirtualOfficeParticipant({
+        virtualOfficeId: officeId,
+        userId: invitedUser.id,
+        status: 'INVITED',
+        userCompanyMandateId: null,
+        requiredRole: requiredRole || null,
+        requiredCompanyIco: requiredCompanyIco || null,
+        respondedAt: null
+      });
+      
+      console.log(`Participant ${email} invited to virtual office ${officeId}`);
+      
+      res.json(participant);
+    } catch (error) {
+      console.error("Invite participant error:", error);
+      res.status(400).json({ error: "Invalid request data" });
+    }
+  });
+
+  app.patch("/api/virtual-offices/:officeId/participants/:participantId", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = (req.user as User).id;
+      const { status } = req.body;
+      
+      if (!status || !['ACCEPTED', 'REJECTED'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      // Get participant
+      const participants = await storage.getVirtualOfficeParticipants(req.params.officeId);
+      const participant = participants.find(p => p.id === req.params.participantId);
+      
+      if (!participant) {
+        return res.status(404).json({ error: "Participant not found" });
+      }
+      
+      // Only the invited user can accept/reject
+      if (participant.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      
+      // Update participant status
+      const updated = await storage.updateVirtualOfficeParticipant(req.params.participantId, {
+        status,
+        respondedAt: new Date()
+      });
       
       res.json(updated);
     } catch (error) {
+      console.error("Update participant error:", error);
       res.status(400).json({ error: "Invalid request data" });
     }
   });
