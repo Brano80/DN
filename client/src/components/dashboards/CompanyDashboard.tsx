@@ -76,7 +76,7 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
 
         <Card 
           className="cursor-pointer transition-all hover-elevate active-elevate-2"
-          onClick={() => setLocation('/virtual-office/list')}
+          onClick={() => setLocation('/virtual-office')}
           data-testid="card-virtual-offices"
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

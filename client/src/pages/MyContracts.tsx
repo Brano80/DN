@@ -95,7 +95,12 @@ export default function MyContracts() {
           ) : (
             <div className="space-y-3">
               {contracts.map((contract) => (
-                <Card key={contract.id} className="p-4" data-testid={`card-contract-${contract.id}`}>
+                <Card 
+                  key={contract.id} 
+                  className="p-4 cursor-pointer hover-elevate active-elevate-2" 
+                  onClick={() => handleShowContract(contract.id)}
+                  data-testid={`card-contract-${contract.id}`}
+                >
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <h3 className="font-medium mb-1" data-testid={`text-contract-title-${contract.id}`}>
