@@ -381,6 +381,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User is already a participant" });
       }
       
+      // Determine invitation context based on current user's active context
+      const activeContext = req.session.activeContext || 'personal';
+      
       // Create participant invitation
       const participant = await storage.createVirtualOfficeParticipant({
         virtualOfficeId: officeId,
@@ -389,10 +392,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userCompanyMandateId: null,
         requiredRole: requiredRole || null,
         requiredCompanyIco: requiredCompanyIco || null,
+        invitationContext: activeContext,
         respondedAt: null
       });
       
-      console.log(`Participant ${email} invited to virtual office ${officeId}`);
+      console.log(`Participant ${email} invited to virtual office ${officeId} with context ${activeContext}`);
       
       res.json(participant);
     } catch (error) {

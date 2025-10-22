@@ -427,6 +427,7 @@ export class MemStorage implements IStorage {
       userCompanyMandateId: insertParticipant.userCompanyMandateId ?? null,
       requiredRole: insertParticipant.requiredRole ?? null,
       requiredCompanyIco: insertParticipant.requiredCompanyIco ?? null,
+      invitationContext: insertParticipant.invitationContext ?? null,
       respondedAt: insertParticipant.respondedAt ?? null,
       id,
       invitedAt: new Date()
