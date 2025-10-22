@@ -1,0 +1,38 @@
+Ahoj Replit AI,
+
+Potrebujeme výrazne upraviť funkčnosť Virtuálnej Kancelárie (VK), aby podporovala pozývanie externých firiem a vyžadovanie mandátov.
+
+**Časť A: Úprava Databázovej Schémy (`shared/schema.ts`)**
+
+1.  **Nahradiť `virtualOffices`:** Nájdite tabuľku `virtualOffices`. Odstráňte z nej stĺpce `ownerEmail`, `invitedEmail` a `contractId`. Pridajte nové stĺpce `createdById` (odkaz na `users.id`) a `ownerCompanyId` (odkaz na `companies.id`).
+2.  **Pridať `virtualOfficeParticipants`:** Vytvorte **novú tabuľku** `virtualOfficeParticipants`, ktorá prepojí VK s používateľmi a ich mandátmi. Bude obsahovať aj polia `requiredRole` a `requiredCompanyIco`.
+3.  **Pridať `virtualOfficeDocuments` a `virtualOfficeSignatures`:** Vytvorte **nové tabuľky** na správu dokumentov v rámci VK a požadovaných podpisov.
+
+*Presná štruktúra týchto tabuliek bola definovaná v mojom predchádzajúcom prompte pre Krok 21 (Virtuálna Kancelária - Základ). Skopíruj si ju odtiaľ.*
+
+Prosím, **vygeneruj a spusti migráciu** pre tieto zmeny (úprava `virtualOffices`, pridanie 3 nových tabuliek).
+
+**Časť B: Úprava API Endpointov (`server/routes.ts` a `server/storage.ts`)**
+
+1.  **Uprav `POST /api/virtual-offices`:**
+    * Logika teraz musí získať `userId` a `companyId` (z `activeContext`) prihláseného používateľa.
+    * Pri vytváraní `VirtualOffice` ulož tieto ID do `createdById` a `ownerCompanyId`.
+    * Automaticky vytvor prvého účastníka (`virtualOfficeParticipants`) pre tvorcu VK, prepoj ho s jeho `userId` a **jeho aktuálnym mandátom** (`userCompanyMandateId`).
+2.  **Uprav `GET /api/virtual-offices`:**
+    * Endpoint teraz musí nájsť `userId` prihláseného používateľa.
+    * Musí vrátiť zoznam VK, kde je tento `userId` uvedený v tabuľke `virtualOfficeParticipants`.
+3.  **Vytvor `POST /api/virtual-offices/:id/participants` (Pozvanie):**
+    * Získaj `:id` (VK ID) z `req.params`.
+    * Získaj `{ email, requiredRole, requiredCompanyIco }` z `req.body`.
+    * **Bezpečnostná kontrola:** Over, či prihlásený používateľ je *vlastníkom* tejto VK (porovnaj `userId` s `virtualOffice.createdById`). Ak nie, vráť 403 Forbidden.
+    * Nájdi používateľa podľa `email`. Ak neexistuje, vráť 404 (zatiaľ).
+    * Vytvor nový záznam v `virtualOfficeParticipants` pre pozvaného používateľa so `status: 'INVITED'` a vyplnenými `requiredRole` a `requiredCompanyIco`.
+    * Vráť `201 Created`.
+4.  **Vytvor `GET /api/virtual-offices/:id` (Detail VK):**
+    * Získaj `:id` (VK ID) z `req.params`.
+    * **Bezpečnostná kontrola:** Over, či je prihlásený používateľ *účastníkom* tejto VK. Ak nie, vráť 403 Forbidden.
+    * Vráť detail VK vrátane zoznamu jej účastníkov (`participants`) a dokumentov (`documents`).
+
+**Dôležité:**
+* Nezabudni upraviť aj funkcie v `storage.ts` tak, aby zodpovedali novej štruktúre DB.
+* Ukáž mi upravenú schému (`shared/schema.ts`), kód nových/upravených endpointov v `routes.ts` a kód upravených funkcií v `storage.ts`.

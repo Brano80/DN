@@ -39,12 +39,25 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
 
+// Enums for Virtual Offices
+export const participantStatusEnum = pgEnum("participant_status", [
+  "INVITED",
+  "ACCEPTED",
+  "REJECTED"
+]);
+
+export const signatureStatusEnum = pgEnum("signature_status", [
+  "PENDING",
+  "SIGNED",
+  "REJECTED"
+]);
+
+// Virtual Offices - now supports multi-party collaboration
 export const virtualOffices = pgTable("virtual_offices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  ownerEmail: text("owner_email").notNull(),
-  invitedEmail: text("invited_email").notNull(),
-  contractId: varchar("contract_id"),
+  createdById: varchar("created_by_id").notNull().references(() => users.id),
+  ownerCompanyId: varchar("owner_company_id").notNull().references(() => companies.id),
   status: text("status").notNull().default("active"),
   processType: text("process_type"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -57,6 +70,62 @@ export const insertVirtualOfficeSchema = createInsertSchema(virtualOffices).omit
 
 export type InsertVirtualOffice = z.infer<typeof insertVirtualOfficeSchema>;
 export type VirtualOffice = typeof virtualOffices.$inferSelect;
+
+// Virtual Office Participants - tracks who is invited/participating
+export const virtualOfficeParticipants = pgTable("virtual_office_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  virtualOfficeId: varchar("virtual_office_id").notNull().references(() => virtualOffices.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  userCompanyMandateId: varchar("user_company_mandate_id").references(() => userCompanyMandates.id),
+  requiredRole: text("required_role"),
+  requiredCompanyIco: text("required_company_ico"),
+  status: participantStatusEnum("status").notNull().default("INVITED"),
+  invitedAt: timestamp("invited_at").notNull().defaultNow(),
+  respondedAt: timestamp("responded_at"),
+});
+
+export const insertVirtualOfficeParticipantSchema = createInsertSchema(virtualOfficeParticipants).omit({
+  id: true,
+  invitedAt: true,
+});
+
+export type InsertVirtualOfficeParticipant = z.infer<typeof insertVirtualOfficeParticipantSchema>;
+export type VirtualOfficeParticipant = typeof virtualOfficeParticipants.$inferSelect;
+
+// Virtual Office Documents - documents within a virtual office
+export const virtualOfficeDocuments = pgTable("virtual_office_documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  virtualOfficeId: varchar("virtual_office_id").notNull().references(() => virtualOffices.id),
+  contractId: varchar("contract_id").notNull().references(() => contracts.id),
+  uploadedById: varchar("uploaded_by_id").notNull().references(() => users.id),
+  status: text("status").notNull().default("pending"),
+  uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
+});
+
+export const insertVirtualOfficeDocumentSchema = createInsertSchema(virtualOfficeDocuments).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+export type InsertVirtualOfficeDocument = z.infer<typeof insertVirtualOfficeDocumentSchema>;
+export type VirtualOfficeDocument = typeof virtualOfficeDocuments.$inferSelect;
+
+// Virtual Office Signatures - tracks signature requirements and completions
+export const virtualOfficeSignatures = pgTable("virtual_office_signatures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  virtualOfficeDocumentId: varchar("virtual_office_document_id").notNull().references(() => virtualOfficeDocuments.id),
+  participantId: varchar("participant_id").notNull().references(() => virtualOfficeParticipants.id),
+  status: signatureStatusEnum("status").notNull().default("PENDING"),
+  signedAt: timestamp("signed_at"),
+  signatureData: text("signature_data"),
+});
+
+export const insertVirtualOfficeSignatureSchema = createInsertSchema(virtualOfficeSignatures).omit({
+  id: true,
+});
+
+export type InsertVirtualOfficeSignature = z.infer<typeof insertVirtualOfficeSignatureSchema>;
+export type VirtualOfficeSignature = typeof virtualOfficeSignatures.$inferSelect;
 
 // Enums for companies and mandates
 export const companyStatusEnum = pgEnum("company_status", [
