@@ -676,8 +676,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as User).id;
       const userName = (req.user as User).name;
       const documentId = req.params.id;
+      const { mandateId } = req.body;
       
-      console.log(`[SIGN] User ${userName} signing document ${documentId}`);
+      console.log(`[SIGN] User ${userName} signing document ${documentId}${mandateId ? ` with mandate ID: ${mandateId}` : ' as physical person'}`);
       
       // Get document
       const document = await storage.getVirtualOfficeDocument(documentId);
@@ -713,7 +714,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         signature = await storage.updateVirtualOfficeSignature(existingSignature.id, {
           status: 'SIGNED',
           signedAt: new Date(),
-          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() })
+          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() }),
+          userCompanyMandateId: mandateId || null
         });
       } else {
         signature = await storage.createVirtualOfficeSignature({
@@ -721,7 +723,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantId: participant.id,
           status: 'SIGNED',
           signedAt: new Date(),
-          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() })
+          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() }),
+          userCompanyMandateId: mandateId || null
         });
       }
       
