@@ -102,26 +102,28 @@ export default function ManageMandatesPage() {
   const activeCompany = isCompanyContext
     ? userData?.mandates.find(m => m.mandateId === activeContext)
     : null;
+  
+  const activeIco = activeCompany?.ico || null;
 
   // Fetch mandates for the company
   const { data: mandates, isLoading: isLoadingMandates, isError } = useQuery<Mandate[]>({
-    queryKey: ['/api/companies', activeContext, 'mandates'],
-    enabled: !!activeContext && activeContext !== 'personal',
+    queryKey: ['/api/companies', activeIco, 'mandates'],
+    enabled: !!activeIco,
     retry: false,
   });
 
   // Mutation for inviting user
   const inviteMutation = useMutation({
     mutationFn: async (data: InviteFormData) => {
-      if (!activeContext) throw new Error("Nie je vybraný firemný kontext");
+      if (!activeIco) throw new Error("Nie je vybraný firemný kontext");
       
-      const response = await apiRequest('POST', `/api/companies/${activeContext}/mandates`, data);
+      const response = await apiRequest('POST', `/api/companies/${activeIco}/mandates`, data);
       return response.json();
     },
     onSuccess: () => {
       // Invalidate cache to refresh the table
       queryClient.invalidateQueries({ 
-        queryKey: ['/api/companies', activeContext, 'mandates'] 
+        queryKey: ['/api/companies', activeIco, 'mandates'] 
       });
       
       // Invalidate current-user cache so pending invitations show up in personal dashboard

@@ -22,6 +22,7 @@ interface CurrentUserResponse {
     email: string;
   };
   mandates: Array<{
+    mandateId: string;
     ico: string;
     companyName: string;
     role: string;
@@ -67,10 +68,13 @@ export default function AuditLogPage() {
 
   const activeContext = userData?.activeContext;
   const isCompanyContext = activeContext && activeContext !== 'personal';
-  const activeIco = isCompanyContext ? activeContext : null;
 
-  // Find active company name from mandates
-  const activeCompany = userData?.mandates.find(m => m.ico === activeIco);
+  // Find active company by mandate ID
+  const activeCompany = isCompanyContext
+    ? userData?.mandates.find(m => m.mandateId === activeContext)
+    : null;
+  
+  const activeIco = activeCompany?.ico || null;
 
   // Fetch audit logs
   const { data: logs, isLoading: isLoadingLogs, isError } = useQuery<AuditLogResponse[]>({
