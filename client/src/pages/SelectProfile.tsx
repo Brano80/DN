@@ -34,6 +34,8 @@ export default function SelectProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contracts'] });
       setLocation('/');
     },
   });
