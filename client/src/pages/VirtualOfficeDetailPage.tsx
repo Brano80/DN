@@ -113,7 +113,7 @@ export default function VirtualOfficeDetailPage() {
   // Respond to invitation mutation (accept/reject)
   const respondToInvitationMutation = useMutation({
     mutationFn: async ({ participantId, status }: { participantId: string; status: 'ACCEPTED' | 'REJECTED' }) => {
-      const response = await apiRequest("PATCH", `/api/virtual-office-participants/${participantId}/respond`, { status });
+      const response = await apiRequest("PATCH", `/api/virtual-offices/${id}/participants/${participantId}`, { status });
       return response.json();
     },
     onSuccess: (_, variables) => {
@@ -303,7 +303,7 @@ export default function VirtualOfficeDetailPage() {
                             Prijať
                           </Button>
                         ) : (
-                          <Badge variant={participant.status === 'ACCEPTED' ? 'default' : statusDisplay.variant} className={participant.status === 'ACCEPTED' ? 'bg-green-600 hover:bg-green-700' : ''}>
+                          <Badge variant={participant.status === 'ACCEPTED' ? 'default' : statusDisplay.variant} className={`h-8 flex items-center ${participant.status === 'ACCEPTED' ? 'bg-green-600 hover:bg-green-700' : ''}`}>
                             {participant.status === 'ACCEPTED' && <CheckCircle2 className="mr-1 h-3 w-3" />}
                             {participant.status === 'INVITED' && <Clock className="mr-1 h-3 w-3" />}
                             {participant.status === 'REJECTED' && <XCircle className="mr-1 h-3 w-3" />}
