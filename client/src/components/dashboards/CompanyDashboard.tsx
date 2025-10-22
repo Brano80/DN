@@ -58,8 +58,8 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
 
   // Fetch contracts for the current user
   const { data: contracts } = useQuery<Contract[]>({
-    queryKey: QUERY_KEYS.contracts(currentUser?.email || ''),
-    enabled: !!currentUser?.email,
+    queryKey: QUERY_KEYS.contracts(activeContext),
+    enabled: !!currentUser,
   });
 
   // Fetch virtual offices for the current company (filtered by backend based on activeContext)

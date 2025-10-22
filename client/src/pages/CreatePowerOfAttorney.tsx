@@ -65,7 +65,7 @@ export default function CreatePowerOfAttorney() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/contracts' });
       toast({
         title: "Splnomocnenie vytvorené",
         description: "Splnomocnenie bolo úspešne uložené do 'Moje zmluvy'",

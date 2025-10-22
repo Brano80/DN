@@ -27,6 +27,7 @@ export const contracts = pgTable("contracts", {
   type: text("type").notNull(),
   content: text("content").notNull(),
   ownerEmail: text("owner_email").notNull(),
+  companyIco: text("company_ico"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

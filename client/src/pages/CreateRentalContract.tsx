@@ -79,7 +79,7 @@ export default function CreateRentalContract() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/contracts' });
       toast({
         title: "Zmluva vytvorená",
         description: "Zmluva bola úspešne uložená do 'Moje zmluvy'",

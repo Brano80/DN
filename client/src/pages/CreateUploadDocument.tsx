@@ -53,7 +53,7 @@ export default function CreateUploadDocument() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/contracts' });
       toast({
         title: "Dokument nahratý",
         description: "Dokument bol úspešne uložený do 'Moje zmluvy'",

@@ -29,7 +29,7 @@ interface CurrentUserResponse {
 export default function MyContracts() {
   const [, setLocation] = useLocation();
   const [selectedContract, setSelectedContract] = useState<string | null>(null);
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser, activeContext } = useCurrentUser();
   const { toast } = useToast();
 
   // Get vkId from URL query parameter
@@ -42,8 +42,8 @@ export default function MyContracts() {
   });
 
   const { data: contracts, isLoading } = useQuery<Contract[]>({
-    queryKey: QUERY_KEYS.contracts(currentUser?.email || ''),
-    enabled: !!currentUser?.email,
+    queryKey: QUERY_KEYS.contracts(activeContext),
+    enabled: !!currentUser,
   });
 
   // Determine if user is in company context

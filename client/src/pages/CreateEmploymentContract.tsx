@@ -75,7 +75,7 @@ export default function CreateEmploymentContract() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/contracts' });
       toast({
         title: "Zamestnanecká zmluva vytvorená",
         description: "Zmluva bola úspešne uložená do 'Moje zmluvy'",

@@ -988,8 +988,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contract routes
   app.post("/api/contracts", async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = (req.user as User).id;
+      const activeContext = req.session.activeContext || 'personal';
+      
+      // Get companyIco from activeContext if in company mode
+      let companyIco: string | null = null;
+      if (activeContext !== 'personal') {
+        const userMandates = await storage.getUserMandates(userId);
+        const activeMandate = userMandates.find(m => m.id === activeContext);
+        if (activeMandate) {
+          companyIco = activeMandate.company.ico;
+        }
+      }
+      
       const validated = insertContractSchema.parse(req.body);
-      const contract = await storage.createContract(validated);
+      const contractData = {
+        ...validated,
+        companyIco
+      };
+      
+      const contract = await storage.createContract(contractData);
       res.json(contract);
     } catch (error) {
       res.status(400).json({ error: "Invalid request data" });
@@ -1010,12 +1032,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/contracts", async (req, res) => {
     try {
-      const ownerEmail = req.query.ownerEmail as string;
-      if (!ownerEmail) {
-        return res.status(400).json({ error: "ownerEmail is required" });
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
       }
-      const contracts = await storage.getContractsByOwner(ownerEmail);
-      res.json(contracts);
+      
+      const userId = (req.user as User).id;
+      const user = req.user as User;
+      const activeContext = req.session.activeContext || 'personal';
+      
+      // Get companyIco from activeContext if in company mode
+      let companyIco: string | null = null;
+      if (activeContext !== 'personal') {
+        const userMandates = await storage.getUserMandates(userId);
+        const activeMandate = userMandates.find(m => m.id === activeContext);
+        if (activeMandate) {
+          companyIco = activeMandate.company.ico;
+        }
+      }
+      
+      // Filter contracts by activeContext
+      const allContracts = await storage.getContractsByOwner(user.email);
+      const filteredContracts = allContracts.filter(contract => {
+        if (activeContext === 'personal') {
+          // Personal context: show only contracts without companyIco
+          return !contract.companyIco;
+        } else {
+          // Company context: show only contracts with matching companyIco
+          return contract.companyIco === companyIco;
+        }
+      });
+      
+      res.json(filteredContracts);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch contracts" });
     }
