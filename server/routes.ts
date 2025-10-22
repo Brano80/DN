@@ -833,6 +833,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateVirtualOffice(document.virtualOfficeId, { status: 'completed' });
           console.log(`[SIGN] Virtual office ${document.virtualOfficeId} marked as completed (all documents signed)`);
         }
+        
+        // Check if ALL documents for this contract (across all VKs) are now completed
+        const contractId = document.contractId;
+        const allContractDocuments = await storage.getVirtualOfficeDocumentsByContractId(contractId);
+        const allContractDocsCompleted = allContractDocuments.every(doc => doc.status === 'completed');
+        
+        if (allContractDocsCompleted && allContractDocuments.length > 0) {
+          await storage.updateContract(contractId, { status: 'completed' });
+          console.log(`[SIGN] Contract ${contractId} marked as completed (all documents signed across all VKs)`);
+        }
       }
       
       // Create audit log

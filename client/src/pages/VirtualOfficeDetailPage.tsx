@@ -572,6 +572,13 @@ export default function VirtualOfficeDetailPage() {
           setSelectedDocument(null);
           // Refresh data
           queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${id}`] });
+          // Invalidate all contracts queries to refresh contract status
+          queryClient.refetchQueries({ 
+            predicate: ({ queryKey }) =>
+              Array.isArray(queryKey) && 
+              typeof queryKey[0] === 'string' &&
+              (queryKey[0].startsWith('/api/contracts?') || queryKey[0] === '/api/contracts')
+          });
         }}
       />
 
