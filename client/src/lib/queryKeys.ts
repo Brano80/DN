@@ -1,5 +1,5 @@
 export const QUERY_KEYS = {
-  contracts: (activeContext: string | null | undefined) => ['/api/contracts', activeContext || 'personal'],
+  contracts: (ownerEmail: string) => [`/api/contracts?ownerEmail=${ownerEmail}`],
   contract: (id: string) => [`/api/contracts/${id}`],
   virtualOffices: (ownerEmail: string) => [`/api/virtual-offices?ownerEmail=${ownerEmail}`],
   virtualOffice: (id: string) => [`/api/virtual-offices/${id}`],

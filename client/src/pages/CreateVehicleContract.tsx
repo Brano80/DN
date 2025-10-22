@@ -79,7 +79,7 @@ export default function CreateVehicleContract() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/contracts' });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
       toast({
         title: "Zmluva vytvorená",
         description: "Zmluva bola úspešne uložená do 'Moje zmluvy'",

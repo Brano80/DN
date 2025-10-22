@@ -67,8 +67,8 @@ export default function PersonalDashboard() {
 
   // Fetch contracts for the current user
   const { data: contracts } = useQuery<Contract[]>({
-    queryKey: QUERY_KEYS.contracts(activeContext),
-    enabled: !!currentUser,
+    queryKey: QUERY_KEYS.contracts(currentUser?.email || ''),
+    enabled: !!currentUser?.email,
   });
 
   // Fetch virtual offices for the current user (filtered by backend based on activeContext)
