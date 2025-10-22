@@ -824,6 +824,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (allSigned) {
         await storage.updateVirtualOfficeDocument(documentId, { status: 'completed' });
         console.log(`[SIGN] Document ${documentId} marked as completed (all participants signed)`);
+        
+        // Check if ALL documents in this virtual office are now completed
+        const allDocuments = await storage.getVirtualOfficeDocuments(document.virtualOfficeId);
+        const allDocumentsCompleted = allDocuments.every(doc => doc.status === 'completed');
+        
+        if (allDocumentsCompleted && allDocuments.length > 0) {
+          await storage.updateVirtualOffice(document.virtualOfficeId, { status: 'completed' });
+          console.log(`[SIGN] Virtual office ${document.virtualOfficeId} marked as completed (all documents signed)`);
+        }
       }
       
       // Create audit log

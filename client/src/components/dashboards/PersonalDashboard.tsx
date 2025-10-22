@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Shield, Briefcase, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -29,6 +30,19 @@ interface Mandate {
   role: string;
   status: string;
 }
+
+const getStatusDisplay = (status: string): { text: string; className: string } => {
+  switch (status) {
+    case 'active':
+      return { text: 'Aktívna', className: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' };
+    case 'pending':
+      return { text: 'Čaká', className: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' };
+    case 'completed':
+      return { text: 'Dokončená', className: 'bg-chart-2/20 text-chart-2' };
+    default:
+      return { text: 'Aktívna', className: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' };
+  }
+};
 
 interface CurrentUserResponse {
   user: {
@@ -452,47 +466,50 @@ export default function PersonalDashboard() {
               ))}
 
               {/* Active VK Tasks */}
-              {activeVKTasks.map((vk) => (
-                <div
-                  key={vk.id}
-                  className="flex flex-col gap-4 p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/20"
-                  data-testid={`vk-task-${vk.id}`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-muted-foreground" />
-                        <p className="font-medium text-lg" data-testid="text-vk-name">
-                          {vk.name}
+              {activeVKTasks.map((vk) => {
+                const statusDisplay = getStatusDisplay(vk.status);
+                return (
+                  <div
+                    key={vk.id}
+                    className="flex flex-col gap-4 p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/20"
+                    data-testid={`vk-task-${vk.id}`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="h-5 w-5 text-muted-foreground" />
+                          <p className="font-medium text-lg" data-testid="text-vk-name">
+                            {vk.name}
+                          </p>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Status: <Badge variant="secondary" className={statusDisplay.className}>{statusDisplay.text}</Badge>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {vk.documents.length} {vk.documents.length === 1 ? 'dokument' : vk.documents.length < 5 ? 'dokumenty' : 'dokumentov'}
                         </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Status: <span className="font-medium capitalize">{vk.status}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {vk.documents.length} {vk.documents.length === 1 ? 'dokument' : vk.documents.length < 5 ? 'dokumenty' : 'dokumentov'}
-                      </p>
+                    </div>
+                    
+                    <Alert className="bg-background">
+                      <AlertDescription>
+                        Táto virtuálna kancelária obsahuje dokumenty, ktoré môžu vyžadovať váš podpis alebo pozornosť.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="flex gap-2">
+                      <Button
+                        size="default"
+                        onClick={() => setLocation(`/virtual-office/${vk.id}`)}
+                        data-testid={`button-open-vk-${vk.id}`}
+                      >
+                        <Briefcase className="mr-2 h-4 w-4" />
+                        Otvoriť VK
+                      </Button>
                     </div>
                   </div>
-                  
-                  <Alert className="bg-background">
-                    <AlertDescription>
-                      Táto virtuálna kancelária obsahuje dokumenty, ktoré môžu vyžadovať váš podpis alebo pozornosť.
-                    </AlertDescription>
-                  </Alert>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="default"
-                      onClick={() => setLocation(`/virtual-office/${vk.id}`)}
-                      data-testid={`button-open-vk-${vk.id}`}
-                    >
-                      <Briefcase className="mr-2 h-4 w-4" />
-                      Otvoriť VK
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Empty state */}
