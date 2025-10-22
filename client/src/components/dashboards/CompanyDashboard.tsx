@@ -5,7 +5,18 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { QUERY_KEYS } from "@/lib/queryKeys";
-import type { VirtualOffice, Contract } from "@shared/schema";
+import type { VirtualOffice, VirtualOfficeParticipant, Contract } from "@shared/schema";
+
+interface VirtualOfficeEnriched extends VirtualOffice {
+  participants: Array<VirtualOfficeParticipant & {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  }>;
+  documents: any[];
+}
 
 interface CompanyDashboardProps {
   companyName: string;
@@ -22,15 +33,21 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
     enabled: !!currentUser?.email,
   });
 
-  // Fetch virtual offices for the current user
-  const { data: virtualOffices } = useQuery<VirtualOffice[]>({
-    queryKey: QUERY_KEYS.virtualOffices(currentUser?.email || ''),
-    enabled: !!currentUser?.email,
+  // Fetch virtual offices for the current company (filtered by backend based on activeContext)
+  const { data: virtualOffices } = useQuery<VirtualOfficeEnriched[]>({
+    queryKey: ['/api/virtual-offices'],
+    enabled: !!currentUser,
   });
+
+  // Filter pending VK invitations for this company context
+  const pendingVKInvitations = virtualOffices?.filter(vk => 
+    vk.participants.some(p => p.userId === currentUser?.id && p.status === 'INVITED')
+  ) || [];
 
   // Calculate counts
   const contractsCount = contracts?.length || 0;
   const virtualOfficesCount = virtualOffices?.length || 0;
+  const pendingTasksCount = pendingVKInvitations.length;
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="company-dashboard">
@@ -95,8 +112,8 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Na podpis/schválenie</p>
+            <div className="text-2xl font-bold">{pendingTasksCount}</div>
+            <p className="text-xs text-muted-foreground">Pozvánky do VK</p>
           </CardContent>
         </Card>
       </div>

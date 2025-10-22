@@ -56,7 +56,7 @@ export default function PersonalDashboard() {
     enabled: !!currentUser?.email,
   });
 
-  // Fetch virtual offices for the current user
+  // Fetch virtual offices for the current user (filtered by backend based on activeContext)
   const { data: virtualOffices } = useQuery<VirtualOfficeEnriched[]>({
     queryKey: ['/api/virtual-offices'],
     enabled: !!currentUser,
