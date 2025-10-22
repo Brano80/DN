@@ -257,14 +257,51 @@ export class MemStorage implements IStorage {
     const exampleOffice: VirtualOffice = {
       id: officeId,
       name: "Predaj vozidla - Škoda Octavia",
-      ownerEmail: "jan.novacek@example.sk",
-      invitedEmail: "tomas.horvath@example.com",
+      createdById: mockUserId,
+      ownerCompanyId: companyId,
       status: "completed",
-      contractId: contractId,
       processType: null,
       createdAt: new Date("2024-12-22")
     };
     this.virtualOffices.set(officeId, exampleOffice);
+    
+    // Create participants for the virtual office
+    const participant1: VirtualOfficeParticipant = {
+      id: "participant-jan-skoda",
+      virtualOfficeId: officeId,
+      userId: mockUserId,
+      status: "ACCEPTED",
+      userCompanyMandateId: mandateId,
+      requiredRole: "Konateľ",
+      requiredCompanyIco: null,
+      invitedAt: new Date("2024-12-22"),
+      respondedAt: new Date("2024-12-22")
+    };
+    this.virtualOfficeParticipants.set(participant1.id, participant1);
+    
+    // Create document for the virtual office
+    const document1: VirtualOfficeDocument = {
+      id: "document-skoda",
+      virtualOfficeId: officeId,
+      contractId: contractId,
+      uploadedById: mockUserId,
+      status: "signed",
+      uploadedAt: new Date("2024-12-22")
+    };
+    this.virtualOfficeDocuments.set(document1.id, document1);
+    
+    // Create signature for the document
+    const signature1: VirtualOfficeSignature = {
+      id: "signature-jan-skoda",
+      virtualOfficeDocumentId: document1.id,
+      virtualOfficeParticipantId: participant1.id,
+      status: "SIGNED",
+      signedAt: new Date("2024-12-22"),
+      signatureData: null
+    };
+    this.virtualOfficeSignatures.set(signature1.id, signature1);
+    
+    console.log('[SEED] Created virtual office, participant, document and signature for Škoda Octavia');
     
     // Create sample audit logs for ARIAN
     const auditLog1: AuditLog = {

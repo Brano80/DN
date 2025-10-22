@@ -167,15 +167,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = (req.user as User).id;
-      const { name, processType, invitations } = req.body;
+      const { name, processType, invitations, ownerCompanyId } = req.body;
       
       if (!name) {
         return res.status(400).json({ error: "name is required" });
       }
       
+      if (!ownerCompanyId) {
+        return res.status(400).json({ error: "ownerCompanyId is required" });
+      }
+      
       // Create virtual office
       const office = await storage.createVirtualOffice({
         name,
+        createdById: userId,
+        ownerCompanyId,
         processType: processType || null,
         status: 'active'
       });
