@@ -323,6 +323,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const userParticipant = participants.find(p => p.userId === userId);
           
           if (userParticipant) {
+            // INVITED participants should see VK in all contexts (for pending invitations visibility)
+            if (userParticipant.status === 'INVITED') {
+              return office;
+            }
+            
             const participantContext = userParticipant.invitationContext;
             
             // If invitationContext is set, match it with activeContext
@@ -861,7 +866,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 companyName: company.nazov,
                 companyIco: company.ico,
                 role: mandate.rola,
-                mandateVerificationSource: company.zdrojOverenia || 'OR SR Mock'
+                mandateVerificationSource: mandate.zdrojOverenia || 'OR SR Mock'
               };
             } else {
               // Personal signature
