@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Plus, Loader2, UserPlus, Upload, CheckCircle2, XCircle, Clock, FileSignature } from "lucide-react";
+import { ArrowLeft, Plus, Loader2, UserPlus, Upload, CheckCircle2, XCircle, Clock, FileSignature, FileCheck } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -33,6 +33,22 @@ interface VirtualOfficeEnriched extends VirtualOffice {
       type: string;
     };
   }>;
+}
+
+interface AttestationEntry {
+  userName: string;
+  signedAt: Date | null;
+  type: 'personal' | 'company';
+  companyName?: string;
+  companyIco?: string;
+  role?: string;
+  mandateVerificationSource?: string;
+}
+
+interface AttestationData {
+  documentTitle: string;
+  completedAt: Date | null;
+  attestationEntries: AttestationEntry[];
 }
 
 const getStatusDisplay = (status: string): { text: string; variant: any } => {
@@ -74,6 +90,11 @@ export default function VirtualOfficeDetailPage() {
   // Signing dialog state
   const [showSignDialog, setShowSignDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<VirtualOfficeDocument & { contract: { id: string; title: string; type: string } } | null>(null);
+  
+  // Attestation dialog state
+  const [showAttestationDialog, setShowAttestationDialog] = useState(false);
+  const [attestationData, setAttestationData] = useState<AttestationData | null>(null);
+  const [isLoadingAttestation, setIsLoadingAttestation] = useState(false);
 
   // Fetch virtual office detail
   const { data: office, isLoading, isError } = useQuery<VirtualOfficeEnriched>({
@@ -171,6 +192,26 @@ export default function VirtualOfficeDetailPage() {
       requiredRole: requiredRole || undefined,
       requiredCompanyIco: requiredCompanyIco || undefined,
     });
+  };
+
+  const fetchAndShowAttestation = async (documentId: string) => {
+    setIsLoadingAttestation(true);
+    try {
+      const data = await queryClient.fetchQuery<AttestationData>({
+        queryKey: [`/api/virtual-office-documents/${documentId}/attestation`],
+      });
+      
+      setAttestationData(data);
+      setShowAttestationDialog(true);
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa načítať doložku o overení mandátov.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingAttestation(false);
+    }
   };
 
 
@@ -379,18 +420,36 @@ export default function VirtualOfficeDetailPage() {
                         {new Date(doc.uploadedAt).toLocaleDateString('sk-SK')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedDocument(doc);
-                            setShowSignDialog(true);
-                          }}
-                          data-testid={`button-sign-${doc.id}`}
-                        >
-                          <FileSignature className="mr-2 h-4 w-4" />
-                          Podpísať
-                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedDocument(doc);
+                              setShowSignDialog(true);
+                            }}
+                            data-testid={`button-sign-${doc.id}`}
+                          >
+                            <FileSignature className="mr-2 h-4 w-4" />
+                            Podpísať
+                          </Button>
+                          {doc.status === 'completed' && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => fetchAndShowAttestation(doc.id)}
+                              disabled={isLoadingAttestation}
+                              data-testid={`button-attestation-${doc.id}`}
+                            >
+                              {isLoadingAttestation ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileCheck className="mr-2 h-4 w-4" />
+                              )}
+                              Zobraziť doložku
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -490,6 +549,108 @@ export default function VirtualOfficeDetailPage() {
           queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${id}`] });
         }}
       />
+
+      {/* Attestation Dialog */}
+      <Dialog open={showAttestationDialog} onOpenChange={setShowAttestationDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" data-testid="dialog-attestation">
+          <DialogHeader>
+            <DialogTitle>Doložka o overení mandátov</DialogTitle>
+            <DialogDescription>
+              Dokument: {attestationData?.documentTitle}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {attestationData && (
+            <div className="space-y-4">
+              {attestationData.completedAt && (
+                <div className="bg-muted/50 p-3 rounded-md">
+                  <p className="text-sm">
+                    <strong>Dokončené:</strong>{' '}
+                    {new Date(attestationData.completedAt).toLocaleString('sk-SK', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <h4 className="text-sm font-semibold mb-3">Podpisy a overenie mandátov</h4>
+                {attestationData.attestationEntries.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Zatiaľ nie sú žiadne podpisy
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Meno</TableHead>
+                        <TableHead>Dátum podpisu</TableHead>
+                        <TableHead>Typ</TableHead>
+                        <TableHead>Firma / Rola</TableHead>
+                        <TableHead>Zdroj overenia</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attestationData.attestationEntries.map((entry, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">
+                            {entry.userName}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {entry.signedAt 
+                              ? new Date(entry.signedAt).toLocaleString('sk-SK', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              : '—'
+                            }
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={entry.type === 'company' ? 'default' : 'secondary'}>
+                              {entry.type === 'company' ? 'Firma' : 'Fyzická osoba'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {entry.type === 'company' ? (
+                              <div>
+                                <div className="font-medium">{entry.companyName}</div>
+                                <div className="text-muted-foreground text-xs">
+                                  IČO: {entry.companyIco} • {entry.role}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {entry.type === 'company' ? entry.mandateVerificationSource : '—'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowAttestationDialog(false)}
+              data-testid="button-close-attestation"
+            >
+              Zavrieť
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

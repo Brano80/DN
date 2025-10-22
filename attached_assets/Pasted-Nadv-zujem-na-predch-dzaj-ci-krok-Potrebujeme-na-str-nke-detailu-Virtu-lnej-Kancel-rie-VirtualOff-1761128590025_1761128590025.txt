@@ -1,0 +1,33 @@
+Nadväzujem na predchádzajúci krok. Potrebujeme na stránke detailu Virtuálnej Kancelárie (`VirtualOfficeDetailPage.tsx`) zobraziť tlačidlo, ktoré načíta a zobrazí dáta pre "Doložku o overení mandátov" z nového endpointu.
+
+**Cieľ:** Upraviť `client/src/pages/VirtualOfficeDetailPage.tsx`.
+
+**Detaily implementácie:**
+
+1.  **Pridať Stav pre Dialóg:** Vytvor `useState` pre otvorenie/zatvorenie dialógu doložky a pre uloženie načítaných dát doložky.
+    ```typescript
+    const [showAttestationDialog, setShowAttestationDialog] = useState(false);
+    const [attestationData, setAttestationData] = useState<any>(null); // Definuj presnejší typ
+    ```
+2.  **Pridať Tlačidlo k Dokumentom:** V tabuľke dokumentov (`office.documents.map(...)`):
+    * **Podmienečne zobraz tlačidlo:** Pridaj nové tlačidlo (napr. vedľa tlačidla "Podpísať"), ktoré sa zobrazí **iba ak** je `doc.status === 'completed'`.
+    * Nazvi ho napr. "Zobraziť doložku" (s ikonou `FileCheck`).
+    * Pri kliknutí na toto tlačidlo zavolaj funkciu, ktorá spustí načítanie dát doložky.
+3.  **Vytvoriť Funkciu a Dotaz na Načítanie Doložky:**
+    * Vytvor asynchrónnu funkciu `fetchAndShowAttestation(documentId: string)`.
+    * V tejto funkcii použi `queryClient.fetchQuery` (alebo vytvor `useLazyQuery`, ak používaš Apollo) na zavolanie nového endpointu `GET /api/virtual-office-documents/${documentId}/attestation`.
+    * Keď dáta prídu, ulož ich do `setAttestationData` a otvor dialóg `setShowAttestationDialog(true)`. Nezabudni na loading a error handling.
+4.  **Vytvoriť Dialóg na Zobrazenie Doložky:**
+    * Pridaj komponent `<Dialog open={showAttestationDialog} onOpenChange={setShowAttestationDialog}>`.
+    * **`DialogHeader`:** `<DialogTitle>Doložka o overení mandátov</DialogTitle>` a `<DialogDescription>Dokument: {attestationData?.documentTitle}</DialogDescription>`.
+    * **`DialogContent`:**
+        * Zobraz informáciu o dokončení: `Dokončené: {new Date(attestationData?.completedAt).toLocaleString('sk-SK')}`.
+        * Zobraz tabuľku alebo zoznam (`attestationData?.attestationEntries.map(...)`).
+        * Pre každý záznam zobraz: Meno, Dátum podpisu, a ak je to firemný podpis: Firma, Rola, Zdroj overenia mandátu.
+    * **`DialogFooter`:** Tlačidlo "Zavrieť".
+
+**Dôležité inštrukcie pre AI:**
+* Použi komponenty z `shadcn/ui` (`Dialog`, `Table`, `Button`).
+* Zabezpeč podmienené zobrazenie tlačidla "Zobraziť doložku" len pre dokončené dokumenty.
+* Implementuj načítanie dát "on demand" pri kliknutí na tlačidlo.
+* Ukáž mi upravený kód pre `VirtualOfficeDetailPage.tsx`.
