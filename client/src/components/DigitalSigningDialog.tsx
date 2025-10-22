@@ -49,9 +49,11 @@ export function DigitalSigningDialog({
 
   // Sign document mutation
   const signDocumentMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (mandateId: string | null) => {
       if (!documentId) throw new Error("No document ID provided");
-      const response = await apiRequest("POST", `/api/virtual-office-documents/${documentId}/sign`, {});
+      const response = await apiRequest("POST", `/api/virtual-office-documents/${documentId}/sign`, {
+        mandateId: mandateId || undefined,
+      });
       return response.json();
     },
   });
@@ -81,9 +83,20 @@ export function DigitalSigningDialog({
       // Simulate EUDI signing process
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Determine mandateId to send to backend
+      let mandateId: string | null = null;
+      if (currentUserData?.activeContext && currentUserData.activeContext !== 'personal') {
+        const activeMandate = currentUserData.mandates.find(
+          m => m.id === currentUserData.activeContext && m.stav === 'active'
+        );
+        if (activeMandate) {
+          mandateId = activeMandate.id;
+        }
+      }
+      
       // Call backend to save signature if documentId is provided
       if (documentId) {
-        await signDocumentMutation.mutateAsync();
+        await signDocumentMutation.mutateAsync(mandateId);
       }
       
       setIsProcessing(false);
