@@ -433,7 +433,7 @@ export default function VirtualOfficeDetailPage() {
                             <FileSignature className="mr-2 h-4 w-4" />
                             Podpísať
                           </Button>
-                          {doc.status === 'completed' && (
+                          {doc.status === 'signed' && (
                             <Button
                               size="sm"
                               variant="default"
