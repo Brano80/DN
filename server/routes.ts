@@ -205,6 +205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "ownerCompanyId is required" });
       }
       
+      // Get active context for invitation context
+      const activeContext = req.session.activeContext || 'personal';
+      
       // Create virtual office
       const office = await storage.createVirtualOffice({
         name,
@@ -214,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'active'
       });
       
-      // Create creator as participant with ACCEPTED status
+      // Create creator as participant with ACCEPTED status and invitation context
       await storage.createVirtualOfficeParticipant({
         virtualOfficeId: office.id,
         userId,
@@ -222,6 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userCompanyMandateId: null,
         requiredRole: null,
         requiredCompanyIco: null,
+        invitationContext: activeContext,
         respondedAt: new Date()
       });
       
@@ -240,9 +244,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userCompanyMandateId: null,
               requiredRole: requiredRole || null,
               requiredCompanyIco: requiredCompanyIco || null,
+              invitationContext: activeContext,
               respondedAt: null
             });
-            console.log(`Participant ${email} invited to office ${office.name}`);
+            console.log(`Participant ${email} invited to office ${office.name} with context ${activeContext}`);
           } else {
             console.warn(`User with email ${email} not found`);
           }
@@ -296,13 +301,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = (req.user as User).id;
+      const activeContext = req.session.activeContext || 'personal';
       const offices = await storage.getVirtualOfficesByUser(userId);
       
-      // Enrich offices with participants and documents
-      const enrichedOffices = await Promise.all(
+      // Filter offices based on invitation context
+      const filteredOffices = await Promise.all(
         offices.map(async (office) => {
           const participants = await storage.getVirtualOfficeParticipants(office.id);
-          const documents = await storage.getVirtualOfficeDocuments(office.id);
+          
+          // Find this user's participant record
+          const userParticipant = participants.find(p => p.userId === userId);
+          
+          if (userParticipant) {
+            const participantContext = userParticipant.invitationContext;
+            
+            // If invitationContext is set, match it with activeContext
+            if (participantContext !== null) {
+              if (participantContext === activeContext) {
+                return office;
+              }
+            } else {
+              // Backward compatibility: null invitationContext
+              // Only show in company context if ownerCompanyId matches
+              // Personal context does NOT show legacy offices (to prevent company offices leaking)
+              if (activeContext !== 'personal' && office.ownerCompanyId === activeContext) {
+                return office;
+              }
+            }
+          }
+          
+          return null;
+        })
+      );
+      
+      // Remove null entries and enrich remaining offices
+      const validOffices = filteredOffices.filter(office => office !== null);
+      const enrichedOffices = await Promise.all(
+        validOffices.map(async (office) => {
+          const participants = await storage.getVirtualOfficeParticipants(office!.id);
+          const documents = await storage.getVirtualOfficeDocuments(office!.id);
           
           return {
             ...office,
