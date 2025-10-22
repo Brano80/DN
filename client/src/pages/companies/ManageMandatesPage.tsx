@@ -82,7 +82,7 @@ export default function ManageMandatesPage() {
   const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<InviteFormData>({
-    email: "jan.novacek@example.sk", // Pre-filled for demo
+    email: "",
     rola: "",
     rozsahOpravneni: "",
   });
@@ -134,9 +134,9 @@ export default function ManageMandatesPage() {
       // Close dialog
       setIsDialogOpen(false);
       
-      // Reset form (keep email pre-filled for convenience)
+      // Reset form
       setFormData({
-        email: "jan.novacek@example.sk",
+        email: "",
         rola: "",
         rozsahOpravneni: "",
       });
@@ -350,20 +350,21 @@ export default function ManageMandatesPage() {
               {/* Email Field */}
               <div className="grid gap-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="uzivatel@priklad.sk"
+                <Select
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  list="mandate-mock-emails-list"
-                  data-testid="input-invite-email"
-                />
-                <datalist id="mandate-mock-emails-list">
-                  {MOCK_USER_EMAILS.map((email) => (
-                    <option key={email} value={email} />
-                  ))}
-                </datalist>
+                  onValueChange={(value) => setFormData({ ...formData, email: value })}
+                >
+                  <SelectTrigger data-testid="select-invite-email">
+                    <SelectValue placeholder="Vyberte používateľa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MOCK_USER_EMAILS.map((email) => (
+                      <SelectItem key={email} value={email}>
+                        {email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Rola Field */}
