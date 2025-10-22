@@ -18,6 +18,16 @@ import type { VirtualOffice, VirtualOfficeParticipant, VirtualOfficeDocument } f
 import { MOCK_INVITATION_OPTIONS } from "@/lib/constants";
 import { DigitalSigningDialog } from "@/components/DigitalSigningDialog";
 
+interface SignatureInfo {
+  id: string;
+  participantId: string;
+  userId: string;
+  userName: string;
+  status: 'PENDING' | 'SIGNED';
+  signedAt: Date | null;
+  isCurrentUser: boolean;
+}
+
 interface VirtualOfficeEnriched extends VirtualOffice {
   participants: Array<VirtualOfficeParticipant & {
     user: {
@@ -32,7 +42,7 @@ interface VirtualOfficeEnriched extends VirtualOffice {
       title: string;
       type: string;
     };
-    signerNames?: string[];
+    signatures: SignatureInfo[];
   }>;
 }
 
@@ -404,63 +414,71 @@ export default function VirtualOfficeDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {office.documents.map((doc) => {
-                  const statusDisplay = getDocumentStatusDisplay(doc.status);
-                  
-                  return (
-                    <TableRow key={doc.id} data-testid={`row-document-${doc.id}`}>
-                      <TableCell className="font-medium">{doc.contract.title}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {doc.signerNames && doc.signerNames.length > 0
-                          ? doc.signerNames.join(', ')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground capitalize">
-                        {doc.contract.type}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusDisplay.variant}>
-                          {statusDisplay.text}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(doc.uploadedAt).toLocaleDateString('sk-SK')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedDocument(doc);
-                              setShowSignDialog(true);
-                            }}
-                            data-testid={`button-sign-${doc.id}`}
+                {office.documents.flatMap((doc) => 
+                  doc.signatures.map((signature) => {
+                    const isSigned = signature.status === 'SIGNED';
+                    const isPending = signature.status === 'PENDING';
+                    const allSignaturesSigned = doc.signatures.every(s => s.status === 'SIGNED');
+                    
+                    return (
+                      <TableRow key={`${doc.id}-${signature.id}`} data-testid={`row-document-${doc.id}-${signature.userId}`}>
+                        <TableCell className="font-medium">{doc.contract.title}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {signature.userName}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground capitalize">
+                          {doc.contract.type}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={isSigned ? "default" : "secondary"}
+                            className={isSigned ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600"}
                           >
-                            <FileSignature className="mr-2 h-4 w-4" />
-                            Podpísať
-                          </Button>
-                          {doc.status === 'signed' && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => fetchAndShowAttestation(doc.id)}
-                              disabled={isLoadingAttestation}
-                              data-testid={`button-attestation-${doc.id}`}
-                            >
-                              {isLoadingAttestation ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : (
-                                <FileCheck className="mr-2 h-4 w-4" />
-                              )}
-                              Zobraziť doložku
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                            {isSigned ? 'Podpísané' : 'Čaká na podpis'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(doc.uploadedAt).toLocaleDateString('sk-SK')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            {signature.isCurrentUser && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedDocument(doc);
+                                  setShowSignDialog(true);
+                                }}
+                                disabled={isSigned}
+                                data-testid={`button-sign-${doc.id}`}
+                              >
+                                <FileSignature className="mr-2 h-4 w-4" />
+                                Podpísať
+                              </Button>
+                            )}
+                            {allSignaturesSigned && signature.isCurrentUser && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => fetchAndShowAttestation(doc.id)}
+                                disabled={isLoadingAttestation}
+                                data-testid={`button-attestation-${doc.id}`}
+                              >
+                                {isLoadingAttestation ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <FileCheck className="mr-2 h-4 w-4" />
+                                )}
+                                Zobraziť doložku
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           )}
