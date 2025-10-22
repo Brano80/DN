@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeContext = req.session.activeContext || 'personal';
       const offices = await storage.getVirtualOfficesByUser(userId);
       
-      // Get active mandate's ICO if in company context (for backward compatibility)
+      // Get active mandate's ICO if in company context
       let activeCompanyIco: string | null = null;
       if (activeContext !== 'personal') {
         const userMandates = await storage.getUserMandates(userId);
@@ -373,7 +373,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // If invitationContext is set, match it with activeContext
             if (participantContext !== null) {
-              if (participantContext === activeContext) {
+              // Personal context match
+              if (participantContext === 'personal' && activeContext === 'personal') {
+                return office;
+              }
+              
+              // Company context match - compare ICO values
+              // invitationContext can be an ICO (e.g., "CL76543210")
+              // activeContext is a mandate ID, so we need to compare with activeCompanyIco
+              if (activeContext !== 'personal' && activeCompanyIco && participantContext === activeCompanyIco) {
                 return office;
               }
             } else {
