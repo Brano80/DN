@@ -19,17 +19,17 @@ export default function CreateRentalContract() {
   const { data: currentUser } = useCurrentUser();
 
   // Landlord information
-  const [landlordName, setLandlordName] = useState('Ján Novák');
-  const [landlordAddress, setLandlordAddress] = useState('Hlavná 123, 811 01 Bratislava');
-  const [landlordIdNumber, setLandlordIdNumber] = useState('900101/1234');
+  const [landlordName, setLandlordName] = useState('Petra Ambroz');
+  const [landlordAddress, setLandlordAddress] = useState('Hlavná 25, 811 01 Bratislava, Slovensko');
+  const [landlordIdNumber, setLandlordIdNumber] = useState('920308/5678');
 
   // Tenant information
-  const [tenantName, setTenantName] = useState('Peter Kováč');
-  const [tenantAddress, setTenantAddress] = useState('Vysoká 456, 821 09 Bratislava');
-  const [tenantIdNumber, setTenantIdNumber] = useState('850505/5678');
+  const [tenantName, setTenantName] = useState('Andres Elgueta');
+  const [tenantAddress, setTenantAddress] = useState('Avenida Providencia 1234, Santiago, Chile');
+  const [tenantIdNumber, setTenantIdNumber] = useState('24.567.890-1');
 
   // Property information
-  const [propertyAddress, setPropertyAddress] = useState('Nová 789, 811 05 Bratislava');
+  const [propertyAddress, setPropertyAddress] = useState('Dunajská 15, 811 08 Bratislava');
   const [propertyType, setPropertyType] = useState('2-izbový byt');
   const [propertySize, setPropertySize] = useState('65');
   const [propertyRooms, setPropertyRooms] = useState('2');

@@ -19,15 +19,15 @@ export default function CreateEmploymentContract() {
   const { data: currentUser } = useCurrentUser();
 
   // Employer information
-  const [employerName, setEmployerName] = useState('ABC s.r.o.');
-  const [employerAddress, setEmployerAddress] = useState('Hlavná 123, 811 01 Bratislava');
-  const [employerIdNumber, setEmployerIdNumber] = useState('12345678');
-  const [employerRepresentative, setEmployerRepresentative] = useState('Mgr. Ján Novák, konateľ');
+  const [employerName, setEmployerName] = useState('ARIAN s.r.o.');
+  const [employerAddress, setEmployerAddress] = useState('Námestie SNP 15, 811 06 Bratislava, Slovensko');
+  const [employerIdNumber, setEmployerIdNumber] = useState('47865789');
+  const [employerRepresentative, setEmployerRepresentative] = useState('Petra Ambroz, konateľka');
 
   // Employee information
-  const [employeeName, setEmployeeName] = useState('Peter Kováč');
-  const [employeeAddress, setEmployeeAddress] = useState('Vysoká 456, 821 09 Bratislava');
-  const [employeeIdNumber, setEmployeeIdNumber] = useState('850505/5678');
+  const [employeeName, setEmployeeName] = useState('Andres Elgueta');
+  const [employeeAddress, setEmployeeAddress] = useState('Avenida Providencia 1234, Santiago, Chile');
+  const [employeeIdNumber, setEmployeeIdNumber] = useState('24.567.890-1');
 
   // Employment details
   const [position, setPosition] = useState('Softvérový vývojár');

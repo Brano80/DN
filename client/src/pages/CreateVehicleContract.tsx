@@ -19,21 +19,21 @@ export default function CreateVehicleContract() {
   const { data: currentUser } = useCurrentUser();
 
   // Seller information
-  const [sellerName, setSellerName] = useState('Ján Novák');
-  const [sellerAddress, setSellerAddress] = useState('Hlavná 123, 811 01 Bratislava');
-  const [sellerIdNumber, setSellerIdNumber] = useState('900101/1234');
+  const [sellerName, setSellerName] = useState('Ján Nováček');
+  const [sellerAddress, setSellerAddress] = useState('Masarykova 456, 602 00 Brno, Česká republika');
+  const [sellerIdNumber, setSellerIdNumber] = useState('880215/1234');
 
   // Buyer information
-  const [buyerName, setBuyerName] = useState('Peter Kováč');
-  const [buyerAddress, setBuyerAddress] = useState('Vysoká 456, 821 09 Bratislava');
-  const [buyerIdNumber, setBuyerIdNumber] = useState('850505/5678');
+  const [buyerName, setBuyerName] = useState('Petra Ambroz');
+  const [buyerAddress, setBuyerAddress] = useState('Hlavná 25, 811 01 Bratislava, Slovensko');
+  const [buyerIdNumber, setBuyerIdNumber] = useState('920308/5678');
 
   // Vehicle information
   const [vehicleBrand, setVehicleBrand] = useState('Škoda');
   const [vehicleModel, setVehicleModel] = useState('Octavia');
   const [vehicleYear, setVehicleYear] = useState('2019');
   const [vehicleVin, setVehicleVin] = useState('TMBJJ6NW5J0123456');
-  const [vehicleLicensePlate, setVehicleLicensePlate] = useState('BA123AB');
+  const [vehicleLicensePlate, setVehicleLicensePlate] = useState('BA-123AB');
   const [vehicleMileage, setVehicleMileage] = useState('85000');
 
   // Contract details

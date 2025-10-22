@@ -19,14 +19,14 @@ export default function CreatePropertyContract() {
   const { data: currentUser } = useCurrentUser();
 
   // Seller information
-  const [sellerName, setSellerName] = useState('Ján Novák');
-  const [sellerAddress, setSellerAddress] = useState('Hlavná 123, 811 01 Bratislava');
-  const [sellerIdNumber, setSellerIdNumber] = useState('900101/1234');
+  const [sellerName, setSellerName] = useState('Petra Ambroz');
+  const [sellerAddress, setSellerAddress] = useState('Hlavná 25, 811 01 Bratislava, Slovensko');
+  const [sellerIdNumber, setSellerIdNumber] = useState('920308/5678');
 
   // Buyer information
-  const [buyerName, setBuyerName] = useState('Peter Kováč');
-  const [buyerAddress, setBuyerAddress] = useState('Vysoká 456, 821 09 Bratislava');
-  const [buyerIdNumber, setBuyerIdNumber] = useState('850505/5678');
+  const [buyerName, setBuyerName] = useState('Andres Elgueta');
+  const [buyerAddress, setBuyerAddress] = useState('Avenida Providencia 1234, Santiago, Chile');
+  const [buyerIdNumber, setBuyerIdNumber] = useState('24.567.890-1');
 
   // Property information
   const [propertyAddress, setPropertyAddress] = useState('Slnečná 15, 811 02 Bratislava');
