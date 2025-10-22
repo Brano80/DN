@@ -80,6 +80,7 @@ export const virtualOfficeParticipants = pgTable("virtual_office_participants", 
   requiredRole: text("required_role"),
   requiredCompanyIco: text("required_company_ico"),
   status: participantStatusEnum("status").notNull().default("INVITED"),
+  invitationContext: varchar("invitation_context", { length: 50 }),
   invitedAt: timestamp("invited_at").notNull().defaultNow(),
   respondedAt: timestamp("responded_at"),
 });
