@@ -22,11 +22,11 @@ interface CurrentUserResponse {
     email: string;
   };
   mandates: Array<{
-    id: string;
+    mandateId: string;
     ico: string;
     companyName: string;
-    rola: string;
-    stav: string;
+    role: string;
+    status: string;
   }>;
   activeContext: string | null;
 }
@@ -87,10 +87,10 @@ export function DigitalSigningDialog({
       let mandateId: string | null = null;
       if (currentUserData?.activeContext && currentUserData.activeContext !== 'personal') {
         const activeMandate = currentUserData.mandates.find(
-          m => m.id === currentUserData.activeContext && m.stav === 'active'
+          m => m.mandateId === currentUserData.activeContext && m.status === 'active'
         );
         if (activeMandate) {
-          mandateId = activeMandate.id;
+          mandateId = activeMandate.mandateId;
         }
       }
       
@@ -127,14 +127,14 @@ export function DigitalSigningDialog({
     // Determine signing context
     if (activeContext && activeContext !== 'personal') {
       // User is signing on behalf of a company
-      const activeMandate = currentUserData?.mandates.find(m => m.ico === activeContext && m.stav === 'active');
+      const activeMandate = currentUserData?.mandates.find(m => m.mandateId === activeContext && m.status === 'active');
       if (activeMandate) {
         signingInfo = {
           ...signingInfo,
           context: 'company',
-          mandateId: activeMandate.id,
+          mandateId: activeMandate.mandateId,
           companyName: activeMandate.companyName,
-          role: activeMandate.rola,
+          role: activeMandate.role,
         };
       }
     }
@@ -167,11 +167,11 @@ export function DigitalSigningDialog({
     }
     
     // Company context
-    const activeMandate = currentUserData.mandates.find(m => m.ico === activeContext && m.stav === 'active');
+    const activeMandate = currentUserData.mandates.find(m => m.mandateId === activeContext && m.status === 'active');
     if (activeMandate) {
       return {
         type: 'company' as const,
-        label: `${activeMandate.companyName} ako ${activeMandate.rola}`,
+        label: `${activeMandate.companyName} ako ${activeMandate.role}`,
         icon: Building2,
       };
     }

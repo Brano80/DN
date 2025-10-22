@@ -22,9 +22,11 @@ interface User {
 }
 
 interface Mandate {
+  mandateId: string;
   ico: string;
   companyName: string;
   role: string;
+  status: string;
 }
 
 interface CurrentUserResponse {
@@ -86,7 +88,7 @@ export default function Navbar() {
 
   // Find active company if context is set
   const activeCompany = activeContext && activeContext !== 'personal'
-    ? mandates.find(m => m.ico === activeContext)
+    ? mandates.find(m => m.mandateId === activeContext)
     : null;
 
   // Context display text
@@ -165,8 +167,8 @@ export default function Navbar() {
                     </DropdownMenuLabel>
                     {mandates.map((mandate) => (
                       <DropdownMenuItem
-                        key={mandate.ico}
-                        onClick={() => handleContextChange(mandate.ico)}
+                        key={mandate.mandateId}
+                        onClick={() => handleContextChange(mandate.mandateId)}
                         className="cursor-pointer"
                         data-testid={`dropdown-item-company-${mandate.ico}`}
                       >
@@ -182,7 +184,7 @@ export default function Navbar() {
                               </p>
                             </div>
                           </div>
-                          {activeContext === mandate.ico && (
+                          {activeContext === mandate.mandateId && (
                             <Check className="w-4 h-4 text-primary" />
                           )}
                         </div>

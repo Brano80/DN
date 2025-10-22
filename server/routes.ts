@@ -304,6 +304,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeContext = req.session.activeContext || 'personal';
       const offices = await storage.getVirtualOfficesByUser(userId);
       
+      // Get active mandate's ICO if in company context (for backward compatibility)
+      let activeCompanyIco: string | null = null;
+      if (activeContext !== 'personal') {
+        const userMandates = await storage.getUserMandates(userId);
+        const activeMandate = userMandates.find(m => m.id === activeContext);
+        if (activeMandate) {
+          activeCompanyIco = activeMandate.company.ico;
+        }
+      }
+      
       // Filter offices based on invitation context
       const filteredOffices = await Promise.all(
         offices.map(async (office) => {
@@ -324,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Backward compatibility: null invitationContext
               // Only show in company context if ownerCompanyId matches
               // Personal context does NOT show legacy offices (to prevent company offices leaking)
-              if (activeContext !== 'personal' && office.ownerCompanyId === activeContext) {
+              if (activeContext !== 'personal' && office.ownerCompanyId === activeCompanyIco) {
                 return office;
               }
             }

@@ -6,9 +6,11 @@ import { Building2, ArrowLeft, Plus } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Mandate {
+  mandateId: string;
   ico: string;
   companyName: string;
   role: string;
+  status: string;
 }
 
 interface CurrentUserResponse {
@@ -40,8 +42,8 @@ export default function SelectCompany() {
     },
   });
 
-  const handleSelectCompany = (ico: string) => {
-    setContextMutation.mutate(ico);
+  const handleSelectCompany = (mandateId: string) => {
+    setContextMutation.mutate(mandateId);
   };
 
   if (isLoading) {
@@ -92,9 +94,9 @@ export default function SelectCompany() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {data.mandates.map((mandate) => (
             <Card 
-              key={mandate.ico}
+              key={mandate.mandateId}
               className="cursor-pointer transition-all hover-elevate active-elevate-2 flex flex-col"
-              onClick={() => handleSelectCompany(mandate.ico)}
+              onClick={() => handleSelectCompany(mandate.mandateId)}
               data-testid={`card-company-${mandate.ico}`}
             >
               <CardHeader>
