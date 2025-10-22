@@ -110,6 +110,31 @@ export default function VirtualOfficeDetailPage() {
     },
   });
 
+  // Respond to invitation mutation (accept/reject)
+  const respondToInvitationMutation = useMutation({
+    mutationFn: async ({ participantId, status }: { participantId: string; status: 'ACCEPTED' | 'REJECTED' }) => {
+      const response = await apiRequest("PATCH", `/api/virtual-office-participants/${participantId}/respond`, { status });
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${id}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
+      if (variables.status === 'ACCEPTED') {
+        toast({
+          title: "Pozvánka prijatá",
+          description: "Úspešne ste prijali pozvánku do virtuálnej kancelárie.",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa spracovať pozvánku.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleInvitationOptionSelect = (optionId: string) => {
     const option = MOCK_INVITATION_OPTIONS.find(opt => opt.id === optionId);
     if (option) {
@@ -252,6 +277,8 @@ export default function VirtualOfficeDetailPage() {
               <TableBody>
                 {office.participants.map((participant) => {
                   const statusDisplay = getStatusDisplay(participant.status);
+                  const isCurrentUser = currentUser && participant.user.email === currentUser.email;
+                  const canAccept = isCurrentUser && participant.status === 'INVITED';
                   
                   return (
                     <TableRow key={participant.id} data-testid={`row-participant-${participant.id}`}>
@@ -260,12 +287,29 @@ export default function VirtualOfficeDetailPage() {
                       <TableCell>{participant.requiredRole || '—'}</TableCell>
                       <TableCell>{participant.requiredCompanyIco || '—'}</TableCell>
                       <TableCell>
-                        <Badge variant={statusDisplay.variant}>
-                          {participant.status === 'ACCEPTED' && <CheckCircle2 className="mr-1 h-3 w-3" />}
-                          {participant.status === 'INVITED' && <Clock className="mr-1 h-3 w-3" />}
-                          {participant.status === 'REJECTED' && <XCircle className="mr-1 h-3 w-3" />}
-                          {statusDisplay.text}
-                        </Badge>
+                        {canAccept ? (
+                          <Button
+                            size="sm"
+                            className="bg-orange-500 hover:bg-orange-600 text-white"
+                            onClick={() => respondToInvitationMutation.mutate({ participantId: participant.id, status: 'ACCEPTED' })}
+                            disabled={respondToInvitationMutation.isPending}
+                            data-testid={`button-accept-${participant.id}`}
+                          >
+                            {respondToInvitationMutation.isPending ? (
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            ) : (
+                              <Clock className="mr-1 h-3 w-3" />
+                            )}
+                            Prijať
+                          </Button>
+                        ) : (
+                          <Badge variant={participant.status === 'ACCEPTED' ? 'default' : statusDisplay.variant} className={participant.status === 'ACCEPTED' ? 'bg-green-600 hover:bg-green-700' : ''}>
+                            {participant.status === 'ACCEPTED' && <CheckCircle2 className="mr-1 h-3 w-3" />}
+                            {participant.status === 'INVITED' && <Clock className="mr-1 h-3 w-3" />}
+                            {participant.status === 'REJECTED' && <XCircle className="mr-1 h-3 w-3" />}
+                            {statusDisplay.text}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(participant.invitedAt).toLocaleDateString('sk-SK')}
