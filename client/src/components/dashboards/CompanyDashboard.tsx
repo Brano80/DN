@@ -58,7 +58,7 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Firemné dokumenty</CardTitle>
+            <CardTitle className="text-sm font-medium">E-dokumenty</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -163,7 +163,7 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
           >
             <FileText className="mr-2 h-5 w-5" />
             <div className="text-left">
-              <div className="font-medium">E-dokumenty firmy</div>
+              <div className="font-medium">E-dokumenty</div>
               <div className="text-xs text-muted-foreground">Všetky dokumenty</div>
             </div>
           </Button>

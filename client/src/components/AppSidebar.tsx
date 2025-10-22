@@ -82,12 +82,12 @@ const companyNavItems: NavItem[] = [
     path: "/",
   },
   {
-    label: "Dokumenty firmy",
+    label: "Firemné zmluvy",
     icon: FileText,
     path: "/my-contracts",
   },
   {
-    label: "E-dokumenty firmy",
+    label: "E-dokumenty",
     icon: FolderOpen,
     path: "/my-documents",
   },
