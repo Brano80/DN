@@ -484,7 +484,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Document upload/add endpoint for Virtual Offices
-  app.post("/api/virtual-offices/:id/documents", upload.single("documentFile"), async (req, res) => {
+  app.post("/api/virtual-offices/:id/documents", (req, res, next) => {
+    // Only use multer if request is multipart/form-data
+    const contentType = req.get('Content-Type') || '';
+    if (contentType.includes('multipart/form-data')) {
+      upload.single("documentFile")(req, res, next);
+    } else {
+      next();
+    }
+  }, async (req, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ error: "Not authenticated" });
@@ -493,6 +501,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as User).id;
       const userName = (req.user as User).name;
       const officeId = req.params.id;
+      
+      console.log(`[VK] POST documents - Content-Type: ${req.get('Content-Type')}, body:`, req.body, 'file:', req.file ? 'present' : 'none');
       
       // Check if user is participant of the office
       const isParticipant = await storage.isUserParticipant(userId, officeId);
