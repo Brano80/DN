@@ -14,6 +14,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { VirtualOffice, VirtualOfficeParticipant, VirtualOfficeDocument } from "@shared/schema";
+import { MOCK_USER_EMAILS } from "@/lib/constants";
 
 interface VirtualOfficeEnriched extends VirtualOffice {
   participants: Array<VirtualOfficeParticipant & {
@@ -327,8 +328,14 @@ export default function VirtualOfficeDetailPage() {
                 placeholder="jan.novak@example.sk"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
+                list="mock-emails-list"
                 data-testid="input-invite-email"
               />
+              <datalist id="mock-emails-list">
+                {MOCK_USER_EMAILS.map((email) => (
+                  <option key={email} value={email} />
+                ))}
+              </datalist>
             </div>
             <div className="space-y-2">
               <Label htmlFor="required-role">Požadovaná rola (voliteľné)</Label>

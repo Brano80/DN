@@ -34,6 +34,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, UserPlus, AlertCircle, Users, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { MOCK_USER_EMAILS } from "@/lib/constants";
 
 interface CurrentUserResponse {
   user: {
@@ -352,8 +353,14 @@ export default function ManageMandatesPage() {
                   placeholder="uzivatel@priklad.sk"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  list="mandate-mock-emails-list"
                   data-testid="input-invite-email"
                 />
+                <datalist id="mandate-mock-emails-list">
+                  {MOCK_USER_EMAILS.map((email) => (
+                    <option key={email} value={email} />
+                  ))}
+                </datalist>
               </div>
 
               {/* Rola Field */}
