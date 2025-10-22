@@ -4,11 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BackButton from "@/components/BackButton";
 import { ContractDetailModal } from "@/components/ContractDetailModal";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Contract } from "@shared/schema";
 import { FileText } from "lucide-react";
 import { QUERY_KEYS } from "@/lib/queryKeys";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface CurrentUserResponse {
   user: {
@@ -28,6 +30,11 @@ export default function MyContracts() {
   const [, setLocation] = useLocation();
   const [selectedContract, setSelectedContract] = useState<string | null>(null);
   const { data: currentUser } = useCurrentUser();
+  const { toast } = useToast();
+
+  // Get vkId from URL query parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const vkId = urlParams.get('vkId');
 
   const { data: currentUserResponse } = useQuery<CurrentUserResponse>({
     queryKey: ['/api/current-user'],
@@ -42,6 +49,31 @@ export default function MyContracts() {
   // Determine if user is in company context
   const isCompanyContext = currentUserResponse?.activeContext && currentUserResponse.activeContext !== 'personal';
   const pageTitle = isCompanyContext ? "Firemné zmluvy" : "Moje zmluvy";
+
+  // Mutation to add contract to VK
+  const addContractToVkMutation = useMutation({
+    mutationFn: async (contractId: string) => {
+      const response = await apiRequest("POST", `/api/virtual-offices/${vkId}/documents`, {
+        contractId
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${vkId}`] });
+      toast({
+        title: "Dokument pridaný",
+        description: "Zmluva bola úspešne pridaná do virtuálnej kancelárie.",
+      });
+      setLocation(`/virtual-office/${vkId}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa pridať dokument do VK.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleShowContract = (contractId: string) => {
     setSelectedContract(contractId);
@@ -67,9 +99,11 @@ export default function MyContracts() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
         <Card className="p-8">
-          <BackButton onClick={() => setLocation('/')} />
+          <BackButton onClick={() => vkId ? setLocation(`/virtual-office/${vkId}`) : setLocation('/')} />
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">{pageTitle}</h2>
+            <h2 className="text-2xl font-semibold">
+              {vkId ? "Vyberte zmluvu na nahratie do VK" : pageTitle}
+            </h2>
             <Button
               variant="outline"
               onClick={() => setLocation('/create-document')}
@@ -97,8 +131,7 @@ export default function MyContracts() {
               {contracts.map((contract) => (
                 <Card 
                   key={contract.id} 
-                  className="p-4 cursor-pointer hover-elevate active-elevate-2" 
-                  onClick={() => handleShowContract(contract.id)}
+                  className="p-4" 
                   data-testid={`card-contract-${contract.id}`}
                 >
                   <div className="flex justify-between items-start mb-3">
@@ -122,13 +155,26 @@ export default function MyContracts() {
                     </div>
                     <div className="flex flex-col items-end space-y-2">
                       {getContractStatusBadge(contract)}
-                      <button 
-                        onClick={() => handleShowContract(contract.id)} 
-                        className="text-primary hover:underline text-sm" 
-                        data-testid={`button-show-${contract.id}`}
-                      >
-                        Zobraziť
-                      </button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleShowContract(contract.id)} 
+                          data-testid={`button-show-${contract.id}`}
+                        >
+                          Zobraziť
+                        </Button>
+                        {vkId && (
+                          <Button
+                            size="sm"
+                            onClick={() => addContractToVkMutation.mutate(contract.id)}
+                            disabled={addContractToVkMutation.isPending}
+                            data-testid={`button-add-to-vk-${contract.id}`}
+                          >
+                            Pridať do VK
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>

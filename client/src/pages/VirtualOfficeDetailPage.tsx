@@ -266,7 +266,7 @@ export default function VirtualOfficeDetailPage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setLocation('/my-contracts')}
+              onClick={() => setLocation(`/my-contracts?vkId=${id}`)}
               data-testid="button-upload-document"
             >
               <Upload className="mr-2 h-4 w-4" />

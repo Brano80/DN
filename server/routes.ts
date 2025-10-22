@@ -483,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Document upload endpoint for Virtual Offices
+  // Document upload/add endpoint for Virtual Offices
   app.post("/api/virtual-offices/:id/documents", upload.single("documentFile"), async (req, res) => {
     try {
       if (!req.user) {
@@ -500,26 +500,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not a participant of this virtual office" });
       }
       
-      // Check if file was uploaded
-      if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
+      let contractId: string;
+      let documentTitle: string;
+      
+      // Check if contractId is provided in body (adding existing contract)
+      if (req.body.contractId) {
+        contractId = req.body.contractId;
+        
+        // Get contract details for audit log
+        const contract = await storage.getContract(contractId);
+        if (!contract) {
+          return res.status(404).json({ error: "Contract not found" });
+        }
+        documentTitle = contract.title;
+        
+        console.log(`[VK] Adding existing contract ${contractId} to virtual office ${officeId}`);
       }
-      
-      const { originalname, path: filePath } = req.file;
-      
-      // Create a contract entry for the uploaded file
-      const contract = await storage.createContract({
-        title: originalname,
-        type: "upload",
-        content: `Uploaded file: ${originalname} at ${filePath}`,
-        ownerEmail: (req.user as User).email,
-        status: "pending"
-      });
+      // Check if file was uploaded (new document upload)
+      else if (req.file) {
+        const { originalname, path: filePath } = req.file;
+        
+        // Create a contract entry for the uploaded file
+        const contract = await storage.createContract({
+          title: originalname,
+          type: "upload",
+          content: `Uploaded file: ${originalname} at ${filePath}`,
+          ownerEmail: (req.user as User).email,
+          status: "pending"
+        });
+        
+        contractId = contract.id;
+        documentTitle = originalname;
+        
+        console.log(`[VK] Uploading new file ${originalname} to virtual office ${officeId}`);
+      } else {
+        return res.status(400).json({ error: "No file uploaded or contract ID provided" });
+      }
       
       // Create virtual office document entry
       const document = await storage.createVirtualOfficeDocument({
         virtualOfficeId: officeId,
-        contractId: contract.id,
+        contractId: contractId,
         uploadedById: userId,
         status: "pending"
       });
@@ -537,12 +558,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create audit log entry
       await storage.createAuditLog({
         actionType: "DOCUMENT_UPLOADED",
-        details: `Používateľ ${userName} nahral dokument ${originalname} do virtuálnej kancelárie`,
+        details: `Používateľ ${userName} pridal dokument ${documentTitle} do virtuálnej kancelárie`,
         userId,
         companyId
       });
       
-      console.log(`[VK] Document ${originalname} uploaded to virtual office ${officeId} by user ${userName}`);
+      console.log(`[VK] Document ${documentTitle} added to virtual office ${officeId} by user ${userName}`);
       
       res.status(201).json(document);
     } catch (error) {
