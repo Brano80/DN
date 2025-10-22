@@ -380,6 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = (req.user as User).id;
+      const userName = (req.user as User).name;
       const { status } = req.body;
       
       if (!status || !['ACCEPTED', 'REJECTED'].includes(status)) {
@@ -399,12 +400,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized" });
       }
       
-      // Update participant status
+      // MANDATE VERIFICATION LOGIC (only when ACCEPTING)
+      if (status === 'ACCEPTED') {
+        // Check if this invitation has mandate requirements
+        if (participant.requiredRole && participant.requiredCompanyIco) {
+          console.log(`[VK] Verifying mandate for user ${userName}: role=${participant.requiredRole}, ico=${participant.requiredCompanyIco}`);
+          
+          // Get all active mandates for the user
+          const userMandates = await storage.getUserMandates(userId);
+          
+          // Find matching mandate: same company ICO, same role, and active status
+          const matchingMandate = userMandates.find(
+            (m) => m.company.ico === participant.requiredCompanyIco &&
+                   m.rola === participant.requiredRole &&
+                   m.stav === 'active'
+          );
+          
+          if (!matchingMandate) {
+            // User doesn't have the required mandate
+            console.log(`[VK] User ${userName} missing required mandate: ${participant.requiredRole} for company ${participant.requiredCompanyIco}`);
+            return res.status(403).json({
+              error: "Chýbajúci požadovaný mandát",
+              message: `Pre prijatie tejto pozvánky musíte najprv pripojiť firmu ${participant.requiredCompanyIco} a získať mandát '${participant.requiredRole}'.`,
+              requiredMandateMissing: true,
+              requiredRole: participant.requiredRole,
+              requiredCompanyIco: participant.requiredCompanyIco
+            });
+          }
+          
+          // Matching mandate found - update participant with mandate reference
+          console.log(`[VK] User ${userName} has matching mandate ${matchingMandate.id}`);
+          const updated = await storage.updateVirtualOfficeParticipant(req.params.participantId, {
+            status,
+            respondedAt: new Date(),
+            userCompanyMandateId: matchingMandate.id
+          });
+          
+          console.log(`[VK] Participant ${req.params.participantId} accepted with mandate ${matchingMandate.id}`);
+          return res.json(updated);
+        }
+      }
+      
+      // No mandate requirements or status is REJECTED
       const updated = await storage.updateVirtualOfficeParticipant(req.params.participantId, {
         status,
         respondedAt: new Date()
       });
       
+      console.log(`[VK] Participant ${req.params.participantId} updated to status ${status}`);
       res.json(updated);
     } catch (error) {
       console.error("Update participant error:", error);

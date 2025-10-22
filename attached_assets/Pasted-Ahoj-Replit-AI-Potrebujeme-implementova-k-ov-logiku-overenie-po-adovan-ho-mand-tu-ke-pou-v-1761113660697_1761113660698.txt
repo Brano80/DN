@@ -1,0 +1,43 @@
+Ahoj Replit AI,
+
+Potrebujeme implementovať kľúčovú logiku: overenie požadovaného mandátu, keď používateľ prijíma pozvánku do Virtuálnej Kancelárie (VK).
+
+**Cieľ:** Upraviť backend endpoint `PATCH /api/virtual-offices/:officeId/participants/:participantId` a frontendovú logiku v `PersonalDashboard.tsx`.
+
+**Časť A: Úprava Backend Endpointu (`server/routes.ts`)**
+
+1.  **Nájdi handler:** Otvor `server/routes.ts` a nájdi handler pre `PATCH /api/virtual-offices/:officeId/participants/:participantId`.
+2.  **Identifikuj Akciu "Prijať":** Nájdi blok kódu, ktorý sa vykoná, ak `req.body.status === 'ACCEPTED'`.
+3.  **Pridaj Logiku Overenia Mandátu (pred aktualizáciou statusu):**
+    * Získaj dáta účastníka (`participant = await storage.getVirtualOfficeParticipant(participantId)`).
+    * **Ak účastník *má* definované `requiredRole` a `requiredCompanyIco`:**
+        * Načítaj **všetky aktívne mandáty** prihláseného používateľa (`userMandates = await storage.getUserMandates(userId)`).
+        * Skontroluj, či medzi `userMandates` existuje **aspoň jeden**, ktorý **presne zodpovedá** požiadavkám:
+            * `mandate.company.ico === participant.requiredCompanyIco`
+            * `mandate.rola === participant.requiredRole`
+            * `mandate.stav === 'active'`
+        * **Ak zhoda NEEXISTUJE:**
+            * **NEAKTUALIZUJ status účastníka!**
+            * Vráť chybu `403 Forbidden` s message: "Pre prijatie tejto pozvánky musíte najprv pripojiť firmu [ICO] a získať mandát '[Rola]'." a pridaj flag, napr. `{ requiredMandateMissing: true }`.
+        * **Ak zhoda EXISTUJE:**
+            * Nájdi ID tohto zhodného mandátu (`matchingMandateId`).
+            * **Pokračuj v aktualizácii statusu účastníka na 'ACCEPTED'.**
+            * **Dôležité:** Pri aktualizácii účastníka ulož aj ID nájdeného mandátu: `await storage.updateVirtualOfficeParticipant(participantId, { status: 'ACCEPTED', userCompanyMandateId: matchingMandateId })`.
+    * **Ak účastník *nemá* definované `requiredRole` a `requiredCompanyIco`:**
+        * Pokračuj v aktualizácii statusu na 'ACCEPTED' bez ďalších kontrol (je to len bežná pozvánka bez požiadavky).
+
+**Časť B: Úprava Frontendu (`client/src/components/dashboards/PersonalDashboard.tsx`)**
+
+1.  **Nájdi `acceptVKInvitationMutation`:** Otvor `PersonalDashboard.tsx` a nájdi túto mutáciu.
+2.  **Uprav `onError` handler:**
+    * V `onError` skontroluj, či chyba z backendu obsahuje náš nový flag `requiredMandateMissing: true`.
+    * **Ak áno:**
+        * Zobraz **informatívny "toast"** (alebo `<Alert>`), ktorý povie používateľovi presne to, čo vrátil backend (napr. "Pre prijatie tejto pozvánky musíte najprv pripojiť firmu...").
+        * Zobraz v tom toaste/alerte **tlačidlo "Pripojiť firmu"**, ktoré používateľa presmeruje na `/companies/add` (ideálne s parametrom `?returnTo=/` alebo `?returnTo=/dashboard`, aby sa po pripojení firmy vrátil na dashboard).
+    * **Ak nie (je to iná chyba):** Zobraz štandardnú chybovú hlášku.
+
+**Dôležité inštrukcie pre AI:**
+* Zameraj sa na pridanie logiky overenia mandátu do backendu PRED aktualizáciou statusu.
+* Zabezpeč správne vrátenie chyby 403 s flagom a message z backendu.
+* Uprav frontend tak, aby túto špecifickú chybu zachytil a zobrazil používateľovi jasné inštrukcie s tlačidlom na nápravu.
+* Ukáž mi upravený kód pre backend handler (`routes.ts`), upravenú storage funkciu (`storage.ts` - ak si ju menil) a upravený frontend komponent (`PersonalDashboard.tsx`).

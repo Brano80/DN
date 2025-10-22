@@ -130,9 +130,10 @@ export default function PersonalDashboard() {
   // Accept VK invitation mutation
   const acceptVKInvitationMutation = useMutation({
     mutationFn: async ({ officeId, participantId }: { officeId: string; participantId: string }) => {
-      return await apiRequest('PATCH', `/api/virtual-offices/${officeId}/participants/${participantId}`, {
+      const response = await apiRequest('PATCH', `/api/virtual-offices/${officeId}/participants/${participantId}`, {
         status: 'ACCEPTED'
       });
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
@@ -142,11 +143,31 @@ export default function PersonalDashboard() {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa prijať pozvánku.",
-        variant: "destructive",
-      });
+      // Check if this is a "missing required mandate" error
+      if (error.requiredMandateMissing) {
+        toast({
+          title: "Chýbajúci požadovaný mandát",
+          description: error.message || "Pre prijatie tejto pozvánky musíte najprv pripojiť firmu a získať požadovaný mandát.",
+          variant: "destructive",
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation('/companies/add')}
+              data-testid="button-connect-company"
+            >
+              Pripojiť firmu
+            </Button>
+          ),
+        });
+      } else {
+        // Standard error handling
+        toast({
+          title: "Chyba",
+          description: error.message || "Nepodarilo sa prijať pozvánku.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
