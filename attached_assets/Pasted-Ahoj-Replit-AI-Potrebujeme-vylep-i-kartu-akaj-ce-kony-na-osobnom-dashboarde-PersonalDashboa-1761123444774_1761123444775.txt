@@ -1,0 +1,31 @@
+Ahoj Replit AI,
+
+Potrebujeme vylepšiť kartu "Čakajúce úkony" na osobnom dashboarde (`PersonalDashboard.tsx`), aby zobrazovala aj relevantné informácie o Virtuálnych Kanceláriách (VK).
+
+**Cieľ:** Upraviť `client/src/components/dashboards/PersonalDashboard.tsx`.
+
+**Detaily implementácie:**
+
+1.  **Načítať VK:** Komponent už načíta VK pomocou `useQuery(['/api/virtual-offices'])` pre spracovanie pozvánok. Tieto dáta použijeme znova.
+2.  **Filtrovať Aktívne/Čakajúce VK:** Okrem pozvánok (`pendingVKInvitations`) vytvor **nový filter**, ktorý nájde VK, ktoré vyžadujú akciu od prihláseného používateľa. Zatiaľ pre jednoduchosť zobrazme všetky VK, kde je používateľ účastníkom (`status === 'ACCEPTED'`) a VK samotná *nie je* `COMPLETED` ani `CANCELED`. Nazvime tento filter `activeVKTasks`.
+    ```typescript
+    const activeVKTasks = data?.virtualOffices?.filter(vk => 
+      vk.participants.some(p => p.userId === currentUser?.id && p.status === 'ACCEPTED') &&
+      vk.status !== 'COMPLETED' && vk.status !== 'CANCELED'
+    ) || [];
+    ```
+3.  **Aktualizovať Počítadlo:** Uprav počítadlo čakajúcich úkonov, aby zahŕňalo aj tieto nové úlohy: `pendingMandates.length + pendingVKInvitations.length + activeVKTasks.length`.
+4.  **Zobraziť Úlohy VK:** V `CardContent` karty "Čakajúce úkony":
+    * Pod existujúcim zoznamom pozvánok (alebo zmiešané s nimi) pridaj zobrazenie pre `activeVKTasks`.
+    * Zmapuj pole `activeVKTasks`.
+    * Pre každú VK zobraz:
+        * Ikonu (napr. `Briefcase` z lucide-react).
+        * Názov VK (`vk.name`).
+        * Text popisujúci potrebnú akciu (zatiaľ môžeme dať všeobecný text, napr. "Vyžaduje pozornosť" alebo zobraziť status VK).
+        * Tlačidlo "Otvoriť VK", ktoré presmeruje na detail VK (`/virtual-office/${vk.id}`).
+5.  **Zlepšiť Zobrazenie Prázdneho Stavu:** Uprav správu, ktorá sa zobrazí, keď nie sú žiadne úkony, aby bola presnejšia (napr. "Aktuálne nemáte žiadne čakajúce pozvánky ani úlohy vo virtuálnych kanceláriách.").
+
+**Dôležité inštrukcie pre AI:**
+* Zameraj sa na úpravu obsahu **existujúcej** karty "Čakajúce úkony".
+* Rozšír logiku tak, aby zobrazovala nielen pozvánky, ale aj aktívne úlohy súvisiace s VK.
+* **Poskytni mi kompletný kód upraveného súboru `client/src/components/dashboards/PersonalDashboard.tsx`.**
