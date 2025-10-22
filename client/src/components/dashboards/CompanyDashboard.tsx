@@ -80,17 +80,6 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">E-dokumenty</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Podpísané dokumenty</p>
-          </CardContent>
-        </Card>
-
         <Card 
           className="cursor-pointer transition-all hover-elevate active-elevate-2"
           onClick={() => setLocation('/virtual-office')}
@@ -103,6 +92,17 @@ export default function CompanyDashboard({ companyName, ico }: CompanyDashboardP
           <CardContent>
             <div className="text-2xl font-bold">{virtualOfficesCount}</div>
             <p className="text-xs text-muted-foreground">Aktívne kancelárie</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">E-dokumenty</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">Podpísané dokumenty</p>
           </CardContent>
         </Card>
 
