@@ -281,12 +281,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Enrich with participants and documents
       const participants = await storage.getVirtualOfficeParticipants(office.id);
-      const documents = await storage.getVirtualOfficeDocuments(office.id);
+      const allDocuments = await storage.getVirtualOfficeDocuments(office.id);
+      
+      // Find current user's participant record
+      const userParticipant = participants.find(p => p.userId === userId);
+      if (!userParticipant) {
+        return res.status(403).json({ error: "User is not a participant" });
+      }
+      
+      // Filter documents to only show those where user has a signature entry
+      const userDocuments = await Promise.all(
+        allDocuments.map(async (doc) => {
+          const signatures = await storage.getVirtualOfficeSignatures(doc.id);
+          const userSignature = signatures.find(s => s.participantId === userParticipant.id);
+          
+          if (!userSignature) {
+            return null; // User doesn't have a signature entry for this document
+          }
+          
+          return doc;
+        })
+      );
+      
+      const filteredDocuments = userDocuments.filter(doc => doc !== null);
       
       // Enrich documents with signer names
       const enrichedDocuments = await Promise.all(
-        documents.map(async (doc) => {
-          const signatures = await storage.getVirtualOfficeSignatures(doc.id);
+        filteredDocuments.map(async (doc) => {
+          const signatures = await storage.getVirtualOfficeSignatures(doc!.id);
           const signedSignatures = signatures.filter(s => s.status === 'SIGNED');
           
           const signerNames = await Promise.all(
@@ -687,6 +709,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Create signature entries for all ACCEPTED participants
+      const participants = await storage.getVirtualOfficeParticipants(officeId);
+      const acceptedParticipants = participants.filter(p => p.status === 'ACCEPTED');
+      
+      for (const participant of acceptedParticipants) {
+        await storage.createVirtualOfficeSignature({
+          virtualOfficeDocumentId: document.id,
+          participantId: participant.id,
+          status: 'PENDING'
+        });
+        console.log(`[VK] Created signature entry for participant ${participant.id} on new document ${document.id}`);
+      }
+      
       // Create audit log entry
       await storage.createAuditLog({
         actionType: "DOCUMENT_UPLOADED",
@@ -738,33 +773,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "User must be an accepted participant to sign documents" });
       }
       
-      // Check if signature already exists for this participant+document
+      // Check if signature entry exists for this participant+document
       const existingSignatures = await storage.getVirtualOfficeSignatures(documentId);
       const existingSignature = existingSignatures.find(s => s.participantId === participant.id);
       
-      if (existingSignature && existingSignature.status === 'SIGNED') {
+      if (!existingSignature) {
+        return res.status(403).json({ error: "No signature entry found for this participant on this document" });
+      }
+      
+      if (existingSignature.status === 'SIGNED') {
         return res.status(400).json({ error: "Document already signed by this participant" });
       }
       
-      // Create or update signature
-      let signature;
-      if (existingSignature) {
-        signature = await storage.updateVirtualOfficeSignature(existingSignature.id, {
-          status: 'SIGNED',
-          signedAt: new Date(),
-          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() }),
-          userCompanyMandateId: mandateId || null
-        });
-      } else {
-        signature = await storage.createVirtualOfficeSignature({
-          virtualOfficeDocumentId: documentId,
-          participantId: participant.id,
-          status: 'SIGNED',
-          signedAt: new Date(),
-          signatureData: JSON.stringify({ userId, userName, timestamp: new Date() }),
-          userCompanyMandateId: mandateId || null
-        });
-      }
+      // Update signature to SIGNED
+      const signature = await storage.updateVirtualOfficeSignature(existingSignature.id, {
+        status: 'SIGNED',
+        signedAt: new Date(),
+        signatureData: JSON.stringify({ userId, userName, timestamp: new Date() }),
+        userCompanyMandateId: mandateId || null
+      });
       
       console.log(`[SIGN] Signature created/updated for participant ${participant.id} on document ${documentId}`);
       
