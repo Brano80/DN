@@ -5,11 +5,22 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { QUERY_KEYS } from "@/lib/queryKeys";
-import type { Contract, VirtualOffice } from "@shared/schema";
+import type { Contract, VirtualOffice, VirtualOfficeParticipant } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle } from "lucide-react";
+
+interface VirtualOfficeEnriched extends VirtualOffice {
+  participants: Array<VirtualOfficeParticipant & {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  }>;
+  documents: any[];
+}
 
 interface Mandate {
   mandateId: string;
@@ -46,13 +57,28 @@ export default function PersonalDashboard() {
   });
 
   // Fetch virtual offices for the current user
-  const { data: virtualOffices } = useQuery<VirtualOffice[]>({
-    queryKey: QUERY_KEYS.virtualOffices(currentUser?.email || ''),
-    enabled: !!currentUser?.email,
+  const { data: virtualOffices } = useQuery<VirtualOfficeEnriched[]>({
+    queryKey: ['/api/virtual-offices'],
+    enabled: !!currentUser,
   });
 
   // Filter pending mandate invitations
   const pendingMandates = userData?.mandates?.filter(m => m.status === 'pending_confirmation') || [];
+  
+  // Filter pending VK invitations
+  const pendingVKInvitations = virtualOffices?.filter(vk => 
+    vk.participants.some(p => p.userId === currentUser?.id && p.status === 'INVITED')
+  ).map(vk => {
+    const myParticipation = vk.participants.find(p => p.userId === currentUser?.id);
+    return {
+      officeId: vk.id,
+      officeName: vk.name,
+      participantId: myParticipation?.id,
+      invitedAt: myParticipation?.invitedAt,
+      requiredRole: myParticipation?.requiredRole,
+      requiredCompanyIco: myParticipation?.requiredCompanyIco,
+    };
+  }) || [];
 
   // Calculate counts
   const contractsCount = contracts?.length || 0;
@@ -96,6 +122,52 @@ export default function PersonalDashboard() {
       toast({
         title: "Chyba",
         description: error.message || "Nepodarilo sa odmietnuť mandát.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Accept VK invitation mutation
+  const acceptVKInvitationMutation = useMutation({
+    mutationFn: async ({ officeId, participantId }: { officeId: string; participantId: string }) => {
+      return await apiRequest('PATCH', `/api/virtual-offices/${officeId}/participants/${participantId}`, {
+        status: 'ACCEPTED'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
+      toast({
+        title: "Pozvánka prijatá",
+        description: "Úspešne ste sa pripojili do virtuálnej kancelárie.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa prijať pozvánku.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Reject VK invitation mutation
+  const rejectVKInvitationMutation = useMutation({
+    mutationFn: async ({ officeId, participantId }: { officeId: string; participantId: string }) => {
+      return await apiRequest('PATCH', `/api/virtual-offices/${officeId}/participants/${participantId}`, {
+        status: 'REJECTED'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
+      toast({
+        title: "Pozvánka odmietnutá",
+        description: "Pozvánka do virtuálnej kancelárie bola odmietnutá.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodarilo sa odmietnuť pozvánku.",
         variant: "destructive",
       });
     }
@@ -171,7 +243,7 @@ export default function PersonalDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingMandates.length}</div>
+            <div className="text-2xl font-bold">{pendingMandates.length + pendingVKInvitations.length}</div>
             <p className="text-xs text-muted-foreground">Pozvánky na spoluprácu</p>
           </CardContent>
         </Card>
@@ -227,15 +299,16 @@ export default function PersonalDashboard() {
         </CardContent>
       </Card>
 
-      {/* Pending Mandate Invitations - Detail View */}
-      {pendingMandates.length > 0 && (
+      {/* Pending Invitations - Detail View */}
+      {(pendingMandates.length > 0 || pendingVKInvitations.length > 0) && (
         <Card id="pending-mandates-section">
           <CardHeader>
             <CardTitle>Pozvánky na spoluprácu</CardTitle>
-            <CardDescription>Skontrolujte a potvrďte pozvánky od spoločností</CardDescription>
+            <CardDescription>Skontrolujte a potvrďte pozvánky od spoločností a do virtuálnych kancelárií</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {/* Mandate invitations */}
               {pendingMandates.map((mandate) => (
                 <div
                   key={mandate.mandateId}
@@ -278,6 +351,70 @@ export default function PersonalDashboard() {
                       onClick={() => rejectMandateMutation.mutate(mandate.mandateId)}
                       disabled={acceptMandateMutation.isPending || rejectMandateMutation.isPending}
                       data-testid={`button-reject-${mandate.mandateId}`}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Odmietnuť
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              {/* VK invitations */}
+              {pendingVKInvitations.map((invitation) => (
+                <div
+                  key={invitation.participantId}
+                  className="flex flex-col gap-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20"
+                  data-testid={`vk-invitation-${invitation.participantId}`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-medium text-lg" data-testid="text-office-name">
+                        {invitation.officeName}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Pozvánka do virtuálnej kancelárie
+                      </p>
+                      {invitation.requiredRole && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Požadovaná rola: <span className="font-medium">{invitation.requiredRole}</span>
+                        </p>
+                      )}
+                      {invitation.requiredCompanyIco && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Požadované IČO firmy: {invitation.requiredCompanyIco}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Alert className="bg-background">
+                    <AlertDescription>
+                      Boli ste pozvaní do virtuálnej kancelárie. Prijatím pozvánky získate prístup k dokumentom a budete môcť participovať na digitálnom podpisovaní.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="default"
+                      onClick={() => acceptVKInvitationMutation.mutate({
+                        officeId: invitation.officeId,
+                        participantId: invitation.participantId!
+                      })}
+                      disabled={acceptVKInvitationMutation.isPending || rejectVKInvitationMutation.isPending}
+                      data-testid={`button-accept-vk-${invitation.participantId}`}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Prijať
+                    </Button>
+                    <Button
+                      size="default"
+                      variant="outline"
+                      onClick={() => rejectVKInvitationMutation.mutate({
+                        officeId: invitation.officeId,
+                        participantId: invitation.participantId!
+                      })}
+                      disabled={acceptVKInvitationMutation.isPending || rejectVKInvitationMutation.isPending}
+                      data-testid={`button-reject-vk-${invitation.participantId}`}
                     >
                       <XCircle className="mr-2 h-4 w-4" />
                       Odmietnuť

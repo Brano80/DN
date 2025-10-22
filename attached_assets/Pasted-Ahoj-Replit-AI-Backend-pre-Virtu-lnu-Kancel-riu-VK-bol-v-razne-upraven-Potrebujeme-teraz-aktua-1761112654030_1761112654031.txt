@@ -1,0 +1,52 @@
+Ahoj Replit AI,
+
+Backend pre Virtuálnu Kanceláriu (VK) bol výrazne upravený. Potrebujeme teraz aktualizovať frontend, aby tieto zmeny reflektoval.
+
+**Cieľ:** Upraviť existujúcu stránku `VirtualOfficeListPage.tsx` a vytvoriť novú detailnú stránku `VirtualOfficeDetailPage.tsx`.
+
+**Časť A: Úprava Zoznamu VK (`client/src/pages/VirtualOfficeListPage.tsx`)**
+
+1.  **Upraviť `POST /api/virtual-offices` volanie:** Mutácia na vytvorenie VK už nemusí posielať `ownerEmail` ani `invitedEmail`. Má posielať len `name`. Backend si `userId` a `companyId` zistí zo session.
+2.  **Upraviť `GET /api/virtual-offices` volanie:** Tento dotaz už nepotrebuje `ownerEmail` ako parameter. Backend vráti VK na základe prihláseného používateľa.
+3.  **Upraviť Zobrazenie Zoznamu:**
+    * V tabuľke (alebo zozname kariet) zobrazuj dáta z nového API (názov, status, dátum vytvorenia).
+    * **Urob položky klikateľné:** Každý riadok/karta v zozname by mal byť odkazom, ktorý vedie na detail VK. Použi `setLocation(`/virtual-office/${vk.id}`)`.
+
+**Časť B: Vytvorenie Detailnej Stránky VK (`client/src/pages/VirtualOfficeDetailPage.tsx`)**
+
+1.  **Vytvoriť súbor:** Vytvor nový súbor `client/src/pages/VirtualOfficeDetailPage.tsx`.
+2.  **Upraviť Router (`App.tsx`):** Zmeň existujúcu routu `/virtual-office/:id`, aby teraz smerovala na tento nový komponent `VirtualOfficeDetailPage`. (Stránka `VirtualOffice.tsx`, ktorú sme mali predtým, už nebude potrebná alebo sa premenuje na `VirtualOfficeListPage`).
+3.  **Obsah `VirtualOfficeDetailPage.tsx`:**
+    * Získaj `:id` (VK ID) z `useParams`.
+    * Zavolaj **nový dotaz** na načítanie detailu VK: `useQuery({ queryKey: ['/api/virtual-offices', id], ... })`.
+    * Zobraz `isLoading`, `isError` stavy.
+    * **Ak sa dáta úspešne načítajú (`data: virtualOffice`):**
+        * Zobraz nadpis: `<h1>{virtualOffice.name}</h1>`.
+        * Zobraz tlačidlo "Späť" na `/virtual-office`.
+        * **Sekcia "Účastníci":**
+            * Zobraz tabuľku účastníkov (`virtualOffice.participants`).
+            * Stĺpce: Meno (`participant.user.name`), Firma (`participant.userCompanyMandate?.company.nazov` alebo `requiredCompanyIco`), Rola (`participant.userCompanyMandate?.rola` alebo `requiredRole`), Status (`participant.status`).
+            * Pridaj tlačidlo "Pozvať účastníka". Po kliknutí zobraz `<Dialog>` s poliami: Email, Požadovaná rola, Požadované IČO firmy. Po odoslaní zavolaj `POST /api/virtual-offices/:id/participants`.
+        * **Sekcia "Dokumenty":**
+            * Zobraz tabuľku dokumentov (`virtualOffice.documents`).
+            * Stĺpce: Názov súboru (`doc.fileName`), Status (`doc.status`).
+            * Pridaj tlačidlo "Nahrať dokument" (zatiaľ nemusí nič robiť).
+        * **Sekcia "Požadované Podpisy":** (Môžeme pridať neskôr, zatiaľ stačia účastníci a dokumenty).
+
+**Časť C: Spracovanie Pozvánok (Úprava `PersonalDashboard.tsx`)**
+
+1.  **Pridať nový dotaz:** V `PersonalDashboard.tsx` pridaj dotaz na `GET /api/virtual-offices`, aby sme zistili, či má používateľ nejaké pozvánky do VK.
+2.  **Zobraziť Pozvánky:** V karte "Čakajúce úkony" (kde už zobrazujeme pozvánky na mandáty):
+    * Zmapuj aj pozvánky do VK (`virtualOffice.participants`, kde `userId` je aktuálny používateľ a `status === 'INVITED'`).
+    * Pre každú pozvánku do VK zobraz: "Pozvánka do VK: {vk.name}" a dve tlačidlá: "Prijať" a "Odmietnuť".
+    * **Mutácie (Prijať/Odmietnuť):** Vytvor dve nové `useMutation`, ktoré budú volať `PATCH /api/virtual-offices/:officeId/participants/:participantId` s príslušným statusom (`ACCEPTED` alebo `REJECTED`). Po úspechu invaliduj cache pre `/api/virtual-offices`.
+
+**Dôležité inštrukcie pre AI:**
+* Uisti sa, že starý súbor `VirtualOffice.tsx` je buď premenovaný na `VirtualOfficeListPage.tsx` alebo jeho obsah je presunutý a súbor zmazaný, aby nevznikol konflikt.
+* Použi komponenty z `shadcn/ui`.
+* **Poskytni mi kompletný kód pre všetky upravené/nové súbory:**
+    1.  `client/src/pages/VirtualOfficeListPage.tsx`
+    2.  `client/src/pages/VirtualOfficeDetailPage.tsx`
+    3.  `client/src/App.tsx` (s upravenou routou)
+    4.  `client/src/components/AppSidebar.tsx` (s pridanou položkou menu, ak tam ešte nie je)
+    5.  `client/src/components/dashboards/PersonalDashboard.tsx` (s logikou pre prijatie/odmietnutie VK pozvánok).

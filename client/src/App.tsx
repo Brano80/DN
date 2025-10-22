@@ -26,7 +26,8 @@ import CreateUploadDocument from "@/pages/CreateUploadDocument";
 import CreatePowerOfAttorney from "@/pages/CreatePowerOfAttorney";
 import CreateEmploymentContract from "@/pages/CreateEmploymentContract";
 import VerifyDocument from "@/pages/VerifyDocument";
-import VirtualOffice from "@/pages/VirtualOffice";
+import VirtualOfficeListPage from "@/pages/VirtualOfficeListPage";
+import VirtualOfficeDetailPage from "@/pages/VirtualOfficeDetailPage";
 import DigitalSigning from "@/pages/DigitalSigning";
 import NotFound from "@/pages/not-found";
 
@@ -124,19 +125,14 @@ function Router() {
           <VerifyDocument />
         </PrivateRoute>
       </Route>
-      <Route path="/virtual-office/list">
-        <PrivateRoute>
-          <VirtualOffice />
-        </PrivateRoute>
-      </Route>
       <Route path="/virtual-office/:id">
         <PrivateRoute>
-          <VirtualOffice />
+          <VirtualOfficeDetailPage />
         </PrivateRoute>
       </Route>
       <Route path="/virtual-office">
         <PrivateRoute>
-          <VirtualOffice />
+          <VirtualOfficeListPage />
         </PrivateRoute>
       </Route>
       <Route path="/digital-signing/:type">
