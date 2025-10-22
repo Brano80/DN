@@ -51,6 +51,7 @@ export interface IStorage {
   // Virtual Office Documents
   createVirtualOfficeDocument(document: InsertVirtualOfficeDocument): Promise<VirtualOfficeDocument>;
   getVirtualOfficeDocuments(virtualOfficeId: string): Promise<Array<VirtualOfficeDocument & { contract: Contract }>>;
+  getVirtualOfficeDocumentsByContractId(contractId: string): Promise<VirtualOfficeDocument[]>;
   
   // Virtual Office Signatures
   createVirtualOfficeSignature(signature: InsertVirtualOfficeSignature): Promise<VirtualOfficeSignature>;
@@ -487,6 +488,12 @@ export class MemStorage implements IStorage {
       if (!contract) throw new Error(`Contract ${document.contractId} not found`);
       return { ...document, contract };
     });
+  }
+
+  async getVirtualOfficeDocumentsByContractId(contractId: string): Promise<VirtualOfficeDocument[]> {
+    return Array.from(this.virtualOfficeDocuments.values()).filter(
+      (d) => d.contractId === contractId
+    );
   }
 
   // Virtual Office Signatures
