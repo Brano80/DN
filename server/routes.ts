@@ -378,11 +378,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 return office;
               }
               
-              // Company context match - compare ICO values
-              // invitationContext can be an ICO (e.g., "CL76543210")
-              // activeContext is a mandate ID, so we need to compare with activeCompanyIco
-              if (activeContext !== 'personal' && activeCompanyIco && participantContext === activeCompanyIco) {
-                return office;
+              // Company context match - support two formats:
+              // 1. Direct mandate ID match (for creators and legacy)
+              // 2. ICO match (for invited participants)
+              if (activeContext !== 'personal') {
+                // Direct mandate ID match
+                if (participantContext === activeContext) {
+                  return office;
+                }
+                // ICO match - invitationContext can be an ICO (e.g., "CL76543210")
+                if (activeCompanyIco && participantContext === activeCompanyIco) {
+                  return office;
+                }
               }
             } else {
               // Backward compatibility: null invitationContext
