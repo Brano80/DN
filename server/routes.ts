@@ -202,10 +202,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "name is required" });
       }
       
-      if (!ownerCompanyId) {
-        return res.status(400).json({ error: "ownerCompanyId is required" });
-      }
-      
       // Get active context for invitation context
       const activeContext = req.session.activeContext || 'personal';
       

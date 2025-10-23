@@ -60,18 +60,18 @@ export default function VirtualOfficeListPage() {
 
   // Fetch virtual offices for the current user
   const { data: offices = [], isLoading } = useQuery<VirtualOfficeEnriched[]>({
-    queryKey: ['/api/virtual-offices'],
+    queryKey: ['/api/virtual-offices', userData?.activeContext],
     enabled: !!currentUser,
   });
 
   // Create virtual office mutation
   const createOfficeMutation = useMutation({
-    mutationFn: async (data: { name: string; ownerCompanyId: string }) => {
+    mutationFn: async (data: { name: string; ownerCompanyId: string | null }) => {
       const response = await apiRequest("POST", "/api/virtual-offices", data);
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
       setShowCreateDialog(false);
       setOfficeName('');
       toast({
@@ -101,16 +101,8 @@ export default function VirtualOfficeListPage() {
     }
 
     // Get ownerCompanyId from active context
-    const ownerCompanyId = userData?.activeContext === 'personal' ? '' : userData?.activeContext || '';
-    
-    if (!ownerCompanyId) {
-      toast({
-        title: "Chyba",
-        description: "Nie ste prihlásený pod firmou. Prepnite sa na firemný profil.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // For personal context, send null; for company context, send the mandate ID
+    const ownerCompanyId = userData?.activeContext === 'personal' ? null : userData?.activeContext || null;
 
     createOfficeMutation.mutate({
       name: officeName,
