@@ -57,7 +57,7 @@ export const virtualOffices = pgTable("virtual_offices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   createdById: varchar("created_by_id").notNull().references(() => users.id),
-  ownerCompanyId: varchar("owner_company_id").notNull().references(() => companies.id),
+  ownerCompanyId: varchar("owner_company_id").references(() => companies.id),
   status: text("status").notNull().default("active"),
   processType: text("process_type"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
