@@ -11,7 +11,6 @@ import { Plus, Loader2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import type { VirtualOffice } from "@shared/schema";
 
 interface VirtualOfficeEnriched extends VirtualOffice {
@@ -49,7 +48,6 @@ const getStatusDisplay = (status: string): { text: string; className: string } =
 export default function VirtualOfficeListPage() {
   const [, setLocation] = useLocation();
   const { data: currentUser } = useCurrentUser();
-  const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [officeName, setOfficeName] = useState('');
 
@@ -74,29 +72,13 @@ export default function VirtualOfficeListPage() {
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
       setShowCreateDialog(false);
       setOfficeName('');
-      toast({
-        title: "Virtuálna kancelária vytvorená",
-        description: `Kancelária "${data.name}" bola úspešne vytvorená.`,
-      });
       // Navigate to detail
       setLocation(`/virtual-office/${data.id}`);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa vytvoriť virtuálnu kanceláriu.",
-        variant: "destructive",
-      });
     },
   });
 
   const handleCreateOffice = () => {
     if (!officeName.trim()) {
-      toast({
-        title: "Chyba",
-        description: "Zadajte názov kancelárie.",
-        variant: "destructive",
-      });
       return;
     }
 

@@ -13,7 +13,6 @@ import { ArrowLeft, Plus, Loader2, UserPlus, Upload, CheckCircle2, XCircle, Cloc
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import type { VirtualOffice, VirtualOfficeParticipant, VirtualOfficeDocument } from "@shared/schema";
 import { MOCK_INVITATION_OPTIONS } from "@/lib/constants";
 import { DigitalSigningDialog } from "@/components/DigitalSigningDialog";
@@ -90,7 +89,6 @@ export default function VirtualOfficeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { data: currentUser } = useCurrentUser();
-  const { toast } = useToast();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [selectedInvitationOption, setSelectedInvitationOption] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
@@ -128,17 +126,6 @@ export default function VirtualOfficeDetailPage() {
       setInvitationContext('');
       setRequiredRole('');
       setRequiredCompanyIco('');
-      toast({
-        title: "Účastník pozvaný",
-        description: "Pozvánka bola úspešne odoslaná.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa pozvať účastníka.",
-        variant: "destructive",
-      });
     },
   });
 
@@ -151,19 +138,6 @@ export default function VirtualOfficeDetailPage() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${id}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
-      if (variables.status === 'ACCEPTED') {
-        toast({
-          title: "Pozvánka prijatá",
-          description: "Úspešne ste prijali pozvánku do virtuálnej kancelárie.",
-        });
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa spracovať pozvánku.",
-        variant: "destructive",
-      });
     },
   });
 
@@ -187,20 +161,10 @@ export default function VirtualOfficeDetailPage() {
 
   const handleInviteParticipant = () => {
     if (!inviteEmail.trim()) {
-      toast({
-        title: "Chyba",
-        description: "Vyberte účastníka.",
-        variant: "destructive",
-      });
       return;
     }
 
     if (!invitationContext) {
-      toast({
-        title: "Chyba",
-        description: "Kontext pozvánky nie je nastavený.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -229,11 +193,7 @@ export default function VirtualOfficeDetailPage() {
       setAttestationData(data);
       setShowAttestationDialog(true);
     } catch (error: any) {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa načítať doložku o overení mandátov.",
-        variant: "destructive",
-      });
+      // Silent error
     } finally {
       setIsLoadingAttestation(false);
     }
@@ -588,10 +548,6 @@ export default function VirtualOfficeDetailPage() {
         contractName={selectedDocument?.contract.title || ''}
         documentId={selectedDocument?.id}
         onComplete={() => {
-          toast({
-            title: "Dokument podpísaný",
-            description: "Dokument bol úspešne digitálne podpísaný",
-          });
           setShowSignDialog(false);
           setSelectedDocument(null);
           // Refresh data

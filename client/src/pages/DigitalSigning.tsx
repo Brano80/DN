@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BackButton from "@/components/BackButton";
 import { Check, Clock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 type ProcessType = 'house' | 'vehicle' | 'attorney';
 
@@ -16,7 +15,6 @@ export default function DigitalSigning() {
   const [, setLocation] = useLocation();
   const params = useParams();
   const processType = (params.type || 'house') as ProcessType;
-  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
 
   const getProcessSteps = (): StepDefinition[] => {
@@ -101,19 +99,6 @@ export default function DigitalSigning() {
     if (currentStep < steps.length) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
-      
-      // Show toast for each step
-      if (nextStep < steps.length) {
-        toast({
-          title: steps[nextStep - 1].label,
-          description: `Krok ${nextStep} z ${steps.length} dokončený`,
-        });
-      } else {
-        toast({
-          title: "Proces dokončený!",
-          description: "Všetky kroky boli úspešne dokončené.",
-        });
-      }
     }
   };
 

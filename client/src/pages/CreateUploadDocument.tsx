@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BackButton from "@/components/BackButton";
-import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { QUERY_KEYS } from "@/lib/queryKeys";
@@ -14,7 +13,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function CreateUploadDocument() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const { data: currentUser } = useCurrentUser();
 
   const [title, setTitle] = useState('');
@@ -54,28 +52,12 @@ export default function CreateUploadDocument() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
-      toast({
-        title: "Dokument nahratý",
-        description: "Dokument bol úspešne uložený do 'Moje zmluvy'",
-      });
       setLocation('/my-contracts');
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Chyba",
-        description: "Nepodarilo sa nahrať dokument",
-      });
     },
   });
 
   const handleSave = () => {
     if (!fileName || !fileContent) {
-      toast({
-        variant: "destructive",
-        title: "Chýbajúci dokument",
-        description: "Najprv nahrajte dokument",
-      });
       return;
     }
     createContractMutation.mutate();

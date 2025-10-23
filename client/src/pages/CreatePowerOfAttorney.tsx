@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import BackButton from "@/components/BackButton";
-import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { QUERY_KEYS } from "@/lib/queryKeys";
@@ -15,7 +14,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function CreatePowerOfAttorney() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const { data: currentUser } = useCurrentUser();
 
   // Principal (splnomocniteľ) information
@@ -66,28 +64,12 @@ export default function CreatePowerOfAttorney() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contracts(currentUser?.email || '') });
-      toast({
-        title: "Splnomocnenie vytvorené",
-        description: "Splnomocnenie bolo úspešne uložené do 'Moje zmluvy'",
-      });
       setLocation('/my-contracts');
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Chyba",
-        description: "Nepodarilo sa uložiť splnomocnenie",
-      });
     },
   });
 
   const handleSave = () => {
     if (!principalName || !attorneyName || !authorizedActions) {
-      toast({
-        variant: "destructive",
-        title: "Chýbajúce údaje",
-        description: "Vyplňte všetky povinné polia",
-      });
       return;
     }
     createContractMutation.mutate();

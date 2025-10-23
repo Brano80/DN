@@ -163,39 +163,8 @@ export default function PersonalDashboard() {
     onSuccess: ({ officeId }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
-      toast({
-        title: "Pozvánka prijatá",
-        description: "Úspešne ste sa pripojili do virtuálnej kancelárie.",
-      });
       setLocation(`/virtual-office/${officeId}`);
     },
-    onError: (error: any) => {
-      // Check if this is a "missing required mandate" error
-      if (error.requiredMandateMissing) {
-        toast({
-          title: "Chýbajúci požadovaný mandát",
-          description: error.message || "Pre prijatie tejto pozvánky musíte najprv pripojiť firmu a získať požadovaný mandát.",
-          variant: "destructive",
-          action: (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation('/companies/add')}
-              data-testid="button-connect-company"
-            >
-              Pripojiť firmu
-            </Button>
-          ),
-        });
-      } else {
-        // Standard error handling
-        toast({
-          title: "Chyba",
-          description: error.message || "Nepodarilo sa prijať pozvánku.",
-          variant: "destructive",
-        });
-      }
-    }
   });
 
   // Reject VK invitation mutation
@@ -208,18 +177,7 @@ export default function PersonalDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
-      toast({
-        title: "Pozvánka odmietnutá",
-        description: "Pozvánka do virtuálnej kancelárie bola odmietnutá.",
-      });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa odmietnuť pozvánku.",
-        variant: "destructive",
-      });
-    }
   });
 
   return (

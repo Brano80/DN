@@ -10,7 +10,6 @@ import { FileText } from "lucide-react";
 import { QUERY_KEYS } from "@/lib/queryKeys";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
 interface CurrentUserResponse {
   user: {
@@ -30,7 +29,6 @@ export default function MyContracts() {
   const [, setLocation] = useLocation();
   const [selectedContract, setSelectedContract] = useState<string | null>(null);
   const { data: currentUser } = useCurrentUser();
-  const { toast } = useToast();
 
   // Get vkId from URL query parameter
   const urlParams = new URLSearchParams(window.location.search);
@@ -60,18 +58,7 @@ export default function MyContracts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/virtual-offices/${vkId}`] });
-      toast({
-        title: "Dokument pridaný",
-        description: "Zmluva bola úspešne pridaná do virtuálnej kancelárie.",
-      });
       setLocation(`/virtual-office/${vkId}`);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa pridať dokument do VK.",
-        variant: "destructive",
-      });
     },
   });
 

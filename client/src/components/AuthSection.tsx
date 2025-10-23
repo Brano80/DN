@@ -2,10 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, User, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function AuthSection() {
-  const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
 
   const handleOidcLogin = () => {
@@ -40,22 +38,12 @@ export default function AuthSection() {
         throw new Error("Reset failed");
       }
 
-      toast({
-        title: "Dáta vymazané",
-        description: "Všetky dáta boli vymazané a obnovené na základný stav.",
-      });
-
       // Refresh page to reflect changes
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 500);
     } catch (error) {
       console.error("Error resetting data:", error);
-      toast({
-        title: "Chyba",
-        description: "Nepodarilo sa vymazať dáta.",
-        variant: "destructive",
-      });
     } finally {
       setIsResetting(false);
     }

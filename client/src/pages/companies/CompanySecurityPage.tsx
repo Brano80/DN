@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, ArrowLeft, Shield } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface CurrentUserResponse {
@@ -32,7 +31,6 @@ interface Company {
 
 export default function CompanySecurityPage() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
 
   // Get current user and active context
   const { data: userData } = useQuery<CurrentUserResponse>({
@@ -66,21 +64,10 @@ export default function CompanySecurityPage() {
       });
     },
     onSuccess: () => {
-      toast({
-        title: "Nastavenia uložené",
-        description: "Bezpečnostné nastavenia boli úspešne aktualizované.",
-      });
       // Refetch company profile to update UI
       refetch();
       // Also invalidate the profile query
       queryClient.invalidateQueries({ queryKey: ['/api/companies', activeIco, 'profile'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Chyba",
-        description: error.message || "Nepodarilo sa aktualizovať nastavenia.",
-        variant: "destructive",
-      });
     },
   });
 
