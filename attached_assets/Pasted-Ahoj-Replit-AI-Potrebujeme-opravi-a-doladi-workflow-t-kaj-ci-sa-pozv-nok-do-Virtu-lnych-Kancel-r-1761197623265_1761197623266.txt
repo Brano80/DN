@@ -1,0 +1,62 @@
+Ahoj Replit AI,
+
+Potrebujeme opraviť a doladiť workflow týkajúci sa pozvánok do Virtuálnych Kancelárií (VK) a ich zobrazenia v sekcii "Čakajúce úkony" na osobnom dashboarde. Súčasný stav má niekoľko chýb: pozvánky sa nezobrazujú správne pre príjemcu a počítadlo úkonov sa neaktualizuje.
+
+**Cieľ:** Zabezpečiť, aby celý proces od pozvania do VK až po prijatie pozvánky fungoval presne podľa nasledujúcej logiky, pričom **rozlišujeme medzi akciami vykonanými v Osobnom a Firemnom profile**.
+
+**Referenční Používatelia:** Máme 3 mock používateľov: Ján Nováček (eGarant), Petra Ambroz (ARIAN), Andres Elgueta (Tekmain). Každý má osobný profil a prístup k firemnému profilu.
+
+**Požadovaný Workflow (Krok po Kroku):**
+
+1.  **Vytvorenie Dokumentu (Osobný Profil - Kontrola):**
+    * Používateľ A (napr. Ján) vo svojom **osobnom profile** vytvorí dokument v "Vytvoriť dokument".
+    * Dokument sa uloží do "Moje zmluvy".
+    * Počítadlo na karte "Moje zmluvy" sa **správne aktualizuje**. (Over len vizuálne).
+
+2.  **Vytvorenie VK (Osobný Profil):**
+    * Používateľ A (napr. Ján), stále v **osobnom profile**, prejde do "Virtuálne Kancelárie".
+    * Vytvorí novú VK (napr. "Osobný Projekt").
+    * **!!! Backend Check:** **Over**, či `POST /api/virtual-offices` správne zaznamená, že VK bola vytvorená z **osobného kontextu** (napr. `ownerCompanyId` môže byť `null` alebo špeciálna hodnota, alebo sa spoliehame na `invitationContext` prvého účastníka). Tvorca sa pridá ako účastník so statusom `ACCEPTED`.
+
+3.  **Pozvanie Účastníka do VK (z OSOBNÉHO Profilu - OPRAVA a ZJEDNODUŠENIE):**
+    * Používateľ A prejde do detailu VK "Osobný Projekt".
+    * Klikne na "Pozvať účastníka".
+    * **!!! Frontend UI Zmena:** V dialógovom okne na pozvanie zobraz **iba pole pre Email**. Polia pre "Požadovaná rola" a "Požadované IČO" **NESMÚ byť viditeľné ani použité**, keďže pozývam z osobného profilu.
+    * Používateľ A vyberie alebo zadá email Používateľa B (napr. `petra.ambroz@example.sk`).
+    * Odošle pozvánku (`POST /api/virtual-offices/:id/participants`). Požiadavka **nebude obsahovať** `requiredRole` ani `requiredCompanyIco`. Backend musí správne nastaviť `invitationContext` na 'personal'.
+    * **!!! Backend Check:** **Over**, či backend endpoint **spoľahlivo** vytvorí záznam `VirtualOfficeParticipant` pre Petru s `status: 'INVITED'` a **bez** `requiredRole` a `requiredCompanyIco`.
+    * **!!! Frontend UI (Dashboard Používateľa B):** **Zabezpeč**, aby sa **okamžite** (alebo po obnovení) na **osobnom dashboarde Používateľa B (Petra)** stalo nasledovné:
+        * Počítadlo na karte "Čakajúce úkony" sa zvýši o 1.
+        * **Skontroluj a oprav:** Backend (`GET /api/virtual-offices`) a Frontend (`PersonalDashboard.tsx`) musia správne načítať a filtrovať tieto **jednoduché** pozvánky (`status: 'INVITED'`, bez požiadavky na mandát). Počítadlo ich musí započítať.
+
+4.  **Zobrazenie Pozvánky (z OSOBNÉHO Profilu - OPRAVA):**
+    * Používateľ B (Petra) klikne na kartu "Čakajúce úkony" na svojom osobnom dashboarde.
+    * **!!! Frontend UI:** **Zabezpeč**, aby sa v zozname úkonov **jasne zobrazila** pozvánka do VK "Osobný Projekt". Zobrazenie by malo obsahovať:
+        * Názov VK ("Osobný Projekt").
+        * Informáciu, kto ju pozval (napr. "Pozval vás Ján Nováček").
+        * **Nezobrazovať** požiadavku na rolu/IČO (keďže žiadna nebola).
+        * Tlačidlá "Prijať" a "Odmietnuť".
+        * **Skontroluj a oprav:** Logiku renderovania `pendingVKInvitations.map(...)` v `PersonalDashboard.tsx`.
+
+5.  **Prijatie Pozvánky (z OSOBNÉHO Profilu - OPRAVA a ZJEDNODUŠENIE):**
+    * Používateľ B (Petra) klikne na tlačidlo "Prijať".
+    * Spustí sa `acceptVKInvitationMutation` (`PATCH /api/virtual-offices/:officeId/participants/:participantId`).
+    * **!!! Backend Check:** Keďže pozvánka **nemala** `requiredRole` a `requiredCompanyIco`, backend **NESMIE** vykonávať logiku overenia mandátu. Musí jednoducho zmeniť `status` účastníka na `ACCEPTED`.
+    * **Frontend `onSuccess`:** V `onSuccess` handleri `acceptVKInvitationMutation`:
+        * **!!! Aktualizácia UI:** **Zabezpeč** správnu invalidáciu cache (`queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] })`), aby pozvánka zmizla a počítadlo sa znížilo.
+        * **!!! Presmerovanie:** **Zabezpeč**, že po úspešnom prijatí a zobrazení toastu sa používateľ presmeruje do detailu danej VK: `setLocation(`/virtual-office/${officeId}`);`.
+
+**(Poznámka: Workflow pre pozvanie z Firemného profilu s požiadavkou na mandát, ktorý sme riešili predtým, by mal zostať nezmenený a funkčný.)**
+
+**Výsledný stav po opravách:**
+Musia fungovať oba scenáre:
+* Jednoduché pozvanie z Osobného profilu (bez mandátu).
+* Pokročilé pozvanie z Firemného profilu (s vynútením mandátu).
+Používateľ B musí vždy vidieť pozvánku na svojom osobnom dashboarde a po prijatí musí byť presmerovaný do VK.
+
+**Dôležité inštrukcie pre AI:**
+* Implementuj podmienenú logiku vo formulári na pozvanie (`VirtualOfficeDetailPage.tsx`), aby sa polia pre rolu/IČO zobrazili **len ak** je používateľ vo firemnom kontexte.
+* Uprav backend (`POST /api/virtual-offices/:id/participants`), aby správne spracoval pozvánky bez mandátových požiadaviek.
+* Uprav backend (`PATCH .../participants/:participantId`), aby preskočil overenie mandátu, ak nebolo požadované.
+* Zabezpeč správne zobrazenie a funkčnosť v `PersonalDashboard.tsx` pre oba typy pozvánok.
+* **Poskytni mi kompletný kód pre všetky upravené súbory.**
