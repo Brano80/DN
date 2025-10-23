@@ -413,9 +413,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const participants = await storage.getVirtualOfficeParticipants(office!.id);
           const documents = await storage.getVirtualOfficeDocuments(office!.id);
           
+          // Enrich participants with user data
+          const enrichedParticipants = await Promise.all(
+            participants.map(async (participant) => {
+              const user = await storage.getUser(participant.userId);
+              return {
+                ...participant,
+                user: user ? {
+                  id: user.id,
+                  name: user.name,
+                  email: user.email
+                } : null
+              };
+            })
+          );
+          
           return {
             ...office,
-            participants,
+            participants: enrichedParticipants.filter(p => p.user !== null),
             documents
           };
         })
