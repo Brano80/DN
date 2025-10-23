@@ -1,0 +1,35 @@
+Máme problém so zobrazovaním pozvánok do Virtuálnych Kancelárií (VK) na osobnom dashboarde a potrebujeme upraviť logiku načítavania dát. Taktiež potrebujeme zabezpečiť správne fungovanie počítadla čakajúcich úkonov.
+
+**Cieľ:** Opraviť logiku v backende (`routes.ts`) a overiť frontend (`PersonalDashboard.tsx`), aby sa pozvánky do VK spoľahlivo zobrazovali.
+
+**Časť A: Úprava Backend Endpointu `GET /api/virtual-offices` (`server/routes.ts`)**
+
+1.  **Nájdi handler:** Otvor `server/routes.ts` a nájdi handler pre `GET /api/virtual-offices`.
+2.  **Zjednoduš Filtrovanie:** Nájdi časť kódu [cite: 124-129], ktorá filtruje VK na základe `invitationContext` a `activeContext`. **Odstráň toto zložité filtrovanie.** Endpoint by mal jednoducho:
+    * Získať `userId` prihláseného používateľa.
+    * Zavolať `storage.getVirtualOfficesByUser(userId)` [cite: 401-403], aby získal **všetky** VK, kde je používateľ *akýmkoľvek* účastníkom (či už `INVITED` alebo `ACCEPTED`).
+    * **Obohatiť dáta:** Pre každú vrátenú VK načítať jej účastníkov (`participants`) a dokumenty (`documents`), ako to už pravdepodobne robí [cite: 130-131].
+    * Vrátiť tento **nefiltrovaný (podľa kontextu)**, ale obohatený zoznam VK.
+
+**Dôvod zmeny:** Filtrovanie podľa kontextu môžeme riešiť neskôr na frontende, ak to bude potrebné. Pre správne fungovanie "Čakajúcich úkonov" potrebujeme, aby osobný dashboard *vždy* dostal informácie o *všetkých* relevantných VK používateľa.
+
+**Časť B: Overenie Frontendu (`client/src/components/dashboards/PersonalDashboard.tsx`)**
+
+1.  **Skontroluj Filtre:** Uisti sa, že filtre `pendingVKInvitations` [cite: 15] a `activeVKTasks` [cite: 16] v `PersonalDashboard.tsx` správne používajú dáta vrátené z upraveného backend endpointu.
+    * `pendingVKInvitations` by mal stále filtrovať `vk.participants`, kde `p.userId === currentUser?.id && p.status === 'INVITED'`.
+    * `activeVKTasks` by mal filtrovať VK, kde je používateľ prijatý a VK nie je dokončená.
+2.  **Skontroluj Počítadlo:** Uisti sa, že počítadlo `pendingMandates.length + pendingVKInvitations.length + activeVKTasks.length` [cite: 37] používa správne dĺžky týchto polí.
+3.  **Skontroluj Renderovanie:** Uisti sa, že `pendingVKInvitations.map(...)` [cite: 58-72] správne renderuje pozvánky a `activeVKTasks.map(...)` [cite: 73-82] správne renderuje aktívne úlohy VK.
+
+**Výsledný stav po opravách:**
+Keď Používateľ A (v akomkoľvek kontexte) pozve Používateľa B do VK:
+1.  Na osobnom dashboarde Používateľa B sa **musí** zvýšiť počítadlo "Čakajúce úkony".
+2.  V detaile "Čakajúcich úkonov" Používateľa B sa **musí** zobraziť pozvánka do danej VK s tlačidlami Prijať/Odmietnuť.
+3.  Po prijatí/odmietnutí **musí** pozvánka zmiznúť a počítadlo sa znížiť.
+
+**(Pripomienka: Dáta VK stále zmiznú po reštarte servera kvôli použitiu `MemStorage`. Toto tento prompt nerieši.)**
+
+**Dôležité inštrukcie pre AI:**
+* Zameraj sa na zjednodušenie filtrovania v backende `GET /api/virtual-offices`.
+* Over, že frontend správne spracováva dáta z tohto upraveného endpointu.
+* **Poskytni mi kompletný kód pre upravený súbor `server/routes.ts` (len handler pre GET /api/virtual-offices) a `client/src/components/dashboards/PersonalDashboard.tsx`.**

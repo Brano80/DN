@@ -339,79 +339,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = (req.user as User).id;
-      const activeContext = req.session.activeContext || 'personal';
+      
+      // Get ALL virtual offices where user is a participant (regardless of status or context)
       const offices = await storage.getVirtualOfficesByUser(userId);
       
-      // Get active mandate's ICO if in company context
-      let activeCompanyIco: string | null = null;
-      if (activeContext !== 'personal') {
-        const userMandates = await storage.getUserMandates(userId);
-        const activeMandate = userMandates.find(m => m.id === activeContext);
-        if (activeMandate) {
-          activeCompanyIco = activeMandate.company.ico;
-        }
-      }
-      
-      // Filter offices based on invitation context
-      const filteredOffices = await Promise.all(
+      // Enrich offices with participants and documents
+      const enrichedOffices = await Promise.all(
         offices.map(async (office) => {
           const participants = await storage.getVirtualOfficeParticipants(office.id);
-          
-          // Find this user's participant record
-          const userParticipant = participants.find(p => p.userId === userId);
-          
-          if (userParticipant) {
-            const participantContext = userParticipant.invitationContext;
-            
-            console.log(`[VK FILTER] Office: ${office.name}, User: ${userId}, Status: ${userParticipant.status}, InvitationContext: ${participantContext}, ActiveContext: ${activeContext}, ActiveCompanyIco: ${activeCompanyIco}`);
-            
-            // If invitationContext is set, match it with activeContext
-            // This applies to ALL statuses (INVITED, ACCEPTED, REJECTED)
-            if (participantContext !== null) {
-              // Personal context match
-              if (participantContext === 'personal' && activeContext === 'personal') {
-                console.log(`[VK FILTER] ✓ Personal match for office: ${office.name}`);
-                return office;
-              }
-              
-              // Company context match - support two formats:
-              // 1. Direct mandate ID match (for creators and legacy)
-              // 2. ICO match (for invited participants)
-              if (activeContext !== 'personal') {
-                // Direct mandate ID match
-                if (participantContext === activeContext) {
-                  console.log(`[VK FILTER] ✓ Direct mandate ID match for office: ${office.name}`);
-                  return office;
-                }
-                // ICO match - invitationContext can be an ICO (e.g., "CL76543210")
-                if (activeCompanyIco && participantContext === activeCompanyIco) {
-                  console.log(`[VK FILTER] ✓ ICO match for office: ${office.name}`);
-                  return office;
-                }
-              }
-            } else {
-              // Backward compatibility: null invitationContext
-              // Only show in company context if ownerCompanyId matches
-              // Personal context does NOT show legacy offices (to prevent company offices leaking)
-              if (activeContext !== 'personal' && office.ownerCompanyId === activeCompanyIco) {
-                console.log(`[VK FILTER] ✓ Legacy null context match for office: ${office.name}`);
-                return office;
-              }
-            }
-            
-            console.log(`[VK FILTER] ✗ No match for office: ${office.name}`);
-          }
-          
-          return null;
-        })
-      );
-      
-      // Remove null entries and enrich remaining offices
-      const validOffices = filteredOffices.filter(office => office !== null);
-      const enrichedOffices = await Promise.all(
-        validOffices.map(async (office) => {
-          const participants = await storage.getVirtualOfficeParticipants(office!.id);
-          const documents = await storage.getVirtualOfficeDocuments(office!.id);
+          const documents = await storage.getVirtualOfficeDocuments(office.id);
           
           // Enrich participants with user data
           const enrichedParticipants = await Promise.all(
