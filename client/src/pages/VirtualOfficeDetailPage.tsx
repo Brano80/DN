@@ -173,8 +173,15 @@ export default function VirtualOfficeDetailPage() {
       setSelectedInvitationOption(optionId);
       setInviteEmail(option.email);
       setInvitationContext(option.invitationContext);
-      setRequiredRole(option.requiredRole);
-      setRequiredCompanyIco(option.requiredCompanyIco);
+      
+      // Reset mandate requirements for personal invitations
+      if (option.invitationContext === 'personal') {
+        setRequiredRole('');
+        setRequiredCompanyIco('');
+      } else {
+        setRequiredRole(option.requiredRole);
+        setRequiredCompanyIco(option.requiredCompanyIco);
+      }
     }
   };
 
@@ -197,12 +204,19 @@ export default function VirtualOfficeDetailPage() {
       return;
     }
 
-    inviteParticipantMutation.mutate({
+    // For personal invitations, don't send mandate requirements
+    const invitationData: any = {
       email: inviteEmail,
       invitationContext: invitationContext,
-      requiredRole: requiredRole || undefined,
-      requiredCompanyIco: requiredCompanyIco || undefined,
-    });
+    };
+
+    // Only include mandate requirements for company invitations
+    if (invitationContext !== 'personal') {
+      if (requiredRole) invitationData.requiredRole = requiredRole;
+      if (requiredCompanyIco) invitationData.requiredCompanyIco = requiredCompanyIco;
+    }
+
+    inviteParticipantMutation.mutate(invitationData);
   };
 
   const fetchAndShowAttestation = async (documentId: string) => {
@@ -516,26 +530,36 @@ export default function VirtualOfficeDetailPage() {
                 Vyberte, či chcete pozvať fyzickú osobu alebo firmu
               </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="required-role">Požadovaná rola (voliteľné)</Label>
-              <Input
-                id="required-role"
-                placeholder="Napr. Konateľ, Prokurist"
-                value={requiredRole}
-                onChange={(e) => setRequiredRole(e.target.value)}
-                data-testid="input-required-role"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="required-ico">Požadované IČO firmy (voliteľné)</Label>
-              <Input
-                id="required-ico"
-                placeholder="Napr. 12345678"
-                value={requiredCompanyIco}
-                onChange={(e) => setRequiredCompanyIco(e.target.value)}
-                data-testid="input-required-ico"
-              />
-            </div>
+            {invitationContext && invitationContext !== 'personal' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="required-role">Požadovaná rola</Label>
+                  <Input
+                    id="required-role"
+                    placeholder="Napr. Konateľ, Prokurist"
+                    value={requiredRole}
+                    onChange={(e) => setRequiredRole(e.target.value)}
+                    data-testid="input-required-role"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Pozvaný používateľ musí mať túto rolu v zadanej firme
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="required-ico">Požadované IČO firmy</Label>
+                  <Input
+                    id="required-ico"
+                    placeholder="Napr. 12345678"
+                    value={requiredCompanyIco}
+                    onChange={(e) => setRequiredCompanyIco(e.target.value)}
+                    data-testid="input-required-ico"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Pozvaný používateľ musí mať mandát v tejto firme
+                  </p>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button

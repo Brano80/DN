@@ -158,15 +158,16 @@ export default function PersonalDashboard() {
       const response = await apiRequest('PATCH', `/api/virtual-offices/${officeId}/participants/${participantId}`, {
         status: 'ACCEPTED'
       });
-      return response;
+      return { response, officeId };
     },
-    onSuccess: () => {
+    onSuccess: ({ officeId }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
       queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
       toast({
         title: "Pozvánka prijatá",
         description: "Úspešne ste sa pripojili do virtuálnej kancelárie.",
       });
+      setLocation(`/virtual-office/${officeId}`);
     },
     onError: (error: any) => {
       // Check if this is a "missing required mandate" error
