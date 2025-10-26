@@ -1,14 +1,20 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, date, boolean, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, date, boolean, pgEnum } from "drizzle-orm/pg-core"; // Ensure boolean is imported
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// --- Users Table (Updated) ---
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
   email: text("email").notNull(),
+  // --- ADDED 2FA COLUMNS ---
+  isTwoFactorAuthEnabled: boolean("is_two_factor_auth_enabled").notNull().default(false),
+  twoFactorAuthSecret: text("two_factor_auth_secret"), // Secret key for TOTP
+  twoFactorAuthMethod: varchar("two_factor_auth_method", { length: 10 }), // e.g., 'TOTP'
+  // --- END OF ADDED COLUMNS ---
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -17,10 +23,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
   name: true,
   email: true,
 });
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// --- Contracts Table ---
 export const contracts = pgTable("contracts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
@@ -30,29 +36,26 @@ export const contracts = pgTable("contracts", {
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
-
 export const insertContractSchema = createInsertSchema(contracts).omit({
   id: true,
   createdAt: true,
 });
-
 export type InsertContract = z.infer<typeof insertContractSchema>;
 export type Contract = typeof contracts.$inferSelect;
 
-// Enums for Virtual Offices
+// --- Enums for Virtual Offices ---
 export const participantStatusEnum = pgEnum("participant_status", [
   "INVITED",
   "ACCEPTED",
   "REJECTED"
 ]);
-
 export const signatureStatusEnum = pgEnum("signature_status", [
   "PENDING",
   "SIGNED",
   "REJECTED"
 ]);
 
-// Virtual Offices - now supports multi-party collaboration
+// --- Virtual Offices Table ---
 export const virtualOffices = pgTable("virtual_offices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -62,16 +65,14 @@ export const virtualOffices = pgTable("virtual_offices", {
   processType: text("process_type"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
-
 export const insertVirtualOfficeSchema = createInsertSchema(virtualOffices).omit({
   id: true,
   createdAt: true,
 });
-
 export type InsertVirtualOffice = z.infer<typeof insertVirtualOfficeSchema>;
 export type VirtualOffice = typeof virtualOffices.$inferSelect;
 
-// Virtual Office Participants - tracks who is invited/participating
+// --- Virtual Office Participants Table ---
 export const virtualOfficeParticipants = pgTable("virtual_office_participants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   virtualOfficeId: varchar("virtual_office_id").notNull().references(() => virtualOffices.id),
@@ -84,16 +85,14 @@ export const virtualOfficeParticipants = pgTable("virtual_office_participants", 
   invitedAt: timestamp("invited_at").notNull().defaultNow(),
   respondedAt: timestamp("responded_at"),
 });
-
 export const insertVirtualOfficeParticipantSchema = createInsertSchema(virtualOfficeParticipants).omit({
   id: true,
   invitedAt: true,
 });
-
 export type InsertVirtualOfficeParticipant = z.infer<typeof insertVirtualOfficeParticipantSchema>;
 export type VirtualOfficeParticipant = typeof virtualOfficeParticipants.$inferSelect;
 
-// Virtual Office Documents - documents within a virtual office
+// --- Virtual Office Documents Table ---
 export const virtualOfficeDocuments = pgTable("virtual_office_documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   virtualOfficeId: varchar("virtual_office_id").notNull().references(() => virtualOffices.id),
@@ -102,16 +101,14 @@ export const virtualOfficeDocuments = pgTable("virtual_office_documents", {
   status: text("status").notNull().default("pending"),
   uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
 });
-
 export const insertVirtualOfficeDocumentSchema = createInsertSchema(virtualOfficeDocuments).omit({
   id: true,
   uploadedAt: true,
 });
-
 export type InsertVirtualOfficeDocument = z.infer<typeof insertVirtualOfficeDocumentSchema>;
 export type VirtualOfficeDocument = typeof virtualOfficeDocuments.$inferSelect;
 
-// Virtual Office Signatures - tracks signature requirements and completions
+// --- Virtual Office Signatures Table ---
 export const virtualOfficeSignatures = pgTable("virtual_office_signatures", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   virtualOfficeDocumentId: varchar("virtual_office_document_id").notNull().references(() => virtualOfficeDocuments.id),
@@ -121,34 +118,35 @@ export const virtualOfficeSignatures = pgTable("virtual_office_signatures", {
   signatureData: text("signature_data"),
   userCompanyMandateId: varchar("user_company_mandate_id").references(() => userCompanyMandates.id),
 });
-
 export const insertVirtualOfficeSignatureSchema = createInsertSchema(virtualOfficeSignatures).omit({
   id: true,
 });
-
 export type InsertVirtualOfficeSignature = z.infer<typeof insertVirtualOfficeSignatureSchema>;
 export type VirtualOfficeSignature = typeof virtualOfficeSignatures.$inferSelect;
 
-// Enums for companies and mandates
+// --- Enums for Companies and Mandates ---
 export const companyStatusEnum = pgEnum("company_status", [
   "active",
   "inactive",
   "pending_verification",
   "verification_failed"
 ]);
-
 export const mandateRozsahOpravneniEnum = pgEnum("mandate_rozsah_opravneni", [
   "samostatne",
   "spolocne_s_inym",
   "obmedzene"
 ]);
-
 export const mandateStatusEnum = pgEnum("mandate_status", [
   "active",
   "inactive",
   "pending_confirmation",
   "revoked",
   "expired"
+]);
+
+export const apiKeyStatusEnum = pgEnum("api_key_status", [
+  "active",
+  "inactive"
 ]);
 
 export const auditActionTypeEnum = pgEnum("audit_action_type", [
@@ -165,10 +163,13 @@ export const auditActionTypeEnum = pgEnum("audit_action_type", [
   "SECURITY_SETTINGS_UPDATED",
   // Virtuálna kancelária
   "DOCUMENT_UPLOADED",
-  "DOCUMENT_SIGNED"
+  "DOCUMENT_SIGNED",
+  // --- ADD THIS LINE ---
+  "MANDATE_VERIFICATION_ATTEMPT"
+  // --- END ADDED LINE ---
 ]);
 
-// Companies table
+// --- Companies Table ---
 export const companies = pgTable("companies", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ico: varchar("ico", { length: 10 }).notNull().unique(),
@@ -190,17 +191,15 @@ export const companies = pgTable("companies", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
-
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
-
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 
-// User Company Mandates table
+// --- User Company Mandates Table ---
 export const userCompanyMandates = pgTable("user_company_mandates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
@@ -216,17 +215,15 @@ export const userCompanyMandates = pgTable("user_company_mandates", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
-
 export const insertUserCompanyMandateSchema = createInsertSchema(userCompanyMandates).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
-
 export type InsertUserCompanyMandate = z.infer<typeof insertUserCompanyMandateSchema>;
 export type UserCompanyMandate = typeof userCompanyMandates.$inferSelect;
 
-// Audit Logs table
+// --- Audit Logs Table ---
 export const auditLogs = pgTable("audit_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
@@ -235,11 +232,28 @@ export const auditLogs = pgTable("audit_logs", {
   userId: varchar("user_id").notNull().references(() => users.id),
   companyId: varchar("company_id").references(() => companies.id),
 });
-
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   id: true,
   timestamp: true,
 });
-
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
+// --- API Keys Table ---
+export const apiKeys = pgTable("api_keys", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  keyPrefix: varchar("key_prefix", { length: 16 }).notNull().unique(), // Changed from 8 to 16
+  hashedKey: text("hashed_key").notNull(), // This is already text type, no length needed
+  customerName: varchar("customer_name", { length: 255 }).notNull(), // RENAMED from clientId -> customerName
+  status: apiKeyStatusEnum("status").notNull().default("active"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+});
+export type ApiKey = typeof apiKeys.$inferSelect;
+
+// Add insert schema + type for apiKeys (consistent with other tables)
+export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
+  id: true,
+  createdAt: true,
+  lastUsedAt: true,
+});
+export type InsertApiKey = z.infer<typeof insertApiKeySchema>;

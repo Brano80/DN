@@ -1,11 +1,11 @@
-import type { Express, Request, Response } from "express";
+import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
 import multer from "multer";
-import { storage } from "./storage";
+import { storage, listApiKeys } from "./storage"; // Pridali sme listApiKeys
 import { insertVirtualOfficeSchema, insertContractSchema } from "@shared/schema";
 import type { User } from "./auth";
-
+import { authenticateApiKey } from './middleware'; // Alebo správna cesta
 // Multer configuration for file uploads
 const upload = multer({
   dest: "uploads/",
@@ -1681,7 +1681,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API v1 Router
+  const v1Router = express.Router();
+
+  // Secured endpoint requiring API key
+  v1Router.post('/verify-mandate', authenticateApiKey, async (req: Request, res: Response) => {
+    try {
+      // Input shape
+      type VerifyMandateInput = {
+        personIdentifier: {
+          firstName: string;
+          lastName: string;
+        };
+        companyIco: string;
+      };
+
+      const body = req.body as Partial<VerifyMandateInput> | undefined;
+
+      // Basic validation
+      if (
+        !body ||
+        !body.personIdentifier ||
+        typeof body.personIdentifier.firstName !== 'string' ||
+        typeof body.personIdentifier.lastName !== 'string' ||
+        !body.companyIco ||
+        typeof body.companyIco !== 'string'
+      ) {
+        return res.status(400).json({ error: "Invalid input. Require personIdentifier.firstName, personIdentifier.lastName and companyIco." });
+      }
+
+      const firstName = body.personIdentifier.firstName.trim();
+      const lastName = body.personIdentifier.lastName.trim();
+      const companyIco = body.companyIco.trim();
+
+      // 3. Get company data
+      const company = await storage.getCompanyByIco(companyIco);
+
+      if (!company) {
+        return res.status(404).json({
+          status: "company_not_found",
+          message: "Firma s daným IČO nebola nájdená."
+        });
+      }
+
+      // Vytvor celé meno zo vstupu
+      const inputFullName = `${firstName} ${lastName}`;
+
+      // Načítaj mandáty (ktoré obsahujú dáta o useroch) pre danú firmu
+      const mandates = await storage.getCompanyMandatesByIco(companyIco);
+      console.log(`[DEBUG] Nájdené mandáty (${mandates.length}):`, JSON.stringify(mandates, null, 2));
+
+      // Funkcia na normalizáciu mien (malé písmená, bez diakritiky, medzier)
+      const normalize = (str: string) => 
+        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      
+      const normalizedInputName = normalize(inputFullName);
+      console.log(`[DEBUG] Normalizovaný VSTUP: '${normalizedInputName}'`);
+
+      // SPRÁVNE POROVNANIE:
+      // Porovnaj normalizované vstupné meno s normalizovaným menom z databázy (mandate.user.name)
+      const matched = mandates.some((mandate) => {
+        const mandateUserName = mandate.user.name || "";
+        const normalizedDbName = normalize(mandateUserName);
+        console.log(`[DEBUG] Porovnávam: VSTUP ('${normalizedInputName}') vs DB ('${normalizedDbName}')`);
+        return normalizedDbName === normalizedInputName;
+      });
+
+      const resultStatus = matched ? "verified" : "not_verified";
+
+      // 7. Add audit log (use placeholder userId for API client)
+      const details = `Pokus o overenie mandátu pre ${firstName} ${lastName} vo firme ${company.nazov} (${companyIco}). Výsledok: ${resultStatus}`;
+      try {
+        await storage.createAuditLog({
+          actionType: "MANDATE_VERIFICATION_ATTEMPT",
+          details,
+          userId: 'api-verification',
+          companyId: company.id
+        });
+      } catch (auditErr) {
+        console.error("[AUDIT] Failed to create audit log:", auditErr);
+        // proceed even if audit logging fails
+      }
+
+      // 6. Return result
+      if (matched) {
+        return res.status(200).json({
+          status: "verified",
+          message: "Osoba je platným štatutárom firmy.",
+          verifiedPerson: { firstName, lastName },
+          verifiedCompany: { ico: company.ico, name: company.nazov },
+          verifiedRole: "Štatutár"
+        });
+      } else {
+        return res.status(200).json({
+          status: "not_verified",
+          message: "Osoba nebola nájdená medzi štatutármi firmy.",
+          verifiedPerson: { firstName, lastName },
+          verifiedCompany: { ico: company.ico, name: company.nazov }
+        });
+      }
+    } catch (error) {
+      console.error("[API v1] verify-mandate error:", error);
+      return res.status(500).json({ status: "error", message: "Internal server error" });
+    }
+  });
+
+  // --- NEW: Admin router for API key management ---
+  const adminRouter = express.Router();
+
+  // POST /generate-key
+  adminRouter.post('/generate-key', async (req: Request, res: Response) => {
+    try {
+      const customerName = (req.body && req.body.customerName) ? String(req.body.customerName).trim() : "";
+      if (!customerName) {
+        return res.status(400).json({ error: "customerName is required" });
+      }
+
+      const apiKey = await storage.createApiKey(customerName);
+      return res.status(201).json({ apiKey });
+    } catch (error) {
+      console.error("[ADMIN] generate-key error:", error);
+      return res.status(500).json({ error: "Failed to generate API key" });
+    }
+  });
+
+  // GET /keys
+  adminRouter.get('/keys', async (_req: Request, res: Response) => {
+    try {
+      const keys = await listApiKeys(); // Odstránili sme 'storage.'
+      return res.status(200).json(keys);
+    } catch (error) {
+      console.error("[ADMIN] list-keys error:", error);
+      return res.status(500).json({ error: "Failed to list API keys" });
+    }
+  });
+
+  // Registrácia v1 API routera
+  app.use('/api/v1', v1Router);
+
+  // Registrácia admin routera (pod /api/v1/admin)
+  app.use('/api/v1/admin', adminRouter);
+
   const httpServer = createServer(app);
 
   return httpServer;
 }
+
+

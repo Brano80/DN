@@ -16,10 +16,70 @@ import {
   type UserCompanyMandate,
   type InsertUserCompanyMandate,
   type AuditLog,
-  type InsertAuditLog
+  type InsertAuditLog,
+  type ApiKey,  // <-- Add this
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes, pbkdf2, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+import crypto from "crypto"; // <-- ADDED
 
+// Drizzle DB + apiKeys table + helpers
+import { db } from "./db"; // <-- ADDED
+import { apiKeys } from "@shared/schema"; // <-- ADDED
+import { desc, eq } from "drizzle-orm"; // <-- ADDED
+
+const pbkdf2Async = promisify(pbkdf2);
+
+/**
+ * Vygeneruje nový API kľúč:
+ * - keyPrefix: prefix + 8 bezpečných znakov (base64url)
+ * - secret: 32 bezpečných znakov (base64url)
+ * - fullKey: `${keyPrefix}_${secret}`
+ */
+export function generateApiKey(prefix = "mca_") {
+  // 6 bytes -> 8 chars base64url
+  const randomPrefix = randomBytes(6).toString("base64url");
+  const keyPrefix = `${prefix}${randomPrefix}`;
+  // 24 bytes -> 32 chars base64url
+  const secret = randomBytes(24).toString("base64url");
+  const fullKey = `${keyPrefix}_${secret}`;
+  return { keyPrefix, secret, fullKey };
+}
+
+/**
+ * Hashuje secret pomocou PBKDF2 s náhodnou 16-bytovou soľou.
+ * Vracia reťazec vo formáte "salt:hash" (hex).
+ */
+export async function hashSecret(secret: string): Promise<string> {
+  const salt = randomBytes(16);
+  const iterations = 10000;
+  const keylen = 64; // sha512 -> 64 bytes
+  const digest = "sha512";
+  const derived = (await pbkdf2Async(secret, salt, iterations, keylen, digest)) as Buffer;
+  return `${salt.toString("hex")}:${derived.toString("hex")}`;
+}
+
+/**
+ * Overí providedSecret proti uloženému `salt:hash`.
+ * Používa timing-safe porovnanie.
+ */
+export async function verifySecret(storedHashWithSalt: string, providedSecret: string): Promise<boolean> {
+  const parts = storedHashWithSalt.split(":");
+  if (parts.length !== 2) return false;
+  const [saltHex, hashHex] = parts;
+  try {
+    const salt = Buffer.from(saltHex, "hex");
+    const storedHashBuf = Buffer.from(hashHex, "hex");
+    const iterations = 10000;
+    const keylen = storedHashBuf.length;
+    const digest = "sha512";
+    const derived = (await pbkdf2Async(providedSecret, salt, iterations, keylen, digest)) as Buffer;
+    if (derived.length !== storedHashBuf.length) return false;
+    return timingSafeEqual(derived, storedHashBuf);
+  } catch {
+    return false;
+  }
+}  
 // modify the interface with any CRUD methods
 // you might need
 
@@ -81,6 +141,13 @@ export interface IStorage {
   getAuditLogsByCompany(companyId: string, limit?: number): Promise<Array<AuditLog & { user: User }>>;
   getAuditLogsByUser(userId: string, limit?: number): Promise<Array<AuditLog>>;
   
+  // API Key Management
+  createApiKey(clientId: string): Promise<{ fullKey: string, dbRecord: ApiKey }>;
+  getApiKeyByKeyPrefix(keyPrefix: string): Promise<ApiKey | undefined>;
+  verifyApiKey(fullKey: string): Promise<ApiKey | undefined>;
+  deactivateApiKey(keyPrefix: string): Promise<ApiKey | undefined>;
+  recordApiKeyUsage(keyPrefix: string): Promise<void>;
+  
   // Reset all data to seed state (for testing purposes)
   resetToSeedData(): Promise<void>;
 }
@@ -95,6 +162,7 @@ export class MemStorage implements IStorage {
   private companies: Map<string, Company>;
   private userMandates: Map<string, UserCompanyMandate>;
   private auditLogs: Map<string, AuditLog>;
+  private apiKeys: Map<string, ApiKey>;
 
   constructor() {
     this.users = new Map();
@@ -106,6 +174,7 @@ export class MemStorage implements IStorage {
     this.companies = new Map();
     this.userMandates = new Map();
     this.auditLogs = new Map();
+    this.apiKeys = new Map();
   }
 
   seedExampleData() {
@@ -693,6 +762,67 @@ export class MemStorage implements IStorage {
       .slice(0, limit);
   }
 
+  async createApiKey(customerName: string): Promise<string> {
+    // Generate API key with 32 random bytes hex
+    const apiKey = `mandate_sk_live_${crypto.randomBytes(32).toString("hex")}`;
+
+    // keyPrefix - first 10 chars
+    const keyPrefix = apiKey.substring(0, 10);
+
+    // Hash the full apiKey using SHA256
+    const hashedKey = crypto.createHash("sha256").update(apiKey).digest("hex");
+
+    // Insert into DB (drizzle) - return inserted id (optional)
+    try {
+      const result = await db.insert(apiKeys).values({
+        customerName: customerName, // stored customer name
+        hashedKey: hashedKey,
+        keyPrefix: keyPrefix,
+        // createdAt, lastUsedAt, usageCount handled by DB defaults if present
+      }).returning({ insertedId: apiKeys.id });
+
+      // Return the plain API key only once (caller must persist it securely)
+      return apiKey;
+    } catch (err) {
+      console.error("[API KEY] Failed to create API key in DB:", err);
+      throw err;
+    }
+  }
+
+  async getApiKeyByKeyPrefix(keyPrefix: string): Promise<ApiKey | undefined> {
+    return Array.from(this.apiKeys.values()).find(
+      (apiKey) => apiKey.keyPrefix === keyPrefix
+    );
+  }
+
+  async verifyApiKey(fullKey: string): Promise<ApiKey | undefined> {
+    const [prefix, secret] = fullKey.split("_");
+    if (!prefix || !secret) return undefined;
+
+    const apiKey = await this.getApiKeyByKeyPrefix(prefix);
+    if (!apiKey || apiKey.status !== "active") return undefined;
+
+    const isValid = await verifySecret(apiKey.hashedKey, secret);
+    return isValid ? apiKey : undefined;
+  }
+
+  async deactivateApiKey(keyPrefix: string): Promise<ApiKey | undefined> {
+    const apiKey = await this.getApiKeyByKeyPrefix(keyPrefix);
+    if (!apiKey) return undefined;
+
+    const updated = { ...apiKey, status: "inactive" as const };
+    this.apiKeys.set(apiKey.id, updated);
+    return updated;
+  }
+
+  async recordApiKeyUsage(keyPrefix: string): Promise<void> {
+    const apiKey = await this.getApiKeyByKeyPrefix(keyPrefix);
+    if (!apiKey) return;
+
+    const updated = { ...apiKey, lastUsedAt: new Date() };
+    this.apiKeys.set(apiKey.id, updated);
+  }
+
   async resetToSeedData(): Promise<void> {
     console.log('[RESET] Clearing all data and re-seeding...');
     
@@ -706,6 +836,7 @@ export class MemStorage implements IStorage {
     this.userMandates.clear();
     this.auditLogs.clear();
     this.users.clear();
+    this.apiKeys.clear(); // Add this line
     
     // Re-seed the example data
     this.seedExampleData();
@@ -715,3 +846,21 @@ export class MemStorage implements IStorage {
 }
 
 export const storage = new MemStorage();
+
+// New helper: listApiKeys (do NOT select hashedKey)
+export const listApiKeys = async () => {
+  const keys = await db.select({
+    id: apiKeys.id,
+    customerName: apiKeys.customerName,
+    keyPrefix: apiKeys.keyPrefix,
+    createdAt: apiKeys.createdAt,
+    lastUsedAt: apiKeys.lastUsedAt,
+  }).from(apiKeys).orderBy(desc(apiKeys.createdAt));
+  return keys;
+};
+
+// Optional: deleteApiKey
+export const deleteApiKey = async (id: string) => {
+  const res = await db.delete(apiKeys).where(eq(apiKeys.id, id));
+  return res;
+};

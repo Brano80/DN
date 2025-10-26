@@ -1,0 +1,18 @@
+version: '3.8' # You can remove this line later if you want
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: egarant_db # Or 'dn' if you prefer
+    environment:
+      POSTGRES_USER: egarant_user
+      POSTGRES_PASSWORD: password # Use the SAME password as in your .env
+      POSTGRES_DB: egarant_dev
+    ports:
+      - "5432:5432"
+    volumes: # <- MOVED HERE
+      - postgres_data:/var/lib/postgresql/data # <- CORRECT PLACEMENT
+
+volumes:
+  postgres_data:
+    driver: local
