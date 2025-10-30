@@ -1,6 +1,4 @@
-Here is a professional README for your GitHub repository, based on all the work we've done and the strategic decisions we've made.
-
------
+_______
 
 # MandateCheck API
 
