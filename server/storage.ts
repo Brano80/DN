@@ -1,7 +1,7 @@
-import { 
-  type User, 
-  type InsertUser, 
-  type Contract, 
+import {
+  type User,
+  type InsertUser,
+  type Contract,
   type InsertContract,
   type VirtualOffice,
   type InsertVirtualOffice,
@@ -17,16 +17,19 @@ import {
   type InsertUserCompanyMandate,
   type AuditLog,
   type InsertAuditLog,
-  type ApiKey,  // <-- Add this
+  type ApiKey,
 } from "@shared/schema";
 import { randomUUID, randomBytes, pbkdf2, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import crypto from "crypto"; // <-- ADDED
+import crypto from "crypto";
+// <-- ADDED
 
 // Drizzle DB + apiKeys table + helpers
-import { db } from "./db"; // <-- ADDED
+import { db } from "./db";
+// <-- ADDED
 import { apiKeys } from "@shared/schema"; // <-- ADDED
-import { desc, eq } from "drizzle-orm"; // <-- ADDED
+import { desc, eq } from "drizzle-orm";
+// <-- ADDED
 
 const pbkdf2Async = promisify(pbkdf2);
 
@@ -79,77 +82,90 @@ export async function verifySecret(storedHashWithSalt: string, providedSecret: s
   } catch {
     return false;
   }
-}  
+}
+
+// KROK 8.3.1: Definícia typov pre Verification Transactions
+export type VerificationStatus = 'pending' | 'verified' | 'not_verified' | 'error';
+
+export interface VerificationTransaction {
+  id: string;
+  companyIco: string;
+  status: VerificationStatus;
+  // Toto bude obsahovať dáta z peňaženky (napr. given_name, family_name)
+  resultData: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // modify the interface with any CRUD methods
 // you might need
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
+  getUser(id: string): Promise<User |
+    undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   getContract(id: string): Promise<Contract | undefined>;
   getContractsByOwner(ownerEmail: string): Promise<Contract[]>;
   createContract(contract: InsertContract): Promise<Contract>;
   updateContract(id: string, updates: Partial<Contract>): Promise<Contract | undefined>;
   deleteContract(id: string): Promise<boolean>;
-  
   // Virtual Office methods (updated for new structure)
   getVirtualOffice(id: string): Promise<VirtualOffice | undefined>;
   getVirtualOfficesByUser(userId: string): Promise<VirtualOffice[]>;
   createVirtualOffice(office: InsertVirtualOffice): Promise<VirtualOffice>;
   updateVirtualOffice(id: string, updates: Partial<VirtualOffice>): Promise<VirtualOffice | undefined>;
   deleteVirtualOffice(id: string): Promise<boolean>;
-  
+
   // Virtual Office Participants
   createVirtualOfficeParticipant(participant: InsertVirtualOfficeParticipant): Promise<VirtualOfficeParticipant>;
   getVirtualOfficeParticipants(virtualOfficeId: string): Promise<Array<VirtualOfficeParticipant & { user: User }>>;
   updateVirtualOfficeParticipant(id: string, updates: Partial<VirtualOfficeParticipant>): Promise<VirtualOfficeParticipant | undefined>;
   isUserParticipant(userId: string, virtualOfficeId: string): Promise<boolean>;
-  
   // Virtual Office Documents
   createVirtualOfficeDocument(document: InsertVirtualOfficeDocument): Promise<VirtualOfficeDocument>;
   getVirtualOfficeDocuments(virtualOfficeId: string): Promise<Array<VirtualOfficeDocument & { contract: Contract }>>;
   getVirtualOfficeDocumentsByContractId(contractId: string): Promise<VirtualOfficeDocument[]>;
-  
   // Virtual Office Signatures
   createVirtualOfficeSignature(signature: InsertVirtualOfficeSignature): Promise<VirtualOfficeSignature>;
   getVirtualOfficeSignatures(virtualOfficeDocumentId: string): Promise<VirtualOfficeSignature[]>;
   updateVirtualOfficeSignature(id: string, updates: Partial<VirtualOfficeSignature>): Promise<VirtualOfficeSignature | undefined>;
-  
   // Virtual Office Document helpers
   getVirtualOfficeDocument(id: string): Promise<VirtualOfficeDocument | undefined>;
   updateVirtualOfficeDocument(id: string, updates: Partial<VirtualOfficeDocument>): Promise<VirtualOfficeDocument | undefined>;
-  
   // Virtual Office Participant helpers
   getVirtualOfficeParticipant(id: string): Promise<VirtualOfficeParticipant | undefined>;
-  
+
   getCompany(id: string): Promise<Company | undefined>;
-  getCompanyByIco(ico: string): Promise<Company | undefined>;
+  getCompanyByIco(ico: string): Promise<Company |
+    undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: string, updates: Partial<Company>): Promise<Company | undefined>;
   updateCompanySecuritySettings(companyId: string, enforceTwoFactorAuth: boolean): Promise<Company | undefined>;
-  
   getUserMandates(userId: string): Promise<Array<UserCompanyMandate & { company: Company }>>;
   getCompanyMandatesByIco(ico: string): Promise<Array<UserCompanyMandate & { user: User }>>;
   createUserMandate(mandate: InsertUserCompanyMandate): Promise<UserCompanyMandate>;
   updateUserMandate(id: string, updates: Partial<UserCompanyMandate>): Promise<UserCompanyMandate | undefined>;
   getUserMandate(id: string): Promise<UserCompanyMandate | undefined>;
-  
+
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogsByCompany(companyId: string, limit?: number): Promise<Array<AuditLog & { user: User }>>;
   getAuditLogsByUser(userId: string, limit?: number): Promise<Array<AuditLog>>;
-  
   // API Key Management
   createApiKey(clientId: string): Promise<{ fullKey: string, dbRecord: ApiKey }>;
   getApiKeyByKeyPrefix(keyPrefix: string): Promise<ApiKey | undefined>;
   verifyApiKey(fullKey: string): Promise<ApiKey | undefined>;
   deactivateApiKey(keyPrefix: string): Promise<ApiKey | undefined>;
   recordApiKeyUsage(keyPrefix: string): Promise<void>;
-  
   // Reset all data to seed state (for testing purposes)
   resetToSeedData(): Promise<void>;
+
+  // Verification Transaction Management (KROK 8.3.1)
+  createVerificationTransaction(companyIco: string): Promise<VerificationTransaction>;
+  getVerificationTransaction(id: string): Promise<VerificationTransaction | undefined>;
+  updateVerificationTransactionStatus(id: string, status: VerificationStatus, resultData: Record<string, any> | null): Promise<VerificationTransaction | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -163,6 +179,8 @@ export class MemStorage implements IStorage {
   private userMandates: Map<string, UserCompanyMandate>;
   private auditLogs: Map<string, AuditLog>;
   private apiKeys: Map<string, ApiKey>;
+  // KROK 8.3.1: Pridanie novej Map pre transakcie
+  private verificationTransactions: Map<string, VerificationTransaction>;
 
   constructor() {
     this.users = new Map();
@@ -175,11 +193,12 @@ export class MemStorage implements IStorage {
     this.userMandates = new Map();
     this.auditLogs = new Map();
     this.apiKeys = new Map();
+    // KROK 8.3.1: Inicializácia novej Map
+    this.verificationTransactions = new Map();
   }
 
   seedExampleData() {
     console.log('[SEED] Seeding example data for Škoda Octavia...');
-    
     // Create mock user 1 - Ján Nováček (will have a company)
     const mockUserId = "mock123";
     const mockUser: User = {
@@ -190,7 +209,7 @@ export class MemStorage implements IStorage {
       email: "jan.novacek@example.sk"
     };
     this.users.set(mockUserId, mockUser);
-    
+
     // Create mock user 2 - Petra Ambroz (can be invited to a company)
     const mockUser2Id = "mock456";
     const mockUser2: User = {
@@ -201,7 +220,7 @@ export class MemStorage implements IStorage {
       email: "petra.ambroz@example.sk"
     };
     this.users.set(mockUser2Id, mockUser2);
-    
+
     // Create mock user 3 - Andres Elgueta (Chilean company owner)
     const mockUser3Id = "mock789";
     const mockUser3: User = {
@@ -212,10 +231,11 @@ export class MemStorage implements IStorage {
       email: "andres.elgueta@tekmain.cl"
     };
     this.users.set(mockUser3Id, mockUser3);
-    
+
     console.log('[SEED] Created 3 mock users');
-    
-    // Create eGarant s.r.o. company (for Ján Nováček) - Czech company
+
+    // Create eGarant s.r.o.
+    // company (for Ján Nováček) - Czech company
     const companyId = "company-egarant";
     const company: Company = {
       id: companyId,
@@ -230,7 +250,8 @@ export class MemStorage implements IStorage {
       registracnySud: "Městský soud v Praze",
       cisloVlozky: "C 654321",
       datumZapisu: "2020-01-15",
-      pravnaForma: "Společnost s ručením omezeným",
+      pravnaForma:
+        "Společnost s ručením omezeným",
       stat: "CZ",
       stav: "active",
       lastVerifiedAt: new Date(),
@@ -239,7 +260,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     this.companies.set(companyId, company);
-    
+
     // Create mandate for mock user
     const mandateId = "mandate-jan-novacek";
     const mandate: UserCompanyMandate = {
@@ -257,10 +278,11 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     this.userMandates.set(mandateId, mandate);
-    
+
     console.log('[SEED] Created company and mandate for mock user');
-    
-    // Create second company - ARIAN s.r.o. (for Petra Ambroz)
+
+    // Create second company - ARIAN s.r.o.
+    // (for Petra Ambroz)
     const company2Id = "company-arian";
     const company2: Company = {
       id: company2Id,
@@ -284,7 +306,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     this.companies.set(company2Id, company2);
-    
+
     // Create active mandate for Petra Ambroz as Konateľ of ARIAN
     const mandate2Id = "mandate-petra-ambroz";
     const mandate2: UserCompanyMandate = {
@@ -302,9 +324,8 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     this.userMandates.set(mandate2Id, mandate2);
-    
+
     console.log('[SEED] Created ARIAN s.r.o. with Petra Ambroz as Konateľ');
-    
     // Create third company - Tekmain SpA (Chilean company for Andres Elgueta)
     const company3Id = "company-tekmain";
     const company3: Company = {
@@ -320,6 +341,7 @@ export class MemStorage implements IStorage {
       registracnySud: "Registro de Empresas y Sociedades de Chile",
       cisloVlozky: "CL/2022/45678",
       datumZapisu: "2022-03-20",
+
       pravnaForma: "Sociedad por Acciones",
       stat: "CL",
       stav: "active",
@@ -329,7 +351,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     this.companies.set(company3Id, company3);
-    
+
     // Create active mandate for Andres Elgueta as Gerente General of Tekmain
     const mandate3Id = "mandate-andres-elgueta";
     const mandate3: UserCompanyMandate = {
@@ -347,9 +369,8 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
     this.userMandates.set(mandate3Id, mandate3);
-    
+
     console.log('[SEED] Created Tekmain SpA with Andres Elgueta as Gerente General');
-    
     // Create sample audit logs for ARIAN
     const auditLog1: AuditLog = {
       id: "audit-log-1",
@@ -360,7 +381,7 @@ export class MemStorage implements IStorage {
       companyId: company2Id,
     };
     this.auditLogs.set(auditLog1.id, auditLog1);
-    
+
     const auditLog2: AuditLog = {
       id: "audit-log-2",
       timestamp: new Date("2021-06-15T14:30:00Z"),
@@ -370,7 +391,7 @@ export class MemStorage implements IStorage {
       companyId: company2Id,
     };
     this.auditLogs.set(auditLog2.id, auditLog2);
-    
+
     // Create sample audit logs for eGarant
     const auditLog3: AuditLog = {
       id: "audit-log-3",
@@ -381,15 +402,17 @@ export class MemStorage implements IStorage {
       companyId: companyId,
     };
     this.auditLogs.set(auditLog3.id, auditLog3);
-    
+
     console.log('[SEED] Created sample audit logs');
   }
 
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: string): Promise<User |
+    undefined> {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
+  async getUserByUsername(username: string): Promise<User |
+    undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.username === username,
     );
@@ -402,7 +425,8 @@ export class MemStorage implements IStorage {
     return user;
   }
 
-  async getContract(id: string): Promise<Contract | undefined> {
+  async getContract(id: string): Promise<Contract |
+    undefined> {
     return this.contracts.get(id);
   }
 
@@ -414,9 +438,10 @@ export class MemStorage implements IStorage {
 
   async createContract(insertContract: InsertContract): Promise<Contract> {
     const id = randomUUID();
-    const contract: Contract = { 
+    const contract: Contract = {
       ...insertContract,
-      status: insertContract.status ?? 'pending',
+      status: insertContract.status ??
+        'pending',
       id,
       createdAt: new Date()
     };
@@ -424,10 +449,10 @@ export class MemStorage implements IStorage {
     return contract;
   }
 
-  async updateContract(id: string, updates: Partial<Contract>): Promise<Contract | undefined> {
+  async updateContract(id: string, updates: Partial<Contract>): Promise<Contract |
+    undefined> {
     const contract = this.contracts.get(id);
     if (!contract) return undefined;
-    
     const { id: _id, createdAt: _createdAt, ...safeUpdates } = updates;
     const updated = { ...contract, ...safeUpdates };
     this.contracts.set(id, updated);
@@ -445,7 +470,8 @@ export class MemStorage implements IStorage {
   }
 
   // Virtual Office methods (updated for new structure)
-  async getVirtualOffice(id: string): Promise<VirtualOffice | undefined> {
+  async getVirtualOffice(id: string): Promise<VirtualOffice |
+    undefined> {
     return this.virtualOffices.get(id);
   }
 
@@ -454,7 +480,6 @@ export class MemStorage implements IStorage {
     const participantOfficeIds = Array.from(this.virtualOfficeParticipants.values())
       .filter(p => p.userId === userId)
       .map(p => p.virtualOfficeId);
-    
     // Return unique virtual offices
     return Array.from(this.virtualOffices.values()).filter(
       (office) => participantOfficeIds.includes(office.id)
@@ -463,9 +488,10 @@ export class MemStorage implements IStorage {
 
   async createVirtualOffice(insertOffice: InsertVirtualOffice): Promise<VirtualOffice> {
     const id = randomUUID();
-    const office: VirtualOffice = { 
+    const office: VirtualOffice = {
       ...insertOffice,
-      status: insertOffice.status ?? 'active',
+      status: insertOffice.status ??
+        'active',
       processType: insertOffice.processType ?? null,
       id,
       createdAt: new Date()
@@ -474,10 +500,10 @@ export class MemStorage implements IStorage {
     return office;
   }
 
-  async updateVirtualOffice(id: string, updates: Partial<VirtualOffice>): Promise<VirtualOffice | undefined> {
+  async updateVirtualOffice(id: string, updates: Partial<VirtualOffice>): Promise<VirtualOffice |
+    undefined> {
     const office = this.virtualOffices.get(id);
     if (!office) return undefined;
-    
     const { id: _id, createdAt: _createdAt, ...safeUpdates } = updates;
     const updated = { ...office, ...safeUpdates };
     this.virtualOffices.set(id, updated);
@@ -493,11 +519,14 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const participant: VirtualOfficeParticipant = {
       ...insertParticipant,
-      status: insertParticipant.status ?? 'INVITED',
+      status: insertParticipant.status ??
+        'INVITED',
       userCompanyMandateId: insertParticipant.userCompanyMandateId ?? null,
-      requiredRole: insertParticipant.requiredRole ?? null,
+      requiredRole: insertParticipant.requiredRole ??
+        null,
       requiredCompanyIco: insertParticipant.requiredCompanyIco ?? null,
-      invitationContext: insertParticipant.invitationContext ?? null,
+      invitationContext: insertParticipant.invitationContext ??
+        null,
       respondedAt: insertParticipant.respondedAt ?? null,
       id,
       invitedAt: new Date()
@@ -510,7 +539,6 @@ export class MemStorage implements IStorage {
     const participants = Array.from(this.virtualOfficeParticipants.values()).filter(
       (p) => p.virtualOfficeId === virtualOfficeId
     );
-    
     return participants.map((participant) => {
       const user = this.users.get(participant.userId);
       if (!user) throw new Error(`User ${participant.userId} not found`);
@@ -521,7 +549,7 @@ export class MemStorage implements IStorage {
   async updateVirtualOfficeParticipant(id: string, updates: Partial<VirtualOfficeParticipant>): Promise<VirtualOfficeParticipant | undefined> {
     const participant = this.virtualOfficeParticipants.get(id);
     if (!participant) return undefined;
-    
+
     const { id: _id, invitedAt: _invitedAt, ...safeUpdates } = updates;
     const updated = { ...participant, ...safeUpdates };
     this.virtualOfficeParticipants.set(id, updated);
@@ -539,7 +567,8 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const document: VirtualOfficeDocument = {
       ...insertDocument,
-      status: insertDocument.status ?? 'pending',
+      status: insertDocument.status ??
+        'pending',
       id,
       uploadedAt: new Date()
     };
@@ -551,7 +580,6 @@ export class MemStorage implements IStorage {
     const documents = Array.from(this.virtualOfficeDocuments.values()).filter(
       (d) => d.virtualOfficeId === virtualOfficeId
     );
-    
     return documents.map((document) => {
       const contract = this.contracts.get(document.contractId);
       if (!contract) throw new Error(`Contract ${document.contractId} not found`);
@@ -570,9 +598,11 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const signature: VirtualOfficeSignature = {
       ...insertSignature,
-      status: insertSignature.status ?? 'PENDING',
+      status: insertSignature.status ??
+        'PENDING',
       signedAt: insertSignature.signedAt ?? null,
-      signatureData: insertSignature.signatureData ?? null,
+      signatureData: insertSignature.signatureData ??
+        null,
       userCompanyMandateId: insertSignature.userCompanyMandateId ?? null,
       id
     };
@@ -582,14 +612,14 @@ export class MemStorage implements IStorage {
 
   async getVirtualOfficeSignatures(virtualOfficeDocumentId: string): Promise<VirtualOfficeSignature[]> {
     return Array.from(this.virtualOfficeSignatures.values()).filter(
-      (s) => s.virtualOfficeDocumentId === virtualOfficeDocumentId
+      (s) => s.virtualOfficeDocumentId === virtualOfficeId
     );
   }
 
   async updateVirtualOfficeSignature(id: string, updates: Partial<VirtualOfficeSignature>): Promise<VirtualOfficeSignature | undefined> {
     const signature = this.virtualOfficeSignatures.get(id);
     if (!signature) return undefined;
-    
+
     const updated = { ...signature, ...updates };
     this.virtualOfficeSignatures.set(id, updated);
     return updated;
@@ -602,7 +632,7 @@ export class MemStorage implements IStorage {
   async updateVirtualOfficeDocument(id: string, updates: Partial<VirtualOfficeDocument>): Promise<VirtualOfficeDocument | undefined> {
     const document = this.virtualOfficeDocuments.get(id);
     if (!document) return undefined;
-    
+
     const updated = { ...document, ...updates };
     this.virtualOfficeDocuments.set(id, updated);
     return updated;
@@ -627,20 +657,27 @@ export class MemStorage implements IStorage {
     const company: Company = {
       ...insertCompany,
       id,
-      dic: insertCompany.dic ?? null,
+      dic: insertCompany.dic ??
+        null,
       icDph: insertCompany.icDph ?? null,
-      sidloUlica: insertCompany.sidloUlica ?? null,
+      sidloUlica: insertCompany.sidloUlica ??
+        null,
       sidloCislo: insertCompany.sidloCislo ?? null,
-      sidloMesto: insertCompany.sidloMesto ?? null,
+      sidloMesto: insertCompany.sidloMesto ??
+        null,
       sidloPsc: insertCompany.sidloPsc ?? null,
-      registracnySud: insertCompany.registracnySud ?? null,
+      registracnySud: insertCompany.registracnySud ??
+        null,
       cisloVlozky: insertCompany.cisloVlozky ?? null,
-      datumZapisu: insertCompany.datumZapisu ?? null,
+      datumZapisu: insertCompany.datumZapisu ??
+        null,
       pravnaForma: insertCompany.pravnaForma ?? null,
-      stav: insertCompany.stav ?? 'pending_verification',
+      stav: insertCompany.stav ??
+        'pending_verification',
       stat: insertCompany.stat ?? 'SK',
       lastVerifiedAt: null,
-      enforceTwoFactorAuth: insertCompany.enforceTwoFactorAuth ?? false,
+      enforceTwoFactorAuth: insertCompany.enforceTwoFactorAuth ??
+        false,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -648,20 +685,20 @@ export class MemStorage implements IStorage {
     return company;
   }
 
-  async updateCompany(id: string, updates: Partial<Company>): Promise<Company | undefined> {
+  async updateCompany(id: string, updates: Partial<Company>): Promise<Company |
+    undefined> {
     const company = this.companies.get(id);
     if (!company) return undefined;
-    
     const { id: _id, createdAt: _createdAt, ...safeUpdates } = updates;
     const updated = { ...company, ...safeUpdates, updatedAt: new Date() };
     this.companies.set(id, updated);
     return updated;
   }
 
-  async updateCompanySecuritySettings(companyId: string, enforceTwoFactorAuth: boolean): Promise<Company | undefined> {
+  async updateCompanySecuritySettings(companyId: string, enforceTwoFactorAuth: boolean): Promise<Company |
+    undefined> {
     const company = this.companies.get(companyId);
     if (!company) return undefined;
-    
     const updated = { ...company, enforceTwoFactorAuth, updatedAt: new Date() };
     this.companies.set(companyId, updated);
     return updated;
@@ -671,7 +708,6 @@ export class MemStorage implements IStorage {
     const mandates = Array.from(this.userMandates.values()).filter(
       (mandate) => mandate.userId === userId
     );
-    
     return mandates.map((mandate) => {
       const company = this.companies.get(mandate.companyId);
       if (!company) throw new Error(`Company ${mandate.companyId} not found`);
@@ -685,12 +721,11 @@ export class MemStorage implements IStorage {
     if (!company) {
       return [];
     }
-    
+
     // Find all mandates for this company
     const mandates = Array.from(this.userMandates.values()).filter(
       (mandate) => mandate.companyId === company.id
     );
-    
     // Enrich with user data
     return mandates.map((mandate) => {
       const user = this.users.get(mandate.userId);
@@ -704,9 +739,11 @@ export class MemStorage implements IStorage {
     const mandate: UserCompanyMandate = {
       ...insertMandate,
       id,
-      platnyDo: insertMandate.platnyDo ?? null,
+      platnyDo: insertMandate.platnyDo ??
+        null,
       zdrojOverenia: insertMandate.zdrojOverenia ?? 'OR SR Mock',
-      stav: insertMandate.stav ?? 'pending_confirmation',
+      stav: insertMandate.stav ??
+        'pending_confirmation',
       isVerifiedByKep: insertMandate.isVerifiedByKep ?? false,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -715,10 +752,10 @@ export class MemStorage implements IStorage {
     return mandate;
   }
 
-  async updateUserMandate(id: string, updates: Partial<UserCompanyMandate>): Promise<UserCompanyMandate | undefined> {
+  async updateUserMandate(id: string, updates: Partial<UserCompanyMandate>): Promise<UserCompanyMandate |
+    undefined> {
     const mandate = this.userMandates.get(id);
     if (!mandate) return undefined;
-    
     const { id: _id, createdAt: _createdAt, ...safeUpdates } = updates;
     const updated = { ...mandate, ...safeUpdates, updatedAt: new Date() };
     this.userMandates.set(id, updated);
@@ -735,7 +772,8 @@ export class MemStorage implements IStorage {
       ...insertLog,
       id,
       timestamp: new Date(),
-      companyId: insertLog.companyId ?? null,
+      companyId: insertLog.companyId ??
+        null,
     };
     this.auditLogs.set(id, log);
     console.log(`[AUDIT] ${insertLog.actionType}: ${insertLog.details}`);
@@ -747,7 +785,6 @@ export class MemStorage implements IStorage {
       .filter((log) => log.companyId === companyId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit);
-    
     return logs.map((log) => {
       const user = this.users.get(log.userId);
       if (!user) throw new Error(`User ${log.userId} not found`);
@@ -762,70 +799,96 @@ export class MemStorage implements IStorage {
       .slice(0, limit);
   }
 
-  async createApiKey(customerName: string): Promise<string> {
-    // Generate API key with 32 random bytes hex
-    const apiKey = `mandate_sk_live_${crypto.randomBytes(32).toString("hex")}`;
+  async createApiKey(customerName: string): Promise<any> { // Upravené z Promise<string> na Promise<any> aby zodpovedalo vrátenému objektu
+    // Generate API key
+    const { keyPrefix, secret, fullKey } = generateApiKey("mca_"); // Použijeme naše nové pomocné funkcie
 
-    // keyPrefix - first 10 chars
-    const keyPrefix = apiKey.substring(0, 10);
+    // Hash the secret
+    const hashedKey = await hashSecret(secret);
 
-    // Hash the full apiKey using SHA256
-    const hashedKey = crypto.createHash("sha256").update(apiKey).digest("hex");
-
-    // Insert into DB (drizzle) - return inserted id (optional)
+    // Insert into DB (drizzle)
     try {
-      const result = await db.insert(apiKeys).values({
-        customerName: customerName, // stored customer name
+      const [dbRecord] = await db.insert(apiKeys).values({
+        customerName: customerName,
         hashedKey: hashedKey,
         keyPrefix: keyPrefix,
-        // createdAt, lastUsedAt, usageCount handled by DB defaults if present
-      }).returning({ insertedId: apiKeys.id });
-
-      // Return the plain API key only once (caller must persist it securely)
-      return apiKey;
+        status: 'active'
+      }).returning();
+      
+      console.log(`[STORAGE] Vytvorený nový API kľúč pre: ${customerName}, prefix: ${keyPrefix}`);
+      // Vraciame celý kľúč (len raz!) a záznam z DB
+      return { fullKey, dbRecord };
+      
     } catch (err) {
       console.error("[API KEY] Failed to create API key in DB:", err);
       throw err;
     }
   }
 
-  async getApiKeyByKeyPrefix(keyPrefix: string): Promise<ApiKey | undefined> {
-    return Array.from(this.apiKeys.values()).find(
-      (apiKey) => apiKey.keyPrefix === keyPrefix
-    );
+  async getApiKeyByKeyPrefix(keyPrefix: string): Promise<ApiKey |
+    undefined> {
+    // Najprv skúsime v pamäti
+    let apiKey = this.apiKeys.get(keyPrefix); // Predpokladáme, že kľúčom v Map je keyPrefix
+    if (apiKey) return apiKey;
+
+    // Ak nie je v pamäti, hľadáme v DB
+    apiKey = await db.select().from(apiKeys).where(eq(apiKeys.keyPrefix, keyPrefix)).limit(1).then(res => res[0]);
+    
+    if (apiKey) {
+      this.apiKeys.set(keyPrefix, apiKey); // Uložíme do cache
+    }
+    return apiKey;
   }
 
   async verifyApiKey(fullKey: string): Promise<ApiKey | undefined> {
-    const [prefix, secret] = fullKey.split("_");
-    if (!prefix || !secret) return undefined;
+    const parts = fullKey.split("_");
+    if (parts.length !== 2) return undefined; // Očakávame formát prefix_secret
+    
+    const [keyPrefix, secret] = parts;
 
-    const apiKey = await this.getApiKeyByKeyPrefix(prefix);
+    const apiKey = await this.getApiKeyByKeyPrefix(keyPrefix);
     if (!apiKey || apiKey.status !== "active") return undefined;
 
     const isValid = await verifySecret(apiKey.hashedKey, secret);
+    
+    if (isValid) {
+      // Asynchrónne zaznamenáme použitie, ale nečakáme na to
+      this.recordApiKeyUsage(keyPrefix).catch(err => console.error(`[STORAGE] Nepodarilo sa zaznamenať použitie kľúča ${keyPrefix}:`, err));
+    }
+    
     return isValid ? apiKey : undefined;
   }
 
-  async deactivateApiKey(keyPrefix: string): Promise<ApiKey | undefined> {
-    const apiKey = await this.getApiKeyByKeyPrefix(keyPrefix);
-    if (!apiKey) return undefined;
+  async deactivateApiKey(keyPrefix: string): Promise<ApiKey |
+    undefined> {
+    // Aktualizujeme v DB
+    const [updatedApiKey] = await db.update(apiKeys)
+      .set({ status: 'inactive' })
+      .where(eq(apiKeys.keyPrefix, keyPrefix))
+      .returning();
 
-    const updated = { ...apiKey, status: "inactive" as const };
-    this.apiKeys.set(apiKey.id, updated);
-    return updated;
+    if (updatedApiKey) {
+      // Aktualizujeme aj cache
+      this.apiKeys.set(keyPrefix, updatedApiKey);
+    }
+    return updatedApiKey;
   }
 
   async recordApiKeyUsage(keyPrefix: string): Promise<void> {
-    const apiKey = await this.getApiKeyByKeyPrefix(keyPrefix);
-    if (!apiKey) return;
+    // Aktualizujeme v DB
+    await db.update(apiKeys)
+      .set({ lastUsedAt: new Date() }) // Tu by sme mohli inkrementovať aj usageCount
+      .where(eq(apiKeys.keyPrefix, keyPrefix));
 
-    const updated = { ...apiKey, lastUsedAt: new Date() };
-    this.apiKeys.set(apiKey.id, updated);
+    // Aktualizujeme cache
+    const apiKey = this.apiKeys.get(keyPrefix);
+    if (apiKey) {
+      apiKey.lastUsedAt = new Date();
+    }
   }
 
   async resetToSeedData(): Promise<void> {
     console.log('[RESET] Clearing all data and re-seeding...');
-    
     // Clear all data
     this.contracts.clear();
     this.virtualOffices.clear();
@@ -836,17 +899,62 @@ export class MemStorage implements IStorage {
     this.userMandates.clear();
     this.auditLogs.clear();
     this.users.clear();
-    this.apiKeys.clear(); // Add this line
-    
+    this.apiKeys.clear();
+    // KROK 8.3.1: Vyčistenie novej Map
+    this.verificationTransactions.clear();
+
     // Re-seed the example data
     this.seedExampleData();
-    
     console.log('[RESET] Data reset complete');
+  }
+
+  // --- Verification Transaction Methods (KROK 8.3.1) ---
+
+  async createVerificationTransaction(companyIco: string): Promise<VerificationTransaction> {
+    // Použijeme prefix 'txn_' pre jasnejšie ID
+    const id = `txn_${randomUUID()}`;
+    const transaction: VerificationTransaction = {
+      id,
+      companyIco,
+      status: 'pending',
+      resultData: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.verificationTransactions.set(id, transaction);
+    console.log(`[STORAGE] Vytvorená nová transakcia: ${id} pre IČO: ${companyIco}`);
+    return transaction;
+  }
+
+  async getVerificationTransaction(id: string): Promise<VerificationTransaction | undefined> {
+    return this.verificationTransactions.get(id);
+  }
+
+  async updateVerificationTransactionStatus(
+    id: string, 
+    status: VerificationStatus, 
+    resultData: Record<string, any> | null
+  ): Promise<VerificationTransaction | undefined> {
+    
+    const transaction = this.verificationTransactions.get(id);
+    if (!transaction) {
+      console.warn(`[STORAGE] Nepodarilo sa nájsť transakciu ${id} na aktualizáciu stavu.`);
+      return undefined;
+    }
+    
+    const updated: VerificationTransaction = { 
+      ...transaction, 
+      status, 
+      resultData, 
+      updatedAt: new Date() 
+    };
+    this.verificationTransactions.set(id, updated);
+    console.log(`[STORAGE] Transakcia ${id} aktualizovaná na stav: ${status}`);
+    return updated;
   }
 }
 
 export const storage = new MemStorage();
-
 // New helper: listApiKeys (do NOT select hashedKey)
 export const listApiKeys = async () => {
   const keys = await db.select({

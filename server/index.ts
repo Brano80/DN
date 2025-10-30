@@ -83,19 +83,15 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
+  // Stále používame port 3000
+  const port = parseInt(process.env.PORT || "3000", 10);
+  
+  // === OPRAVA KROK 3: Zjednodušenie volania .listen() ===
+  // Odstránili sme 'host', 'reusePort' a objektovú notáciu.
+  // Použijeme najzákladnejšiu formu: server.listen(port, host, callback)
+  // '127.0.0.1' je dôležité pre Windows
+  server.listen(port, "127.0.0.1", () => {
+      log(`serving on http://localhost:${port}`);
     }
   );
 })();

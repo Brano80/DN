@@ -1,11 +1,15 @@
-import express, { type Express, type Request, type Response } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express"; // Pridané NextFunction
 import { createServer, type Server } from "http";
 import passport from "passport";
 import multer from "multer";
-import { storage, listApiKeys } from "./storage"; // Pridali sme listApiKeys
+import { storage, listApiKeys } from "./storage"; 
 import { insertVirtualOfficeSchema, insertContractSchema } from "@shared/schema";
 import type { User } from "./auth";
-import { authenticateApiKey } from './middleware'; // Alebo správna cesta
+import { authenticateApiKey } from './middleware'; 
+import { setupVite } from "./vite";
+import { serveStatic } from "./static";
+import { log } from "./utils";
+
 // Multer configuration for file uploads
 const upload = multer({
   dest: "uploads/",
@@ -45,8 +49,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       id: "mock123",
       name: "Ján Nováček",
       email: "jan.novacek@example.sk",
-      givenName: "Ján",
-      familyName: "Nováček",
+      // Pridané z User typu
+      username: "jan.novacek@example.sk",
+      password: "mock-password-hash"
     };
 
     req.login(mockUser, (err) => {
@@ -64,8 +69,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       id: "mock456",
       name: "Petra Ambroz",
       email: "petra.ambroz@example.sk",
-      givenName: "Petra",
-      familyName: "Ambroz",
+      username: "petra.ambroz@example.sk",
+      password: "mock-password-hash"
     };
 
     req.login(mockUser, (err) => {
@@ -83,8 +88,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       id: "mock789",
       name: "Andres Elgueta",
       email: "andres.elgueta@tekmain.cl",
-      givenName: "Andres",
-      familyName: "Elgueta",
+      username: "andres.elgueta@tekmain.cl",
+      password: "mock-password-hash"
     };
 
     req.login(mockUser, (err) => {
@@ -1486,8 +1491,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const companyData = req.body;
       
       // Verify that the user is a statutory representative
-      const userGivenName = user.givenName || user.name.split(' ')[0];
-      const userFamilyName = user.familyName || user.name.split(' ').slice(1).join(' ');
+      const userGivenName = (user as any).givenName || user.name.split(' ')[0];
+      const userFamilyName = (user as any).familyName || user.name.split(' ').slice(1).join(' ');
       
       const statutari = companyData.statutari || [];
       const userStatutar = statutari.find((stat: any) => {
@@ -1681,150 +1686,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // ==================================================================
+  // === MANDATE CHECK API (KROK 8 a 9) ===
+  // ==================================================================
+  
   // API v1 Router
   const v1Router = express.Router();
+  v1Router.use(express.json()); // For requests from our frontend
+  v1Router.use(express.urlencoded({ extended: true })); // For callbacks from the wallet
 
-  // Secured endpoint requiring API key
+  type VerificationStatus = 'pending' | 'verified' | 'not_verified' | 'error';
+
+  /**
+   * KROK 1: INICIÁCIA (Volá náš Frontend)
+   * KROK 10.1: Aktualizované podľa pozorovania Live Demo
+   */
   v1Router.post('/verify-mandate', authenticateApiKey, async (req: Request, res: Response) => {
     try {
-      // Input shape
-      type VerifyMandateInput = {
-        personIdentifier: {
-          firstName: string;
-          lastName: string;
-        };
-        companyIco: string;
+      const { companyIco } = req.body;
+      if (!companyIco) {
+        return res.status(400).json({ error: 'companyIco is required' });
+      }
+
+      // 1. Vytvoríme transakciu v storage
+      const transaction = await storage.createVerificationTransaction(companyIco);
+      const transactionId = transaction.id; // ID pre polling
+      // Použijeme transactionId aj ako unikátne ID pre request object (zjednodušenie)
+      const requestObjectId = transactionId; 
+
+      console.log(`[API /verify-mandate] Vytvorená transakcia ${transactionId} pre IČO ${companyIco}`);
+
+      // --- KROK 10.1: PRÍPRAVA PODĽA LIVE DEMO ---
+
+      const MY_PUBLIC_CALLBACK_BASE_URL = "https://hired-island-crossing-fitted.trycloudflare.com"; // TODO: Aktualizuj!
+      const walletResponseCallbackUrl = `${MY_PUBLIC_CALLBACK_BASE_URL}/api/v1/verify-callback`; 
+      const EUDI_SANDBOX_INITIATE_URL = "https://verifier-backend.eudiw.dev/ui/presentations"; // Odhadnutá URL z live demo
+
+      // 2. Zostavíme požiadavku pre Verifiera pomocou DCQL 
+      const dcqlQuery = { 
+        credentials: [ /* ... (ako predtým) ... */ {
+          id: "pid_credential", format: "mso_mdoc", 
+          meta: { doctype_value: "eu.europa.ec.eudi.pid.1" },
+          claims: [
+            { path: ["eu.europa.ec.eudi.pid.1", "given_name"] }, 
+            { path: ["eu.europa.ec.eudi.pid.1", "family_name"] } 
+          ]
+        }],
+        credential_sets: [ { options: [ ["pid_credential"] ], purpose: "..." } ]
       };
 
-      const body = req.body as Partial<VerifyMandateInput> | undefined;
+      // 3. Zostavíme payload pre *náš* UI/Frontend 
+      const verifierApiPayload = {
+        dcql_query: dcqlQuery, 
+        nonce: transactionId, 
+        response_mode: "direct_post", 
+        jar_mode: "by_reference", 
+        request_uri_method: "post" // <-- ZMENA: Podľa live demo
+      };
 
-      // Basic validation
-      if (
-        !body ||
-        !body.personIdentifier ||
-        typeof body.personIdentifier.firstName !== 'string' ||
-        typeof body.personIdentifier.lastName !== 'string' ||
-        !body.companyIco ||
-        typeof body.companyIco !== 'string'
-      ) {
-        return res.status(400).json({ error: "Invalid input. Require personIdentifier.firstName, personIdentifier.lastName and companyIco." });
-      }
+      // 4. Simulácia volania *referenčného Verifiera* / Sandboxu
+      console.log(`[API /verify-mandate] Simulujem volanie na ${EUDI_SANDBOX_INITIATE_URL} s payloadom:`, JSON.stringify(verifierApiPayload, null, 2));
 
-      const firstName = body.personIdentifier.firstName.trim();
-      const lastName = body.personIdentifier.lastName.trim();
-      const companyIco = body.companyIco.trim();
+      // 5. Simulácia odpovede z referenčného Verifiera (podľa live demo)
+      const mockVerifierResponse = {
+        transaction_id: transactionId, 
+        request_uri: `${MY_PUBLIC_CALLBACK_BASE_URL}/api/v1/request-object/${requestObjectId}`, // <-- ZMENA: Správny formát cesty pre náš mock, ale zachováva koncept
+        request_uri_method: "post" // <-- ZMENA: Pridané podľa live demo
+      };
+      console.log('[API /verify-mandate] Prijatá (mock) odpoveď z Verifiera:', mockVerifierResponse);
 
-      // 3. Get company data
-      const company = await storage.getCompanyByIco(companyIco);
-
-      if (!company) {
-        return res.status(404).json({
-          status: "company_not_found",
-          message: "Firma s daným IČO nebola nájdená."
-        });
-      }
-
-      // Vytvor celé meno zo vstupu
-      const inputFullName = `${firstName} ${lastName}`;
-
-      // Načítaj mandáty (ktoré obsahujú dáta o useroch) pre danú firmu
-      const mandates = await storage.getCompanyMandatesByIco(companyIco);
-      console.log(`[DEBUG] Nájdené mandáty (${mandates.length}):`, JSON.stringify(mandates, null, 2));
-
-      // Funkcia na normalizáciu mien (malé písmená, bez diakritiky, medzier)
-      const normalize = (str: string) => 
-        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-      
-      const normalizedInputName = normalize(inputFullName);
-      console.log(`[DEBUG] Normalizovaný VSTUP: '${normalizedInputName}'`);
-
-      // SPRÁVNE POROVNANIE:
-      // Porovnaj normalizované vstupné meno s normalizovaným menom z databázy (mandate.user.name)
-      const matched = mandates.some((mandate) => {
-        const mandateUserName = mandate.user.name || "";
-        const normalizedDbName = normalize(mandateUserName);
-        console.log(`[DEBUG] Porovnávam: VSTUP ('${normalizedInputName}') vs DB ('${normalizedDbName}')`);
-        return normalizedDbName === normalizedInputName;
+      // 6. Vrátime odpoveď nášmu frontendu (`eudi-verifier-test`)
+      res.status(200).json({
+        // Frontend teraz očakáva tieto polia:
+        transactionId: mockVerifierResponse.transaction_id,
+        requestUri: mockVerifierResponse.request_uri, 
+        requestUriMethod: mockVerifierResponse.request_uri_method // <-- ZMENA: Posielame aj metódu
       });
 
-      const resultStatus = matched ? "verified" : "not_verified";
-
-      // 7. Add audit log (use placeholder userId for API client)
-      const details = `Pokus o overenie mandátu pre ${firstName} ${lastName} vo firme ${company.nazov} (${companyIco}). Výsledok: ${resultStatus}`;
-      try {
-        await storage.createAuditLog({
-          actionType: "MANDATE_VERIFICATION_ATTEMPT",
-          details,
-          userId: 'api-verification',
-          companyId: company.id
-        });
-      } catch (auditErr) {
-        console.error("[AUDIT] Failed to create audit log:", auditErr);
-        // proceed even if audit logging fails
-      }
-
-      // 6. Return result
-      if (matched) {
-        return res.status(200).json({
-          status: "verified",
-          message: "Osoba je platným štatutárom firmy.",
-          verifiedPerson: { firstName, lastName },
-          verifiedCompany: { ico: company.ico, name: company.nazov },
-          verifiedRole: "Štatutár"
-        });
-      } else {
-        return res.status(200).json({
-          status: "not_verified",
-          message: "Osoba nebola nájdená medzi štatutármi firmy.",
-          verifiedPerson: { firstName, lastName },
-          verifiedCompany: { ico: company.ico, name: company.nazov }
-        });
-      }
-    } catch (error) {
-      console.error("[API v1] verify-mandate error:", error);
-      return res.status(500).json({ status: "error", message: "Internal server error" });
+    } catch (error: any) {
+      console.error('[API /verify-mandate] Chyba pri iniciácii OIDC4VP toku:', error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
   });
 
-  // --- NEW: Admin router for API key management ---
-  const adminRouter = express.Router();
-
-  // POST /generate-key
-  adminRouter.post('/generate-key', async (req: Request, res: Response) => {
+  /**
+   * KROK 9.6: ENDPOINT PRE PEŇAŽENKU - Získanie Authorization Request JWT
+   * Peňaženka volá túto URL (z QR kódu), aby získala detaily požiadavky.
+   * My (zatiaľ) vrátime len mock payload, ktorý obsahuje 'state'.
+   */
+  v1Router.get('/request-object/:id', async (req: Request, res: Response) => {
     try {
-      const customerName = (req.body && req.body.customerName) ? String(req.body.customerName).trim() : "";
-      if (!customerName) {
-        return res.status(400).json({ error: "customerName is required" });
+      const { id } = req.params; // Toto ID je naše transactionId (state)
+      console.log(`[API /request-object] Peňaženka žiada request object pre ID/state: ${id}`); // Updated log
+
+      // Mock JWT payload vracia 'state' nastavený na ID z URL
+      const mockJwtPayload = {
+        iss: "https://hired-island-crossing-fitted.trycloudflare.com", // TODO: Update if tunnel changes
+        aud: "EUDIWallet", 
+        response_type: "vp_token",
+        response_mode: "direct_post",
+        client_id: "nasa_firma_mandate_check_api",
+        nonce: id, 
+        state: id, // Kľúčové: Posielame ID z URL ako 'state'
+        presentation_definition: { /* ... */ }
+      };
+
+      res.status(200).json(mockJwtPayload);
+
+    } catch (error: any) {
+      console.error(`[API /request-object] Chyba pri generovaní mock request objectu ${req.params.id}:`, error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  });
+
+  // Keep existing verify-status endpoint...
+  v1Router.get('/verify-status/:id', authenticateApiKey, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const transaction = await storage.getVerificationTransaction(id);
+
+      if (!transaction) {
+        return res.status(404).json({ error: 'Transaction not found' });
       }
 
-      const apiKey = await storage.createApiKey(customerName);
-      return res.status(201).json({ apiKey });
-    } catch (error) {
-      console.error("[ADMIN] generate-key error:", error);
-      return res.status(500).json({ error: "Failed to generate API key" });
+      // Vrátime len relevantné dáta pre frontend
+      res.status(200).json({
+        status: transaction.status,
+        result: transaction.resultData
+      });
+
+    } catch (error: any) {
+      console.error(`[API /verify-status] Chyba pri kontrole stavu ${req.params.id}:`, error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
   });
 
-  // GET /keys
-  adminRouter.get('/keys', async (_req: Request, res: Response) => {
-    try {
-      const keys = await listApiKeys(); // Odstránili sme 'storage.'
-      return res.status(200).json(keys);
-    } catch (error) {
-      console.error("[ADMIN] list-keys error:", error);
-      return res.status(500).json({ error: "Failed to list API keys" });
-    }
+  /**
+   * KROK 3: CALLBACK (Simuluje volanie z EUDI Peňaženky/Sandboxu)
+   * KROK 9.7: Upravené podľa referenčnej implementácie Verifiera
+   */
+  v1Router.post('/verify-callback', async (req: Request, res: Response) => {
+    // Middleware 'express.urlencoded' nám spracoval dáta do req.body
+
+    // Očakávame dáta z peňaženky podľa špecifikácie (form-urlencoded)
+    const { state, vp_token } = req.body;
+
+    console.log(`[CALLBACK] Prijaté dáta z (mock) EUDI Peňaženky pre state (transactionId) ${state}:`, req.body);
+
+    // ...existing code...
   });
-
-  // Registrácia v1 API routera
-  app.use('/api/v1', v1Router);
-
-  // Registrácia admin routera (pod /api/v1/admin)
-  app.use('/api/v1/admin', adminRouter);
-
-  const httpServer = createServer(app);
-
-  return httpServer;
-}
-
-
+  // ...existing code...
