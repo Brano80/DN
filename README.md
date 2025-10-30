@@ -1,7 +1,3 @@
-Here is a professional README for your GitHub repository, based on all the work we've done and the strategic decisions we've made.
-
------
-
 # MandateCheck API
 
 MandateCheck API is a B2B SaaS solution designed for the new eIDAS 2.0 ecosystem. It provides a simple, high-trust API endpoint for businesses (like banks, financial institutions, and enterprises) to instantly verify if an individual (authenticated via their EUDI Wallet) has a valid legal mandate (e.g., "CEO", "Board Member") to act on behalf of a specific company.
@@ -194,7 +190,7 @@ This prototype implements the full asynchronous OpenID4VP flow:
   * **Step 1 (Real Initiation):** Replace the mock call in `/verify-mandate` with a real `fetch` call to the official EUDI Wallet Sandbox API.
   * **Step 2 (Authentication):** Implement JAR (JWT Secured Authorization Request) signing using a Relying Party certificate/keystore to authenticate our backend against the Sandbox.
   * **Step 3 (Real Callback):** Update `/verify-callback` to parse and cryptographically validate the *real* `vp_token` (Verifiable Presentation / JWT) received from the official EUDI reference wallet.
-  * **Step 4 (Registry Connectors):** Replace the mock registry in `server/storage.ts` with a real API client for the Slovak Business Register (OR SR).
+  * **Step 4 (Registry Connectors):** Replace the mock registry in `server/storage.ts` with a real API client.
   * **Step 5 (Expansion):** Develop connectors for other national registries (CZ, AT, DE, etc.).
   * **Step 6 (Platform Integration):** Integrate this API as a core service within the broader eGarant platform.
 
