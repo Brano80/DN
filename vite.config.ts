@@ -1,58 +1,51 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-// Assuming these Replit plugins might not be needed/available locally, comment them out or remove if they cause issues
-// import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
-// import cartographer from "@replit/vite-plugin-cartographer";
-// import devBanner from "@replit/vite-plugin-dev-banner";
 import path from 'path';
-import { fileURLToPath } from 'url'; // <-- Added import
+import { fileURLToPath } from 'url';
 
-// --- Added lines to define __dirname ---
+// --- Defines __dirname for ES Modules ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// --- End added lines ---
+// --- End ---
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    // runtimeErrorOverlay(), // Commented out Replit plugin
-    // // Only include Replit plugins if needed and installed locally
-    // ...process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined
-    //   ? [cartographer(), devBanner()]
-    //   : [],
+    // Replit pluginy sú zakomentované, nepotrebujeme ich lokálne
   ],
   resolve: {
     alias: {
-      // --- Corrected paths using __dirname ---
+      // Cesty pre importy
       "@": path.resolve(__dirname, "client", "src"),
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
-      // --- End corrected paths ---
     },
   },
-  // --- Corrected root path ---
+  // Hovorí Vitu, kde je "koreň" frontendu (kde nájde index.html)
   root: path.resolve(__dirname, "client"),
-  // --- End corrected root path ---
   build: {
-    // --- Corrected outDir path ---
+    // Kam má ukladať skompilovaný frontend
     outDir: path.resolve(__dirname, "dist/public"),
-    // --- End corrected outDir path ---
     emptyOutDir: true,
   },
   server: {
-    // --- Added proxy for API calls during development ---
+    // Proxy pre API volania (opravené na port 3000)
     proxy: {
+      // Pravidlo pre API volania (napr. /api/current-user)
       '/api': {
-        target: 'http://localhost:5000', // Assuming your backend runs on port 5000
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, ''), // Uncomment if your backend doesn't expect /api prefix
+      },
+      // Pravidlo pre autentifikáciu (napr. /auth/mock-login)
+      '/auth': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
       }
     },
-    // --- End added proxy ---
     fs: {
       strict: true,
-      deny: ["**/.*"], // Keep this for security
+      deny: ["**/.*"],
     },
   },
 });

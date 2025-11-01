@@ -71,9 +71,9 @@ export default function PersonalDashboard() {
     enabled: !!currentUser?.email,
   });
 
-  // Fetch virtual offices for the current user (filtered by backend based on activeContext)
-  const { data: virtualOffices } = useQuery<VirtualOfficeEnriched[]>({
-    queryKey: ['/api/virtual-offices', activeContext],
+  // Fetch virtual offices for the current user (default to empty array)
+  const { data: virtualOffices = [] } = useQuery<VirtualOfficeEnriched[]>({
+    queryKey: QUERY_KEYS.virtualOffices(),
     enabled: !!currentUser,
   });
 
@@ -83,27 +83,35 @@ export default function PersonalDashboard() {
     m.invitationContext === 'personal'
   ) || [];
   
-  // Filter pending VK invitations
-  const pendingVKInvitations = virtualOffices?.filter(vk => 
-    vk.participants.some(p => p.userId === currentUser?.id && p.status === 'INVITED')
-  ).map(vk => {
-    const myParticipation = vk.participants.find(p => p.userId === currentUser?.id);
-    return {
-      officeId: vk.id,
-      officeName: vk.name,
-      participantId: myParticipation?.id,
-      invitedAt: myParticipation?.invitedAt,
-      requiredRole: myParticipation?.requiredRole,
-      requiredCompanyIco: myParticipation?.requiredCompanyIco,
-    };
-  }) || [];
+  // Filter pending VK invitations (use currentUser?.id and safe access)
+  const pendingVKInvitations = virtualOffices
+    .filter(vk => vk.participants?.some(p => p.userId === currentUser?.id && p.status === 'INVITED'))
+    .map(vk => {
+      const myParticipation = vk.participants?.find(p => p.userId === currentUser?.id);
+      return {
+        officeId: vk.id,
+        officeName: vk.name,
+        participantId: myParticipation?.id,
+        invitedAt: myParticipation?.invitedAt,
+        requiredRole: myParticipation?.requiredRole,
+        requiredCompanyIco: myParticipation?.requiredCompanyIco,
+      };
+    });
 
-  // Filter active VK tasks - VK where user is ACCEPTED participant and VK is not completed/canceled
-  const activeVKTasks = virtualOffices?.filter(vk => {
-    const isParticipant = vk.participants.some(p => p.userId === currentUser?.id && p.status === 'ACCEPTED');
-    const isNotFinished = vk.status !== 'completed' && vk.status !== 'canceled';
-    return isParticipant && isNotFinished;
-  }) || [];
+  // Filter active VK tasks (use currentUser?.id and safe access)
+  const activeVKTasks = virtualOffices.filter(
+    (vk) =>
+      vk.status === 'active' &&
+      vk.documents?.some(
+        (doc) =>
+          doc.signatures?.some(
+            (sig) =>
+              sig.participantId ===
+                vk.participants?.find((p) => p.userId === currentUser?.id)?.id &&
+              sig.status === 'PENDING'
+          )
+      )
+  );
 
   // Calculate counts
   const contractsCount = contracts?.length || 0;
@@ -161,8 +169,7 @@ export default function PersonalDashboard() {
       return { response, officeId };
     },
     onSuccess: ({ officeId }) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
-      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.virtualOffices() });
       setLocation(`/virtual-office/${officeId}`);
     },
   });
@@ -175,8 +182,7 @@ export default function PersonalDashboard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/virtual-offices'] });
-      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.virtualOffices() });
     },
   });
 
@@ -209,7 +215,7 @@ export default function PersonalDashboard() {
 
         <Card 
           className="cursor-pointer transition-all hover-elevate active-elevate-2"
-          onClick={() => setLocation('/virtual-office/list')}
+          onClick={() => setLocation('/virtual-office')}
           data-testid="card-virtual-offices"
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -407,7 +413,7 @@ export default function PersonalDashboard() {
                         officeId: invitation.officeId,
                         participantId: invitation.participantId!
                       })}
-                      disabled={acceptVKInvitationMutation.isPending || rejectVKInvitationMutation.isPending}
+                      disabled={acceptVKInvitation.isPending || rejectVKInvitation.isPending}
                       data-testid={`button-accept-vk-${invitation.participantId}`}
                     >
                       <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -420,7 +426,7 @@ export default function PersonalDashboard() {
                         officeId: invitation.officeId,
                         participantId: invitation.participantId!
                       })}
-                      disabled={acceptVKInvitationMutation.isPending || rejectVKInvitationMutation.isPending}
+                      disabled={acceptVKInvitation.isPending || rejectVKInvitation.isPending}
                       data-testid={`button-reject-vk-${invitation.participantId}`}
                     >
                       <XCircle className="mr-2 h-4 w-4" />

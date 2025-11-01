@@ -11,6 +11,7 @@ import { Plus, Loader2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { QUERY_KEYS } from "@/lib/queryKeys"; // ensure we import the centralized keys
 import type { VirtualOffice } from "@shared/schema";
 
 interface VirtualOfficeEnriched extends VirtualOffice {
@@ -58,7 +59,7 @@ export default function VirtualOfficeListPage() {
 
   // Fetch virtual offices for the current user
   const { data: offices = [], isLoading } = useQuery<VirtualOfficeEnriched[]>({
-    queryKey: ['/api/virtual-offices', userData?.activeContext],
+    queryKey: [QUERY_KEYS.virtualOffices()],
     enabled: !!currentUser,
   });
 
@@ -69,7 +70,7 @@ export default function VirtualOfficeListPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === '/api/virtual-offices' });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.virtualOffices() });
       setShowCreateDialog(false);
       setOfficeName('');
       // Navigate to detail

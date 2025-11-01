@@ -612,7 +612,7 @@ export class MemStorage implements IStorage {
 
   async getVirtualOfficeSignatures(virtualOfficeDocumentId: string): Promise<VirtualOfficeSignature[]> {
     return Array.from(this.virtualOfficeSignatures.values()).filter(
-      (s) => s.virtualOfficeDocumentId === virtualOfficeId
+      (s) => s.virtualOfficeDocumentId === virtualOfficeDocumentId
     );
   }
 
